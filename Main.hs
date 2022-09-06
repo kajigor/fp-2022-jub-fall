@@ -91,22 +91,22 @@ main = do
 
 testValidateShape :: Bool
 testValidateShape =
-  and
-    [ validateShape c1 `shouldBe` True
-    , validateShape c2 `shouldBe` True
-    , validateShape c3 `shouldBe` True
-    , validateShape nc1 `shouldBe` False
-    , validateShape nc2 `shouldBe` False
-    , validateShape r1 `shouldBe` True
-    , validateShape r2 `shouldBe` True
-    , validateShape r3 `shouldBe` True
-    , validateShape nr1 `shouldBe` False
-    , validateShape nr2 `shouldBe` False
-    , validateShape nr3 `shouldBe` False
-    , validateShape sq1 `shouldBe` True
-    , validateShape sq2 `shouldBe` True
-    , validateShape sq3 `shouldBe` True
-    ]
+  and [ validateShape c1  `shouldBe` True
+      , validateShape c2  `shouldBe` True
+      , validateShape c3  `shouldBe` True
+      , validateShape nc1 `shouldBe` False
+      , validateShape nc2 `shouldBe` False
+      , validateShape r1  `shouldBe` True
+      , validateShape r2  `shouldBe` True
+      , validateShape r3  `shouldBe` True
+      , validateShape nr1 `shouldBe` False
+      , validateShape nr2 `shouldBe` False
+      , validateShape nr3 `shouldBe` False
+      , validateShape sq1 `shouldBe` True
+      , validateShape sq2 `shouldBe` True
+      , validateShape sq3 `shouldBe` True
+      , validateShape sq4 `shouldBe` True
+      ]
 
 testPerimeter =
   and
@@ -308,6 +308,8 @@ sq2 = Rectangle (PointD (-2) 0) (PointD 2 4)
 
 sq3 :: Shape
 sq3 = Rectangle (PointD (-2) (-2)) (PointD 2 2)
+
+sq4 = Rectangle (PointD (-1) 1) (PointD 1 (-1))
 
 p1 :: PointT
 p1 = PointD 0 0
