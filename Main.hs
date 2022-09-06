@@ -53,7 +53,7 @@ isSquare (Circle center radius) = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape (Circle center radius) (PointD shiftx shifty) = Circle center radius
+slideShape (Circle (PointD cx cy) radius) (PointD shiftx shifty) = Circle (PointD (cx + shiftx) (cy + shifty)) radius
 slideShape (Rectangle (PointD x1 y1) (PointD x2 y2)) (PointD shiftx shifty) = Rectangle (PointD (x1 + shiftx) (y1 + shifty)) (PointD (x2 + shiftx) (y2 + shifty))
 
 -- Проверяет, находится ли точка внутри данной фигуры
