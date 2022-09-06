@@ -13,7 +13,7 @@ makeCircleAtZero r = Circle (PointD 0 0) r
 area :: Shape -> Double
 area (Circle center radius) = pi * radius ^ 2
 area (Rectangle (PointD x0 y0) (PointD x1 y1)) =
-  (abs (x1 - x0)) * (abs (y1 - y0))
+  abs (x1 - x0) * abs (y1 - y0)
 
 -- Круг единичного радиуса
 c :: Shape
@@ -23,42 +23,60 @@ c = Circle (PointD 0 0) 1
 square :: Shape
 square = Rectangle (PointD 0 0) (PointD 1 1)
 
+grDouble :: (Ord a, Num a) => a -> a -> a -> Bool
+grDouble x y eps = x - y > eps
+
+shouldBeGrDouble :: Double -> Double -> Bool
+shouldBeGrDouble x y = grDouble x y 1e-6
+
+-- Считает расстояние между двумя точками 
+distance :: PointT -> PointT -> Double
+distance (PointD x0 y0) (PointD x1 y1) = sqrt((x0 - x1) ^ 2 + (y0 - y1) ^ 2)
+
 -- Трансформирует прямоугольник таким образом,
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
+normalizeRectangle shape = shape
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs(x0 - x1) `shouldBeGrDouble` 0 && abs(y0 - y1) `shouldBeGrDouble` 0
+validateShape (Circle _ radius) = radius `shouldBeGrDouble` 0
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs(x0 - x1) + abs(y0 - y1))
+perimeter (Circle _ radius) = 2 * pi * radius
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs(x0 - x1) `shouldBeDouble` abs(y0 - y1)
+isSquare _ = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD xDelta yDelta) = Rectangle (PointD (x0 + xDelta) (y0 + yDelta)) (PointD (x1 + xDelta) (y1 + yDelta))
+slideShape (Circle (PointD x0 y0) radius) (PointD xDelta yDelta) = Circle (PointD (x0 + xDelta) (y0 + yDelta)) radius
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape rect@(Rectangle _ _) (PointD x y) =
+  let (Rectangle (PointD x0 y0) (PointD x1 y1)) = normalizeRectangle rect 
+  in x `shouldBeGrDouble` x0 && x1 `shouldBeGrDouble` x && y `shouldBeGrDouble` y0 && y1 `shouldBeGrDouble` y
+isPointInShape (Circle center radius) point = radius `shouldBeGrDouble` distance center point
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
 main = do
-  print $ and [ testValidateShape
-              , testPerimeter
+  print $ and [ testValidateShape 
+              , testPerimeter 
               , testNormalizeRectangle
-              , testIsSquare
-              , testSlideShape
+              , testIsSquare 
+              , testSlideShape 
               , testIsPointInShape
               ]
 
