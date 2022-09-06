@@ -91,22 +91,23 @@ main = do
 
 testValidateShape :: Bool
 testValidateShape =
-  and [ validateShape c1  `shouldBe` True
-      , validateShape c2  `shouldBe` True
-      , validateShape c3  `shouldBe` True
-      , validateShape nc1 `shouldBe` False
-      , validateShape nc2 `shouldBe` False
-      , validateShape r1  `shouldBe` True
-      , validateShape r2  `shouldBe` True
-      , validateShape r3  `shouldBe` True
-      , validateShape nr1 `shouldBe` False
-      , validateShape nr2 `shouldBe` False
-      , validateShape nr3 `shouldBe` False
-      , validateShape sq1 `shouldBe` True
-      , validateShape sq2 `shouldBe` True
-      , validateShape sq3 `shouldBe` True
-      , validateShape sq4 `shouldBe` True
-      ]
+  and
+    [ validateShape c1 `shouldBe` True
+    , validateShape c2 `shouldBe` True
+    , validateShape c3 `shouldBe` True
+    , validateShape nc1 `shouldBe` False
+    , validateShape nc2 `shouldBe` False
+    , validateShape r1 `shouldBe` True
+    , validateShape r2 `shouldBe` True
+    , validateShape r3 `shouldBe` True
+    , validateShape nr1 `shouldBe` False
+    , validateShape nr2 `shouldBe` False
+    , validateShape nr3 `shouldBe` False
+    , validateShape sq1 `shouldBe` True
+    , validateShape sq2 `shouldBe` True
+    , validateShape sq3 `shouldBe` True
+    , validateShape sq4 `shouldBe` True
+    ]
 
 testPerimeter =
   and
