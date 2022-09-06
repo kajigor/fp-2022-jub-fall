@@ -55,6 +55,7 @@ perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) =
 isSquare :: Shape -> Bool
 isSquare (Circle center radius) = False
 isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) =
+  validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) &&
   abs (x0 - x1) == abs (y0 - y1)
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
