@@ -295,7 +295,7 @@ eqDouble :: (Ord a, Num a) => a -> a -> a -> Bool
 eqDouble x y eps = abs (x - y) < eps
 
 shouldBeDouble :: Double -> Double -> Bool
-shouldBeDouble x y = eqDouble x y 0000001
+shouldBeDouble x y = eqDouble x y 0.000001
 
 shouldBe :: Eq a => a -> a -> Bool
 shouldBe x y = x == y
