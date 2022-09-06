@@ -118,6 +118,7 @@ testIsSquare =
       , isSquare sq1 `shouldBe` True
       , isSquare sq2 `shouldBe` True
       , isSquare sq3 `shouldBe` True
+      , isSquare sq4 `shouldBe` True
       ]
 
 testSlideShape :: Bool
