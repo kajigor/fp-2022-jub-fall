@@ -27,29 +27,41 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x1 y1) (PointD x2 y2)) = 
+    if (x1 < x2) && (y1 < y2) then Rectangle (PointD x1 y1) (PointD x2 y2)
+    else if (x1 < x2) then Rectangle (PointD x1 y2) (PointD x2 y1)
+    else if (y1 < y2) then Rectangle (PointD x2 y1) (PointD x1 y2)
+    else Rectangle (PointD x2 y2) (PointD x1 y1)
+normalizeRectangle (Circle center radius) = Circle center radius
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle center radius) = (radius > 0)
+validateShape (Rectangle (PointD x1 y1) (PointD x2 y2)) = (x1 /= x2) && (y1 /= y2)
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x1 y1) (PointD x2 y2)) = 2 * (abs (x1 - x2) + abs (y1 - y2))
+perimeter (Circle center radius) = 2 * pi * radius
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x1 y1) (PointD x2 y2)) = validateShape (Rectangle (PointD x1 y1) (PointD x2 y2)) && (abs (x1 - x2) == abs (y1 - y2))
+isSquare (Circle center radius) = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle center radius) (PointD shiftx shifty) = Circle center radius
+slideShape (Rectangle (PointD x1 y1) (PointD x2 y2)) (PointD shiftx shifty) = Rectangle (PointD (x1 + shiftx) (y1 + shifty)) (PointD (x2 + shiftx) (y2 + shifty))
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle (PointD cx cy) radius) (PointD x y) = (((cx - x) ^ 2 + (cy - y) ^ 2) < radius ^ 2)
+isPointInShape (Rectangle (PointD x1 y1) (PointD x2 y2)) (PointD x y) = 
+    if (x1 < x2) && (y1 < y2) then (x1 < x && x < x2) && (y1 < y && y < y2)
+    else isPointInShape (normalizeRectangle (Rectangle (PointD x1 y1) (PointD x2 y2))) (PointD x y)
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
