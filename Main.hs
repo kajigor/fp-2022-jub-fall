@@ -15,6 +15,20 @@ area (Circle center radius) = pi * radius ^ 2
 area (Rectangle (PointD x0 y0) (PointD x1 y1)) =
   (abs (x1 - x0)) * (abs (y1 - y0))
 
+firstPoint :: Shape -> PointT
+firstPoint (Rectangle first _) = first
+firstPoint (Circle c _) = c
+
+secondPoint :: Shape -> PointT
+secondPoint (Rectangle _ second) = second
+secondPoint (Circle c _) = c
+
+x :: PointT -> Double
+x (PointD x0 y0) = x0
+
+y :: PointT -> Double
+y (PointD x0 y0) = y0
+
 -- Круг единичного радиуса
 c :: Shape
 c = Circle (PointD 0 0) 1
@@ -27,29 +41,54 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
+  Rectangle 
+  (PointD (min x0 x1) (min y0 y1)) 
+  (PointD (max x0 x1) (max y0 y1))
+normalizeRectangle (Circle c r) = Circle c r
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = x1 /= x0 && y1 /= y0
+validateShape (Circle center radius) = radius > 0
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs (x1 - x0) + abs (y1 - y0))
+perimeter (Circle center radius) = 2 * pi * radius
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x1 - x0) == abs (y1 - y0)
+isSquare (Circle _ _) = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle (PointD x0 y0) radius) (PointD x1 y1) = Circle (PointD (x0 + x1) (y0 + y1)) radius
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x2 y2) = 
+  Rectangle 
+  (PointD (x0 + x2) (y0 + y2)) 
+  (PointD (x1 + x2) (y1 + y2))
+
+dist :: PointT -> PointT -> Double
+dist (PointD x0 y0) (PointD x1 y1) = sqrt ((x1 - x0) ^ 2 + (y1 - y0) ^ 2)
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle center radius) point = dist center point < radius 
+isPointInShape rectangle (PointD x2 y2) = do
+  let normRect = normalizeRectangle rectangle
+  let point0 = firstPoint normRect
+  let point1 = secondPoint normRect
+  let x0 = x point0
+  let y0 = y point0
+  let x1 = x point1
+  let y1 = y point1
+  x0 < x2 && x2 < x1 && y0 < y2 && y2 < y1
+  
+  
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
