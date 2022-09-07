@@ -27,29 +27,36 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) =
+   Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
+normalizeRectangle shape = shape
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = (x0 /= x1) && (y0 /= y1)
+validateShape (Circle center radius) = radius > 0
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs(x0 - x1) + abs(y0 - y1))
+perimeter (Circle center radius) = 2* pi * radius
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = (abs (x0 - x1) == abs (y0 - y1)) && (abs (x0 - x1) /= 0)
+isSquare _ = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle (PointD x0 y0) radius) (PointD x1 y1) = Circle (PointD (x0 + x1) (y0 + y1)) radius
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x2 y2) = Rectangle (PointD (x0 + x2) (y0 + y2)) (PointD (x1 + x2) (y1 + y2))
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle (PointD x0 y0) radius) (PointD x1 y1) = (((x0 - x1) ^ 2 + (y0 - y1) ^ 2) < radius ^ 2)
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x2 y2) = (min x0 x1) < x2 && (max x0 x1) > x2 && (min y0 y1) < y2 && (max y0 y1) > y2
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
