@@ -83,6 +83,7 @@ main = do
 
 testValidateShape :: Bool
 testValidateShape =
+<<<<<<< HEAD
   and
     [ validateShape c1 `shouldBe` True,
       validateShape c2 `shouldBe` True,
@@ -99,6 +100,24 @@ testValidateShape =
       validateShape sq2 `shouldBe` True,
       validateShape sq3 `shouldBe` True
     ]
+=======
+  and [ validateShape c1  `shouldBe` True
+      , validateShape c2  `shouldBe` True
+      , validateShape c3  `shouldBe` True
+      , validateShape nc1 `shouldBe` False
+      , validateShape nc2 `shouldBe` False
+      , validateShape r1  `shouldBe` True
+      , validateShape r2  `shouldBe` True
+      , validateShape r3  `shouldBe` True
+      , validateShape nr1 `shouldBe` False
+      , validateShape nr2 `shouldBe` False
+      , validateShape nr3 `shouldBe` False
+      , validateShape sq1 `shouldBe` True
+      , validateShape sq2 `shouldBe` True
+      , validateShape sq3 `shouldBe` True
+      , validateShape sq4 `shouldBe` True
+      ]
+>>>>>>> 7860ed8c3ee3c405cae06c9c5d5908b38dbac963
 
 testPerimeter =
   and
@@ -129,6 +148,7 @@ testNormalizeRectangle =
 
 testIsSquare :: Bool
 testIsSquare =
+<<<<<<< HEAD
   and
     [ isSquare c1 `shouldBe` False,
       isSquare c2 `shouldBe` False,
@@ -140,6 +160,19 @@ testIsSquare =
       isSquare sq2 `shouldBe` True,
       isSquare sq3 `shouldBe` True
     ]
+=======
+  and [ isSquare c1  `shouldBe` False
+      , isSquare c2  `shouldBe` False
+      , isSquare c3  `shouldBe` False
+      , isSquare r1  `shouldBe` False
+      , isSquare r2  `shouldBe` True
+      , isSquare r3  `shouldBe` False
+      , isSquare sq1 `shouldBe` True
+      , isSquare sq2 `shouldBe` True
+      , isSquare sq3 `shouldBe` True
+      , isSquare sq4 `shouldBe` True
+      ]
+>>>>>>> 7860ed8c3ee3c405cae06c9c5d5908b38dbac963
 
 testSlideShape :: Bool
 testSlideShape =
@@ -283,6 +316,8 @@ sq2 = Rectangle (PointD (-2) 0) (PointD 2 4)
 sq3 :: Shape
 sq3 = Rectangle (PointD (-2) (-2)) (PointD 2 2)
 
+sq4 = Rectangle (PointD (-1) 1) (PointD 1 (-1))
+
 p1 :: PointT
 p1 = PointD 0 0
 
@@ -312,7 +347,7 @@ eqDouble :: (Ord a, Num a) => a -> a -> a -> Bool
 eqDouble x y eps = abs (x - y) < eps
 
 shouldBeDouble :: Double -> Double -> Bool
-shouldBeDouble x y = eqDouble x y 0000001
+shouldBeDouble x y = eqDouble x y 0.000001
 
 shouldBe :: Eq a => a -> a -> Bool
 shouldBe x y = x == y
