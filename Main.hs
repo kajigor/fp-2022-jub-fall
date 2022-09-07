@@ -26,27 +26,11 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- Трансформирует прямоугольник таким образом,
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
-
--- Возможные ситуации:
--- 1: x0 > x1 && y0 > y1 => (x1 y1) (x0 y0)
--- 2: x0 < x1 && y0 > y1 => (x0 y1) (x1 y0)
--- 3: x0 > x1 && y0 < y1 => (x1 y0) (x0 y1)
--- 4: x0 < x1 && y0 < y1 => (x0 y0) (x1 y1) - точки выставлены верно
-
 normalizeRectangle :: Shape -> Shape
 normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) =
   if validateShape (Rectangle (PointD x0 y0) (PointD x1 y1))
-    then
-      if x0 > x1 && y0 > y1
-        then Rectangle (PointD x1 y1) (PointD x0 y0)
-        else
-          if x0 < x1 && y0 > y1
-            then Rectangle (PointD x0 y1) (PointD x1 y0)
-            else
-              if x0 > x1 && y0 < y1
-                then Rectangle (PointD x1 y0) (PointD x0 y1)
-                else Rectangle (PointD x0 y0) (PointD x1 y1)
-    else Rectangle (PointD x0 y0) (PointD x1 y1)
+  then Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
+  else Rectangle (PointD x0 y0) (PointD x1 y1)
 
 -- другие фигуры передаем без изменений чтобы пройти тесты
 normalizeRectangle anything = anything
@@ -80,12 +64,11 @@ slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) =
 -- НЕ включая границы
 isPointInShape :: Shape -> PointT -> Bool
 isPointInShape (Circle (PointD x0 y0) r) (PointD x y) = (x0 - x) ^ 2 + (y0 - y) ^ 2 < r ^ 2
-isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = 
-  validateShape(Rectangle (PointD x0 y0) (PointD x1 y1)) 
-  && (do
-    let (Rectangle (PointD x0_n y0_n) (PointD x1_n y1_n)) = normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1))
-    (x > x0_n && x < x1_n) && (y > y0_n && y < y1_n)
-  )
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) =
+  validateShape(Rectangle (PointD x0 y0) (PointD x1 y1))
+  && 
+  let (Rectangle (PointD x0_n y0_n) (PointD x1_n y1_n)) = normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1))
+  in (x > x0_n && x < x1_n) && (y > y0_n && y < y1_n)
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
