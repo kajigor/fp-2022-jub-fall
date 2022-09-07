@@ -45,14 +45,18 @@ validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = not (abs (x0 - x1) == 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
 perimeter (Circle center radius) = 2 * pi * radius
-perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = do
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) =
   let (Rectangle (PointD x0_n y0_n) (PointD x1_n y1_n)) = normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1))
-  2 * (x1_n - x0_n) + 2 * (y1_n - y0_n)
+  in 2 * (x1_n - x0_n) + 2 * (y1_n - y0_n)
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
 isSquare (Circle center radius) = False
-isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = x1 - x0 == y1 - y0
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) =
+  validateShape(Rectangle (PointD x0 y0) (PointD x1 y1))
+  &&
+  let (Rectangle (PointD x0_n y0_n) (PointD x1_n y1_n)) = normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1))
+  in x1_n - x0_n == y1_n - y0_n
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
