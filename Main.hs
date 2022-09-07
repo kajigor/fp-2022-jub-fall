@@ -29,7 +29,7 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 normalizeRectangle :: Shape -> Shape
 normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
   Rectangle (PointD (min x1 x0) (min y1 y0)) (PointD (max x1 x0) (max y1 y0))
-normalizeRectangle (Circle center radius) = Circle center radius
+normalizeRectangle x = x
 -- normalizeRectangle _ = undefined
 
 -- Проверяет, является ли фигура корректной
