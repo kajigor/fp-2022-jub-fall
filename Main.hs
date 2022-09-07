@@ -36,32 +36,42 @@ normalizeRectangle x = x
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = and [x0 - x1 /= 0, y0 - y1 /= 0]
-validateShape (Circle center radius) = radius > 0
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
+  and [x0 - x1 /= 0, y0 - y1 /= 0]
+validateShape (Circle center radius) = 
+  radius > 0
 -- validateShape _ = undefined
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = (abs (x0 - x1)) * 2 + (abs (y0 - y1)) * 2
-perimeter (Circle center radius) = 2 * pi * radius
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
+  (abs (x0 - x1)) * 2 + (abs (y0 - y1)) * 2
+perimeter (Circle center radius) = 
+  2 * pi * radius
 -- perimeter _ = undefined
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = (abs (x0 - x1)) == (abs (y0 - y1))
-isSquare (Circle center radius) = False
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
+  (abs (x0 - x1)) == (abs (y0 - y1))
+isSquare (Circle center radius) = 
+  False
 -- isSquare _ = undefined
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD dx dy) = Rectangle (PointD (x0 + dx) (y0 + dy)) (PointD (x1 + dx) (y1 + dy))
-slideShape (Circle (PointD cx cy) radius) (PointD dx dy) = Circle (PointD (cx + dx) (cy + dy)) radius
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD dx dy) = 
+  Rectangle (PointD (x0 + dx) (y0 + dy)) (PointD (x1 + dx) (y1 + dy))
+slideShape (Circle (PointD cx cy) radius) (PointD dx dy) = 
+  Circle (PointD (cx + dx) (cy + dy)) radius
 -- slideShape _ _ = undefined
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = and [(min x0 x1) < x, x < (max x0 x1), (min y0 y1) < y, y < (max y0 y1)]
-isPointInShape (Circle (PointD cx cy) radius) (PointD x y) = radius * radius > (x - cx) * (x - cx) + (y - cy) * (y - cy)
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = 
+  and [(min x0 x1) < x, x < (max x0 x1), (min y0 y1) < y, y < (max y0 y1)]
+isPointInShape (Circle (PointD cx cy) radius) (PointD x y) = 
+  radius * radius > (x - cx) * (x - cx) + (y - cy) * (y - cy)
 -- isPointInShape _ _ = undefined
 
 -- В результате выполнения программы в консоль должно напечататься True
