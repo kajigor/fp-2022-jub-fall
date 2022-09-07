@@ -28,10 +28,7 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
 normalizeRectangle (Rectangle (PointD x1 y1) (PointD x2 y2)) = 
-    if (x1 < x2) && (y1 < y2) then Rectangle (PointD x1 y1) (PointD x2 y2)
-    else if (x1 < x2) then Rectangle (PointD x1 y2) (PointD x2 y1)
-    else if (y1 < y2) then Rectangle (PointD x2 y1) (PointD x1 y2)
-    else Rectangle (PointD x2 y2) (PointD x1 y1)
+    Rectangle (PointD (min x1 x2) (min y1 y2)) (PointD (max x1 x2) (max y1 y2))
 normalizeRectangle (Circle center radius) = Circle center radius
 
 -- Проверяет, является ли фигура корректной
@@ -60,8 +57,7 @@ slideShape (Rectangle (PointD x1 y1) (PointD x2 y2)) (PointD shiftx shifty) = Re
 isPointInShape :: Shape -> PointT -> Bool
 isPointInShape (Circle (PointD cx cy) radius) (PointD x y) = (((cx - x) ^ 2 + (cy - y) ^ 2) < radius ^ 2)
 isPointInShape (Rectangle (PointD x1 y1) (PointD x2 y2)) (PointD x y) = 
-    if (x1 < x2) && (y1 < y2) then (x1 < x && x < x2) && (y1 < y && y < y2)
-    else isPointInShape (normalizeRectangle (Rectangle (PointD x1 y1) (PointD x2 y2))) (PointD x y)
+    ((min x1 x2) < x && x < (max x1 x2)) && ((min y1 y2) < y && y < (max y1 y2))
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
