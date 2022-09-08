@@ -27,29 +27,35 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
+normalizeRectangle circle = circle
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x1 - x0) > 0 && abs (y1 - y0) > 0
+validateShape (Circle (PointD x0 y0) r) = r > 0
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs (x1 - x0)) + 2 * (abs (y1 - y0))
+perimeter (Circle (PointD x0 y0) r) = 2 * pi * r
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x1 - x0) == abs (y1 - y0) -- what if side is equal to 0?
+isSquare circle = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = Rectangle (PointD (x0 + x) (y0 + y)) (PointD (x1 + x) (y1 + y))
+slideShape (Circle (PointD x0 y0) r) (PointD x y) = Circle (PointD (x0 + x) (y0 + y)) r
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = x > (min x0 x1) && x < (max x0 x1) && y > (min y0 y1) && y < (max y0 y1)
+isPointInShape (Circle (PointD x0 y0) r) (PointD x y) = ((x0 - x)^2 + (y0 - y)^2)^2 < r^2
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
