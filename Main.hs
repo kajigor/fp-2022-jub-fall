@@ -1,3 +1,4 @@
+import Distribution.Simple.Command (OptDescr(BoolOpt))
 -- Точка на плоскости
 data PointT = PointD Double Double
 -- Фигуры
@@ -7,11 +8,11 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 
 -- Создание круга с центром в нуле
 makeCircleAtZero :: Double -> Shape
-makeCircleAtZero r = Circle (PointD 0 0) r
+makeCircleAtZero = Circle (PointD 0 0)
 
 -- Вычисление площади фигуры
 area :: Shape -> Double
-area (Circle center radius) = pi * radius ^ 2
+area (Circle _ radius) = pi * radius ^ 2
 area (Rectangle (PointD x0 y0) (PointD x1 y1)) =
   (abs (x1 - x0)) * (abs (y1 - y0))
 
@@ -27,35 +28,42 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
+normalizeRectangle c = c
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle _ r) = r > 0
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = (x0 /= x1) && (y0 /= y1)
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Circle _ r) = 2 * pi * r
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs (x0 - x1) + abs (y0 - y1))
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x0 - x1) == abs (y0 - y1)
+isSquare _ = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle (PointD x y) r) (PointD dx dy) = Circle (PointD (x + dx) (y + dy)) r
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD dx dy) = Rectangle (PointD (x0 + dx) (y0 + dy)) (PointD (x1 + dx) (y1 + dy))
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle (PointD y0 x0) r) (PointD x y) = sqrt ((x0 - x) ^ 2 + (y0 - y) ^ 2) < r
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = (min x0 x1 < x && x < max x0 x1) && (min y0 y1 < y && y < max y0 y1)
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
 main = do
-  print $ and [ testValidateShape
-              , testPerimeter
+  print $ and [
+              testValidateShape,
+              testPerimeter
               , testNormalizeRectangle
               , testIsSquare
               , testSlideShape
@@ -118,7 +126,6 @@ testIsSquare =
       , isSquare sq1 `shouldBe` True
       , isSquare sq2 `shouldBe` True
       , isSquare sq3 `shouldBe` True
-      , isSquare sq4 `shouldBe` True
       ]
 
 testSlideShape :: Bool
@@ -160,7 +167,7 @@ testSlideShape =
       , slideShape sq2 p4 `shouldBeShape` Rectangle (PointD (-3) 1) (PointD 1 5)
       , slideShape sq3 p4 `shouldBeShape` Rectangle (PointD (-3) (-1)) (PointD 1 3)
       , slideShape c1  p5 `shouldBeShape` Circle (PointD 1 (-1)) 0.1
-      , slideShape c2  p5 `shouldBeShape` Circle (PointD 1 (-1)) 1
+      , slideShape c2  p5 `shouldBeShape` Circle (PointD 1 (-1)) 1 
       , slideShape c3  p5 `shouldBeShape` Circle (PointD 1 (-1)) 10
       , slideShape r1  p5 `shouldBeShape` Rectangle (PointD 1 (-1)) (PointD 1.1 (-0.8))
       , slideShape r2  p5 `shouldBeShape` Rectangle (PointD 0 (-1)) (PointD 1 0)
@@ -295,7 +302,7 @@ eqDouble :: (Ord a, Num a) => a -> a -> a -> Bool
 eqDouble x y eps = abs (x - y) < eps
 
 shouldBeDouble :: Double -> Double -> Bool
-shouldBeDouble x y = eqDouble x y 0.000001
+shouldBeDouble x y = eqDouble x y 0000001
 
 shouldBe :: Eq a => a -> a -> Bool
 shouldBe x y = x == y
