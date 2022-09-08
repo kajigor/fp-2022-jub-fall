@@ -27,29 +27,39 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Circle center radius) = Circle center radius
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle _ radius) = radius > 0
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = (abs (x1 - x0) > 0) && (abs (y1 - y0) > 0)
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Circle _ radius) = 2 * pi * radius
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = (abs (x1 - x0) + abs (y1 - y0)) * 2
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x1 - x0) == abs (y1 - y0)
+isSquare _ = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle (PointD x y) radius) (PointD dx dy) = Circle (PointD (x + dx) (y + dy)) radius
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD dx dy) = Rectangle (PointD (x0 + dx) (y0 + dy)) (PointD (x1 + dx) (y1 + dy))
+
+
+isPointInNormalizedShape :: Shape -> PointT -> Bool
+isPointInNormalizedShape (Circle (PointD cx cy) radius) (PointD px py) = radius ^ 2 > (cx - px) ^ 2 + (cy - py) ^ 2
+isPointInNormalizedShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD px py) = x0 < px && px < x1 && y0 < py && py < y1
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape shape = isPointInNormalizedShape (normalizeRectangle shape)
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
