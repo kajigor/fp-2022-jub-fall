@@ -13,8 +13,7 @@ makeCircleAtZero r = Circle (PointD 0 0) r
 -- Вычисление площади фигуры
 area :: Shape -> Double
 area (Circle center radius) = pi * radius ^ 2
-area (Rectangle (PointD x0 y0) (PointD x1 y1)) =
-  (abs (x1 - x0)) * (abs (y1 - y0))
+area (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x1 - x0) * abs (y1 - y0)
 
 -- Круг единичного радиуса
 c :: Shape
@@ -37,12 +36,9 @@ normalizeRectangle (Circle (PointD x0 y0) r) = Circle (PointD x0 y0) r
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) 
-  | x0 /= x1 && y0 /= y1 = True
-  | otherwise = False
-validateShape (Circle (PointD x0 y0) r)
-  | r > 0 = True
-  | otherwise = False
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = x0 /= x1 && y0 /= y1
+  
+validateShape (Circle (PointD x0 y0) r) = r > 0
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
@@ -52,9 +48,7 @@ perimeter (Circle _ r) = 2 * pi * r
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare (Rectangle (PointD x0 y0) (PointD x1 y1))
-  | abs(x1 - x0) == abs(y1 - y0) = True
-  | otherwise = False
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs(x1 - x0) == abs(y1 - y0)
 isSquare _ = False
 
 
@@ -67,13 +61,9 @@ slideShape (Circle (PointD x0 y0) r) (PointD dx dy) = Circle (PointD (x0 + dx) (
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD px py)
-  | px > nx0 && px < nx1 && py > ny0 && py < ny1 = True
-  | otherwise = False 
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD px py) = px > nx0 && px < nx1 && py > ny0 && py < ny1
   where Rectangle (PointD nx0 ny0) (PointD nx1 ny1) = normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1))
-isPointInShape (Circle (PointD x0 y0) r) (PointD px py)
-  | sqrt((px - x0) * (px - x0) + (py - y0) * (py - y0)) < r = True
-  | otherwise = False
+isPointInShape (Circle (PointD x0 y0) r) (PointD px py) = sqrt((px - x0) * (px - x0) + (py - y0) * (py - y0)) < r
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
