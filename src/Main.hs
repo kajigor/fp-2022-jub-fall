@@ -1,4 +1,3 @@
-import qualified GHC.Float as Math
 -- Точка на плоскости
 data PointT = PointD Double Double
 
@@ -55,7 +54,7 @@ validateShape (Rectangle (PointD x1 y1) (PointD x2 y2)) = do
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter (Circle _ r) = 2 * Math.pi * r
+perimeter (Circle _ r) = 2 * pi * r
 perimeter (Rectangle (PointD x1 y1) (PointD x2 y2)) = 2 * (abs (x2 - x1) + abs (y2 - y1))
 
 -- Проверяет, является ли фигура квадратом
