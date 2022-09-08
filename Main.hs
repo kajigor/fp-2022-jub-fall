@@ -33,7 +33,7 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 normalizeRectangle :: Shape -> Shape
 normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) =
   Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
-normalizeRectangle _ = undefined
+normalizeRectangle x = x
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
@@ -45,7 +45,7 @@ validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x1 - x0) > 0 && a
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
 perimeter (Circle center radius) = 2 * pi * radius
-perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x1 - x0) * abs (y1 - y0)
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs (x1 - x0) + abs (y1 - y0))
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
@@ -64,9 +64,8 @@ isPointInShape :: Shape -> PointT -> Bool
 isPointInShape (Circle (PointD x0 y0) radius) (PointD x y) =
   (x - x0) ^ 2 + (y - y0) ^ 2 < radius ^ 2
 isPointInShape rect (PointD x y) =
-  do
   let (Rectangle (PointD x0 y0) (PointD x1 y1)) = normalizeRectangle rect
-  return and [x0<=x, x<=x1, y0<=y, y<=y1]
+   in and [x0 < x, x < x1, y0 < y, y < y1]
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
@@ -83,7 +82,6 @@ main = do
 
 testValidateShape :: Bool
 testValidateShape =
-<<<<<<< HEAD
   and
     [ validateShape c1 `shouldBe` True,
       validateShape c2 `shouldBe` True,
@@ -98,26 +96,9 @@ testValidateShape =
       validateShape nr3 `shouldBe` False,
       validateShape sq1 `shouldBe` True,
       validateShape sq2 `shouldBe` True,
-      validateShape sq3 `shouldBe` True
+      validateShape sq3 `shouldBe` True,
+      validateShape sq4 `shouldBe` True
     ]
-=======
-  and [ validateShape c1  `shouldBe` True
-      , validateShape c2  `shouldBe` True
-      , validateShape c3  `shouldBe` True
-      , validateShape nc1 `shouldBe` False
-      , validateShape nc2 `shouldBe` False
-      , validateShape r1  `shouldBe` True
-      , validateShape r2  `shouldBe` True
-      , validateShape r3  `shouldBe` True
-      , validateShape nr1 `shouldBe` False
-      , validateShape nr2 `shouldBe` False
-      , validateShape nr3 `shouldBe` False
-      , validateShape sq1 `shouldBe` True
-      , validateShape sq2 `shouldBe` True
-      , validateShape sq3 `shouldBe` True
-      , validateShape sq4 `shouldBe` True
-      ]
->>>>>>> 7860ed8c3ee3c405cae06c9c5d5908b38dbac963
 
 testPerimeter =
   and
@@ -148,7 +129,6 @@ testNormalizeRectangle =
 
 testIsSquare :: Bool
 testIsSquare =
-<<<<<<< HEAD
   and
     [ isSquare c1 `shouldBe` False,
       isSquare c2 `shouldBe` False,
@@ -158,21 +138,9 @@ testIsSquare =
       isSquare r3 `shouldBe` False,
       isSquare sq1 `shouldBe` True,
       isSquare sq2 `shouldBe` True,
-      isSquare sq3 `shouldBe` True
+      isSquare sq3 `shouldBe` True,
+      isSquare sq4 `shouldBe` True
     ]
-=======
-  and [ isSquare c1  `shouldBe` False
-      , isSquare c2  `shouldBe` False
-      , isSquare c3  `shouldBe` False
-      , isSquare r1  `shouldBe` False
-      , isSquare r2  `shouldBe` True
-      , isSquare r3  `shouldBe` False
-      , isSquare sq1 `shouldBe` True
-      , isSquare sq2 `shouldBe` True
-      , isSquare sq3 `shouldBe` True
-      , isSquare sq4 `shouldBe` True
-      ]
->>>>>>> 7860ed8c3ee3c405cae06c9c5d5908b38dbac963
 
 testSlideShape :: Bool
 testSlideShape =
