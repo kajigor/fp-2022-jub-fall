@@ -60,12 +60,10 @@ slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD xp yp) =
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
 isPointInShape (Circle (PointD x y) r)  (PointD xp yp) =
-  if ((xp - x) ^ 2 + (yp - y) ^ 2) < r ^ 2 then True
-  else False
+  ((xp - x) ^ 2 + (yp - y) ^ 2) < r ^ 2 
 
 isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD xp yp) = 
-  if (xp > min (x0) (x1) && xp < max (x0) (x1) && yp > min (y0) (y1) && yp < max (y0) (y1)) then True
-  else False
+  xp > min (x0) (x1) && xp < max (x0) (x1) && yp > min (y0) (y1) && yp < max (y0) (y1)
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
