@@ -36,8 +36,8 @@ normalizeRectangle (Circle (PointD x y) r) = Circle (PointD x y) r
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape (Circle (PointD x y) r) = if r > 0 then True else False
-validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = if (x0 == x1) || (y0 == y1) then False else True
+validateShape (Circle (PointD x y) r) = r > 0
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = not ((x0 == x1) || (y0 == y1))
 
 
 -- Считает периметр фигуры
@@ -48,7 +48,7 @@ perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs(x0 - x1) + abs(y0
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
 isSquare (Circle (PointD x y) r) = False
-isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = if abs(x0 - x1) == abs(y0 - y1) then True else False
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs(x0 - x1) == abs(y0 - y1)
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
