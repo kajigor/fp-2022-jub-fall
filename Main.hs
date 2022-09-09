@@ -27,29 +27,45 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
+  Rectangle (PointD (min (x0) (x1)) (min (y0) (y1))) (PointD (max (x0) (x1)) (max (y0) (y1))) 
+normalizeRectangle (Circle (PointD x y) r) = Circle (PointD x y) r 
+
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle (PointD x y) r) = if r > 0 then True else False
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = if (x0 == x1) || (y0 == y1) then False else True
+
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Circle (PointD x y) r) = 2 * pi * r
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs(x0 - x1) + abs(y0 - y1))
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Circle (PointD x y) r) = False
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = if abs(x0 - x1) == abs(y0 - y1) then True else False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle (PointD x y) r) (PointD xp yp)  = 
+  Circle (PointD (x + xp) (y + yp)) r
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD xp yp) = 
+  Rectangle  (PointD (x0 + xp) (y0 + yp)) (PointD (x1 + xp) (y1 + yp))
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle (PointD x y) r)  (PointD xp yp) =
+  if ((xp - x) ^ 2 + (yp - y) ^ 2) < r ^ 2 then True
+  else False
+
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD xp yp) = 
+  if (xp > min (x0) (x1) && xp < max (x0) (x1) && yp > min (y0) (y1) && yp < max (y0) (y1)) then True
+  else False
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
