@@ -1,3 +1,5 @@
+import Data.Map (valid)
+import Data.Text (center)
 -- Точка на плоскости
 data PointT = PointD Double Double
 -- Фигуры
@@ -27,29 +29,40 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
+  Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
+normalizeRectangle (Circle center radius) = Circle center radius
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle center radius) = radius > 0
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = x0 /= x1 && y0 /= y1
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Circle center radius) = 2 * pi * radius
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs (x0 - x1) + abs (y0 - y1))
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Circle center radius) = False
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x0 - x1) == abs (y0 - y1)
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle (PointD x y) radius) (PointD x_offset y_offset) =
+  Circle (PointD (x + x_offset) (y + y_offset)) radius
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x_offset y_offset) = 
+  Rectangle (PointD (x0 + x_offset) (y0 + y_offset)) (PointD (x1 + x_offset) (y1 + y_offset))
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle (PointD c_x c_y) radius) (PointD x y) = (c_x - x) ^ 2 + (c_y - y) ^ 2 < radius ^ 2
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = 
+  min x0 x1 < x && x < max x0 x1 && min y0 y1 < y && y < max y0 y1
+
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
