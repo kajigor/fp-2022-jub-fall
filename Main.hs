@@ -27,29 +27,55 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
+  Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
+normalizeRectangle (Circle center radius) = Circle center radius
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle center radius) = 
+  if radius > 0 
+  then True 
+  else False
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
+  if (x0 == x1) || (y0 == y1) 
+  then False 
+  else True
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Circle center radius) = 2 * radius * pi
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = (abs (x1 - x0) + abs (y1 - y0)) * 2
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) =
+  if abs(x0 - x1) == abs(y1 - y0)
+  then True
+  else False
+isSquare _ = False
+
+-- Передвигает точку на x по горизонтали и на y по вертикали
+slidePoint :: PointT -> PointT -> PointT
+slidePoint (PointD x0 y0) (PointD x y) = PointD (x0 + x) (y0 + y)
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle center radius) slide = Circle (slidePoint center slide) radius
+slideShape (Rectangle a b) slide = Rectangle (slidePoint a slide) (slidePoint b slide)
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle (PointD x0 y0) radius) (PointD x y) = 
+  if (abs (x0 - x) ^ 2 + abs (y0 - y) ^ 2 < radius ^ 2) 
+  then True 
+  else False
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = 
+  if ((min x0 x1) < x && x < (max x0 x1)) && ((min y0 y1) < y && y < (max y0 y1))
+  then True
+  else False
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
