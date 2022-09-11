@@ -27,29 +27,41 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = Rectangle (PointD (x0 `min` x1) (y0 `min` y1)) (PointD (x0 `max` x1) (y0 `max` y1))
+normalizeRectangle circle = circle
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle center radius) = radius > 0
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = not((x0 == x1)||(y0 == y1))
+
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2*abs(x1 - x0)+ 2*abs(y1 - y0)
+perimeter (Circle center radius) = 2*pi*radius
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs(x1 - x0) == abs(y1 - y0)
+isSquare _ = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle (PointD x0 y0) radius) (PointD x1 y1) = Circle (PointD (x0+x1) (y0+y1)) radius
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x2 y2) = Rectangle (PointD (x0+x2) (y0+y2)) (PointD (x1+x2) (y1+y2))
 
 -- Проверяет, находится ли точка внутри данной фигуры
+isPointInNormalizedShape:: Shape -> PointT -> Bool
+isPointInNormalizedShape (Circle (PointD x0 y0) radius) (PointD x y) = sqrt((x - x0)^2 + (y - y0)^2) < radius
+isPointInNormalizedShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = x0 < x && x < x1 && y0 < y && y < y1
+
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape = isPointInNormalizedShape . normalizeRectangle
+
+
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
@@ -61,6 +73,8 @@ main = do
               , testSlideShape
               , testIsPointInShape
               ]
+
+
 
 
 testValidateShape :: Bool
