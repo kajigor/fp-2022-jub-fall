@@ -27,29 +27,65 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) =
+    Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
+normalizeRectangle x = x
+
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = and [ abs(y1 - y0) > 0
+                                                              , abs(x1 - x0) > 0
+                                                              ]
+validateShape (Circle c r) = (r > 0)
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * abs(x0 - x1) + 2 * abs(y0 - y1)
+perimeter (Circle c r) = 2 * pi * r
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = (abs(x1 - x0) == abs(y1 - y0))
+isSquare _ = False
+
+
+
+
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
+addDelta :: Shape -> PointT -> Shape
+addDelta (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD deltax deltay) =
+    (Rectangle (PointD (x0 + deltax) (y0 + deltay)) (PointD (x1 + deltax) (y1 + deltay)))
+addDelta (Circle (PointD x y) r) (PointD deltax deltay) =
+    (Circle (PointD (x + deltax) (y + deltay)) r)
+
+
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Rectangle x y) delta = addDelta (Rectangle x y) delta
+slideShape (Circle c r) delta = addDelta (Circle c r) delta
+
+
+check :: Shape -> PointT -> Bool
+check (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD checkx checky) =
+    and [ x0 < checkx
+        , checkx < x1
+        , y0 < checky
+        , checky < y1
+        ]
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle (PointD x y) r) (PointD checkx checky) =
+    (sqrt((x - checkx)^2 + (y - checky)^2) < r)
+isPointInShape (Rectangle x y) point =
+    check (normalizeRectangle (Rectangle x y)) point
+
+
+
+
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
