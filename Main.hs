@@ -27,29 +27,38 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = (Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1)))
+normalizeRectangle (Circle c r) = Circle c r
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle center radius) = radius > 0
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = not (y1 == y0 || x1 == x0)
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Circle center radius) = 2 * pi * abs radius
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs (x1-x0) + abs (y1 - y0))
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Circle center radius) = False
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = (x0 /= x1) && abs (x1-x0) == abs (y1-y0)
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle (PointD x y) radius) (PointD sx sy) = Circle (PointD (x+sx) (y+sy)) radius
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD sx sy) = Rectangle (PointD (x0+sx) (y0+sy)) (PointD (x1+sx) (y1+sy))
+
+isPointBetween :: Double -> Double -> Double -> Bool
+isPointBetween x0 x1 x = x>x0 && x<x1 || x<x0 && x>x1
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle (PointD cx cy) radius) (PointD x y) = sqrt ((x-cx)^2 + (y-cy)^2) < radius
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = isPointBetween x0 x1 x && isPointBetween y0 y1 y
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
