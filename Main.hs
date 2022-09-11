@@ -1,5 +1,3 @@
-import Data.Map (valid)
-import Data.Text (center)
 -- Точка на плоскости
 data PointT = PointD Double Double
 -- Фигуры
@@ -48,7 +46,7 @@ perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs (x0 - x1) + abs (
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
 isSquare (Circle center radius) = False
-isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x0 - x1) == abs (y0 - y1)
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x0 - x1) == abs (y0 - y1) && x0 /= x1
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
