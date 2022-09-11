@@ -3,7 +3,7 @@ data PointT = PointD Double Double
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
            | Rectangle PointT PointT -- Прямоугольник со сторонами, параллельными координатным осям,
-                                     -- характеризуется координатами двух углов
+                                     -- характеризуется координатами двух точек
 
 -- Создание круга с центром в нуле
 makeCircleAtZero :: Double -> Shape
@@ -27,29 +27,37 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1))
+normalizeRectangle shape = shape
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle _ radius) = radius > 0
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs (x1 - x0) `doubleIsGreaterThanDouble` 0 && abs (y1 - y0) `doubleIsGreaterThanDouble`0
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs(x0 - x1) + abs(y0 - y1))
+perimeter (Circle _ radius) = 2 * pi * radius
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs(x0 - x1) `shouldBeDouble` abs(y0 - y1)
+isSquare _ = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD xDelta yDelta) = Rectangle (PointD (x0 + xDelta) (y0 + yDelta)) (PointD (x1 + xDelta) (y1 + yDelta))
+slideShape (Circle (PointD x0 y0) radius) (PointD xDelta yDelta) = Circle (PointD (x0 + xDelta) (y0 + yDelta)) radius
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape rect@(Rectangle _ _) (PointD x y) =
+  let (Rectangle (PointD x0 y0) (PointD x1 y1)) = normalizeRectangle rect
+  in x `doubleIsGreaterThanDouble` x0 && x1 `doubleIsGreaterThanDouble` x && y `doubleIsGreaterThanDouble` y0 && y1 `doubleIsGreaterThanDouble` y
+isPointInShape (Circle center radius) point = radius `doubleIsGreaterThanDouble` distance center point
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
@@ -290,7 +298,6 @@ eqShape _ _ = False
 shouldBeShape :: Shape -> Shape -> Bool
 shouldBeShape = eqShape
 
-
 eqDouble :: (Ord a, Num a) => a -> a -> a -> Bool
 eqDouble x y eps = abs (x - y) < eps
 
@@ -299,3 +306,15 @@ shouldBeDouble x y = eqDouble x y 0.000001
 
 shouldBe :: Eq a => a -> a -> Bool
 shouldBe x y = x == y
+
+-- Проверить разницу аргументов на соответствие эпсилону
+doubleIsGreaterThanDouble :: Double -> Double -> Bool
+doubleIsGreaterThanDouble x y = (x - y) > 0.000001
+
+-- Проверить разницу аргументов на соответствие эпсилону
+doubleEqualsDouble :: Double -> Double -> Bool
+doubleEqualsDouble x y = (x - y) <= 0.000001
+
+-- Считает расстояние между двумя точками 
+distance :: PointT -> PointT -> Double
+distance (PointD x0 y0) (PointD x1 y1) = sqrt((x0 - x1) ^ 2 + (y0 - y1) ^ 2)
