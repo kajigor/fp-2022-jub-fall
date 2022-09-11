@@ -27,29 +27,38 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1)) 
+normalizeRectangle x = x
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = (abs (x0 - x1)) > 0 && (abs (y0 - y1)) > 0
+validateShape (Circle center radius) = radius > 0
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 2 * (abs (x0 - x1)) + 2 * (abs (y0 - y1)) 
+perimeter (Circle center radius) = 2 * pi * radius
 
+
+ebs :: Double
+ebs = 0.000000001
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) = abs(x0 - x1) > 0 && abs(abs(x0 - x1) - abs(y0 - y1)) < ebs
+isSquare _ = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD dx dy) = Rectangle (PointD (x0 + dx) (y0 + dy)) (PointD (x1 + dx) (y1 + dy))
+slideShape (Circle (PointD x0 y0) radius) (PointD dx dy) = Circle (PointD (x0 + dx) (y0 + dy)) radius
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD px py) = (min x1 x0) < px && (max x1 x0) > px && (min y1 y0) < py && (max y1 y0) > py
+isPointInShape (Circle (PointD x0 y0) radius) (PointD px py) = (px - x0) ** 2 + (py - y0) ** 2 < radius ** 2
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
