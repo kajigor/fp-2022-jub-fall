@@ -25,13 +25,13 @@ maxNum Empty             = minBound :: Int
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append (AtLeastOne xL Empty) (AtLeastOne xR xsR) = AtLeastOne xL (AtLeastOne xR xsR)
+append (AtLeastOne xL Empty) (AtLeastOne xR xsR) =
+  AtLeastOne xL (AtLeastOne xR xsR)
 append Empty (AtLeastOne x xs) = AtLeastOne x xs
 append (AtLeastOne x xs) Empty = AtLeastOne x xs
 append Empty Empty = Empty
 append (AtLeastOne xL xsL) (AtLeastOne xR xsR) =
   append (AtLeastOne xL Empty) (append xsL (AtLeastOne xR xsR))
-
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
