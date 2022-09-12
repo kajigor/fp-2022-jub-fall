@@ -1,8 +1,24 @@
-module List where
+module List ( sumAndMult
+            , maxNum
+            , append
+            , safeHead
+            , safeTail
+            , double
+            , triple
+            , map'
+            , double'
+            , triple'
+            , sumListUp
+            , multListUp
+            , sumListUp'
+            , multListUp'
+            , List(..)
+            ) where
+import Data.Foldable ( Foldable(foldl') )
 
 -- [1, 2, 3, 4] === 1 : (2 : (3 : (4 : [])))
 
--- data [] a = [] | : a ([] a)
+-- data [] a = [] | : a ([] a)dsa
 data List a = Empty -- пустой список без элементов, a.k.a. []
             | AtLeastOne a (List a) -- список, у которого есть голова типа a и хвост-список, a.k.a. :
             deriving (Show)
@@ -10,16 +26,20 @@ data List a = Empty -- пустой список без элементов, a.k.
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+sumAndMult = foldl' fld (0, 1)
+    where
+        fld :: Num a => (a, a) -> a -> (a, a)
+        fld (s, m) x = (s + x, m * x)
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
-maxNum _ = undefined
+maxNum = foldl' max 0
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append _ _ = undefined
+append Empty rhs = rhs
+append (AtLeastOne x xs) rhs = AtLeastOne x (append xs rhs)
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
@@ -53,7 +73,7 @@ map' f (AtLeastOne x xs) = AtLeastOne (f x) (map' f xs)
 -- (2*) называется section of an infix operator
 -- https://wiki.haskell.org/Section_of_an_infix_operator
 double' :: List Int -> List Int
-double' xs = map' (2*) xs
+double' = map' (2*)
 
 -- Можно использовать анонимную функцию, она же лямбда-функция
 -- double' xs = map' (\x -> 2 * x) xs
@@ -64,7 +84,7 @@ double' xs = map' (2*) xs
 
 -- Утроение элементов списка через map
 triple' :: List Int -> List Int
-triple' xs = map' (*3) xs
+triple' = map' (*3)
 
 -- Сложить все элементы списка целых чисел
 sumListUp :: List Int -> Int
@@ -82,15 +102,22 @@ multListUp Empty = 1
 -- fold _ acc Empty = acc
 
 -- Универсальная функция свертки
-fold :: (a -> b -> b) -> b -> List a -> b
-fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
-fold _ acc Empty = acc
+-- fold :: (a -> b -> b) -> b -> List a -> b
+-- fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
+-- fold _ acc Empty = acc
 
+instance Functor List where
+    fmap _ Empty = Empty
+    fmap f (AtLeastOne a lst) = AtLeastOne (f a) (f <$> lst)
+
+instance Foldable List where
+    foldMap _ Empty = mempty
+    foldMap f (AtLeastOne x xs) = f x <> foldMap f xs
 
 -- Сложение элементов списка целых чисел
 sumListUp' :: List Int -> Int
-sumListUp' xs = fold (+) 0 xs
+sumListUp' = foldl' (+) 0
 
 -- Перемножение элементов списка целых чисел
 multListUp' :: List Int -> Int
-multListUp' xs = fold (*) 1 xs
+multListUp' = foldl' (*) 1
