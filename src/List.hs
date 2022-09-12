@@ -15,8 +15,7 @@ sumAndMult = fold (\h ((,) s mult) -> (h + s, h * mult)) (0, 1)
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
-maxNum Empty = 0
-maxNum (AtLeastOne h t) = fold max h t
+maxNum = fold max (minBound :: Int)
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
