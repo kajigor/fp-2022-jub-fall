@@ -24,12 +24,13 @@ unit_sumAndMult = do
 
 unit_maxNum :: Assertion
 unit_maxNum = do
-    testMaxNum [] 0
+    testMaxNum [] (minBound :: Int)
     testMaxNum [13] 13
     testMaxNum [1,2,3,4,5] 5
     testMaxNum [5,4,3,2,1] 5
     testMaxNum [1, -2, 3, -4, 5] 5
     testMaxNum [-1, 2, -3, 4, -5] 4
+    testMaxNum [-3, -2, -1] (-1)
   where
     testMaxNum xs expected = maxNum (fromList xs) @?= expected
 
