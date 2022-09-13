@@ -27,29 +27,44 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x1 y1) (PointD x2 y2)) =
+  Rectangle (PointD (min x1 x2) (min y1 y2)) (PointD (max x1 x2) (max y1 y2))
+normalizeRectangle shape = shape
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Rectangle (PointD x1 y1) (PointD x2 y2)) = (x1 - x2) * (y1 - y2) /= 0
+validateShape (Circle center radius) = radius > 0
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Rectangle (PointD x1 y1) (PointD x2 y2)) = 2 * (abs (x1 - x2) + abs (y1 - y2))
+perimeter (Circle center radius) = 2 * pi * radius 
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Rectangle (PointD x1 y1) (PointD x2 y2)) = abs (x1 - x2) == abs(y1 - y2) && x1 /= x2
+isSquare _ = False
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Rectangle (PointD x1 y1) (PointD x2 y2)) (PointD x3 y3) =
+  Rectangle (PointD (x1 + x3) (y1 + y3)) (PointD (x2 + x3) (y2 + y3))
+slideShape (Circle (PointD x1 y1) radius) (PointD x2 y2) =
+  Circle (PointD (x1 + x2) (y1 + y2)) radius
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Rectangle (PointD x1 y1) (PointD x2 y2)) (PointD x3 y3) = 
+  and [ min x1 x2 < x3
+      , x3 < max x1 x2
+      , min y1 y2 < y3
+      , y3 < max y1 y2
+      ]
+isPointInShape (Circle (PointD x1 y1) radius) (PointD x2 y2) =
+    (x1 - x2) ^ 2 + (y1 - y2) ^ 2 < radius ^ 2
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
