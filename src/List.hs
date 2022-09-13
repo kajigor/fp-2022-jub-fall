@@ -7,19 +7,25 @@ data List a = Empty -- пустой список без элементов, a.k.
             | AtLeastOne a (List a) -- список, у которого есть голова типа a и хвост-список, a.k.a. :
             deriving (Show)
 
+-- Универсальная функция свертки
+fold :: (a -> b -> b) -> b -> List a -> b
+fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
+fold _ acc Empty = acc
+
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+sumAndMult = fold (\a (x, y) -> (x + a, y * a)) (0, 1)
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
-maxNum _ = undefined
+maxNum = fold max minBound
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append _ _ = undefined
+append (AtLeastOne x xs) y = AtLeastOne x (append xs y)
+append Empty y = y
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
@@ -75,17 +81,6 @@ sumListUp Empty = 0
 multListUp :: List Int -> Int
 multListUp (AtLeastOne x xs) = x * multListUp xs
 multListUp Empty = 1
-
--- -- Универсальная функция свертки
--- fold :: (Int -> Int -> Int) -> Int -> List Int -> Int
--- fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
--- fold _ acc Empty = acc
-
--- Универсальная функция свертки
-fold :: (a -> b -> b) -> b -> List a -> b
-fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
-fold _ acc Empty = acc
-
 
 -- Сложение элементов списка целых чисел
 sumListUp' :: List Int -> Int
