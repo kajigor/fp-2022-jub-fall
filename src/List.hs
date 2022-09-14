@@ -9,17 +9,26 @@ data List a = Empty -- пустой список без элементов, a.k.
 
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
+sumAndMultElem :: Int -> (Int, Int) -> (Int,Int)
+sumAndMultElem p1 (p3, p4) = (p1 + p3, p4 * p1)
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+sumAndMult b = fold sumAndMultElem (0, 1) b
+sumAndMult Empty = (0, 1)
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
+maxNumSafe :: Int ->  List Int -> Int
+maxNumSafe x Empty = x
+maxNumSafe m (AtLeastOne x xs) = maxNumSafe (max m x) xs  
 maxNum :: List Int -> Int
-maxNum _ = undefined
+maxNum (AtLeastOne x xs) = maxNumSafe x (AtLeastOne x xs)
+maxNum Empty = minBound :: Int
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append _ _ = undefined
+append (AtLeastOne x xs) b = AtLeastOne x (append xs b)
+append (AtLeastOne x Empty) b = AtLeastOne x b 
+append Empty b = b
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
