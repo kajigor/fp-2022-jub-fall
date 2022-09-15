@@ -17,8 +17,8 @@ leaves (Node _ l r) = leaves l ++ leaves r
 
 -- Возвращает узлы дерева, перечисленные слева направо, сверху вниз
 nodes :: BinTree a -> [a]
-nodes (Leaf _) = []
-nodes (Node n _ _) = [n]
+nodes (Leaf n) = [n]
+nodes (Node n l r) = nodes l ++ [n] ++ nodes r
 
 -- Глубина дерева -- длина пути до самого глубокого листа
 -- Глубина дерева из одного листа -- 1
