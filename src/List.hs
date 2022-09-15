@@ -10,16 +10,30 @@ data List a = Empty -- пустой список без элементов, a.k.
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+sumAndMult (AtLeastOne x xs) = fold2d func (x, x) xs  
+  where
+    fold2d :: ((b, b) -> (b, b) -> (b, b)) -> (b, b) -> List b -> (b, b)
+    fold2d f acc (AtLeastOne x xs) = fold2d f ((x, x) `f` acc) xs
+    fold2d _ acc Empty = acc
+
+    func :: (Int, Int) -> (Int, Int) -> (Int, Int) 
+    func (x0, y0) (x1, y1) = (x0 + x1, y0 * y1)
+
+sumAndMult Empty = (0, 1)
+-- sumAndMult _ = undefined
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
-maxNum _ = undefined
+maxNum (AtLeastOne x xs) = max x (maxNum xs)
+maxNum Empty = (minBound :: Int)
+-- maxNum _ = undefined
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append _ _ = undefined
+append (AtLeastOne x xs) right_list = AtLeastOne x (append xs right_list)
+append Empty right_list = right_list
+-- append _ _ = undefined
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
@@ -93,4 +107,4 @@ sumListUp' xs = fold (+) 0 xs
 
 -- Перемножение элементов списка целых чисел
 multListUp' :: List Int -> Int
-multListUp' xs = fold (*) 1 xs
+multListUp' xs = fold (*) 1 xs 
