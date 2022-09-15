@@ -1,5 +1,4 @@
 module BinTree where
-import List (List(Empty))
 
 data BinTree a = Leaf a -- Лист, содержащий значение
                | Node a (BinTree a) (BinTree a) -- Узел со значением и двумя потомками
@@ -30,5 +29,4 @@ depth (Node _ l r) = 1 + max (depth l) (depth r)
 mapTree :: (a -> b) -> BinTree a -> BinTree b
 mapTree f (Leaf l) = Leaf (f l)
 mapTree f (Node n l r) = Node (f n) (mapTree f l) (mapTree f r)
-
 

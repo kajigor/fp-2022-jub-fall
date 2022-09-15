@@ -1,5 +1,4 @@
 module List where
-import Control.Applicative (Alternative(empty))
 
 -- [1, 2, 3, 4] === 1 : (2 : (3 : (4 : [])))
 
@@ -25,7 +24,6 @@ maxNum (AtLeastOne x Empty) = x
 maxNum (AtLeastOne x xs) =
     if x > maxNum xs then x
     else maxNum xs
-
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
@@ -105,4 +103,3 @@ sumListUp' xs = fold (+) 0 xs
 -- Перемножение элементов списка целых чисел
 multListUp' :: List Int -> Int
 multListUp' xs = fold (*) 1 xs
-
