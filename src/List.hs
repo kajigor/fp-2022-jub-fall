@@ -107,4 +107,4 @@ sumListUp' xs = fold (+) 0 xs
 
 -- Перемножение элементов списка целых чисел
 multListUp' :: List Int -> Int
-multListUp' xs = fold (*) 1 xs 
+multListUp' xs = fold (*) 1 xs
