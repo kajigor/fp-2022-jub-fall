@@ -6,11 +6,11 @@ import Test.Tasty.HUnit (Assertion, (@?=))
 import List
 
 fromList :: [a] -> List a
-fromList = foldr AtLeastOne Empty
+fromList = foldr Cons Nil
 
 toList :: List a -> [a]
-toList Empty = []
-toList (AtLeastOne x xs) = x : toList xs
+toList Nil = []
+toList (Cons x xs) = x : toList xs
 
 unit_sumAndMult :: Assertion
 unit_sumAndMult = do
