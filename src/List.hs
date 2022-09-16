@@ -3,50 +3,54 @@ module List where
 -- [1, 2, 3, 4] === 1 : (2 : (3 : (4 : [])))
 
 -- data [] a = [] | : a ([] a)
-data List a = Empty -- пустой список без элементов, a.k.a. []
-            | AtLeastOne a (List a) -- список, у которого есть голова типа a и хвост-список, a.k.a. :
+data List a = Nil -- пустой список без элементов, a.k.a. []
+            | Cons a (List a) -- список, у которого есть голова типа a и хвост-список, a.k.a. :
             deriving (Show)
 
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+sumAndMult Nil = (0, 1)
+sumAndMult (Cons x xs) = let tailAns = sumAndMult xs in
+    (x + fst tailAns, x * snd tailAns)
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
-maxNum _ = undefined
+maxNum Nil = minBound :: Int
+maxNum (Cons x xs) = max x (maxNum xs)
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append _ _ = undefined
+append Nil snd = snd
+append (Cons x xs) snd = Cons x (append xs snd)
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
-safeHead Empty = Nothing
-safeHead (AtLeastOne x _) = Just x
+safeHead Nil = Nothing
+safeHead (Cons x _) = Just x
 
 -- Всюду определенная функция взятия хвоста списка
 safeTail :: List a -> Maybe (List a)
-safeTail Empty = Nothing
-safeTail (AtLeastOne _ xs) = Just xs
+safeTail Nil = Nothing
+safeTail (Cons _ xs) = Just xs
 
 -- Удваиваем каждый элемент списка
 -- [1, 2] -> [2, 4]
 double :: List Int -> List Int
-double Empty = Empty
-double (AtLeastOne x xs) = AtLeastOne (x * 2) (double xs)
+double Nil = Nil
+double (Cons x xs) = Cons (x * 2) (double xs)
 
 -- Утраиваем каждый элемент списка
 -- [1, 2] -> [3, 6]
 triple :: List Int -> List Int
-triple Empty = Empty
-triple (AtLeastOne x xs) = AtLeastOne (x * 3) (triple xs)
+triple Nil = Nil
+triple (Cons x xs) = Cons (x * 3) (triple xs)
 
 -- Применяем функцию f к каждому элементу списка
 map' :: (a -> b) -> List a -> List b
-map' _ Empty = Empty
-map' f (AtLeastOne x xs) = AtLeastOne (f x) (map' f xs)
+map' _ Nil = Nil
+map' f (Cons x xs) = Cons (f x) (map' f xs)
 
 -- Удвоение элементов списка через map
 -- Используем (2*) как функцию удвоения числа
@@ -68,23 +72,23 @@ triple' xs = map' (*3) xs
 
 -- Сложить все элементы списка целых чисел
 sumListUp :: List Int -> Int
-sumListUp (AtLeastOne x xs) = x + sumListUp xs
-sumListUp Empty = 0
+sumListUp (Cons x xs) = x + sumListUp xs
+sumListUp Nil = 0
 
 -- Перемножить элементы списка целых чисел
 multListUp :: List Int -> Int
-multListUp (AtLeastOne x xs) = x * multListUp xs
-multListUp Empty = 1
+multListUp (Cons x xs) = x * multListUp xs
+multListUp Nil = 1
 
 -- -- Универсальная функция свертки
 -- fold :: (Int -> Int -> Int) -> Int -> List Int -> Int
--- fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
--- fold _ acc Empty = acc
+-- fold f acc (Cons x xs) = fold f (x `f` acc) xs
+-- fold _ acc Nil = acc
 
 -- Универсальная функция свертки
 fold :: (a -> b -> b) -> b -> List a -> b
-fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
-fold _ acc Empty = acc
+fold f acc (Cons x xs) = fold f (x `f` acc) xs
+fold _ acc Nil = acc
 
 
 -- Сложение элементов списка целых чисел
