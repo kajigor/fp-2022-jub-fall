@@ -311,10 +311,6 @@ shouldBe x y = x == y
 doubleIsGreaterThanDouble :: Double -> Double -> Bool
 doubleIsGreaterThanDouble x y = (x - y) > 0.000001
 
--- Проверить разницу аргументов на соответствие эпсилону
-doubleEqualsDouble :: Double -> Double -> Bool
-doubleEqualsDouble x y = (x - y) <= 0.000001
-
 -- Считает расстояние между двумя точками 
 distance :: PointT -> PointT -> Double
 distance (PointD x0 y0) (PointD x1 y1) = sqrt((x0 - x1) ^ 2 + (y0 - y1) ^ 2)
