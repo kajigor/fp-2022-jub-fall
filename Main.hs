@@ -36,25 +36,19 @@ normalizeRectangle (Circle center radius) = Circle center radius
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
 validateShape (Circle center radius) = 
-  if radius > 0 
-  then True 
-  else False
-validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
-  if (x0 == x1) || (y0 == y1) 
-  then False 
-  else True
+  radius > 0
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) = (x0 /= x1 && y0 /= y1)
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
 perimeter (Circle center radius) = 2 * radius * pi
-perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = (abs (x1 - x0) + abs (y1 - y0)) * 2
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) = 
+  (abs (x1 - x0) + abs (y1 - y0)) * 2
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
 isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) =
-  if abs(x0 - x1) == abs(y1 - y0)
-  then True
-  else False
+  abs(x0 - x1) == abs(y1 - y0)
 isSquare _ = False
 
 -- Передвигает точку на x по горизонтали и на y по вертикали
@@ -69,13 +63,9 @@ slideShape (Rectangle a b) slide = Rectangle (slidePoint a slide) (slidePoint b 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
 isPointInShape (Circle (PointD x0 y0) radius) (PointD x y) = 
-  if (abs (x0 - x) ^ 2 + abs (y0 - y) ^ 2 < radius ^ 2) 
-  then True 
-  else False
+  abs (x0 - x) ^ 2 + abs (y0 - y) ^ 2 < radius ^ 2
 isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x y) = 
-  if ((min x0 x1) < x && x < (max x0 x1)) && ((min y0 y1) < y && y < (max y0 y1))
-  then True
-  else False
+  ((min x0 x1) < x && x < (max x0 x1)) && ((min y0 y1) < y && y < (max y0 y1))
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
