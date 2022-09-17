@@ -22,8 +22,9 @@ maxNum :: List Int -> Int
 maxNum Empty = minBound :: Int
 maxNum (AtLeastOne x Empty) = x
 maxNum (AtLeastOne x xs) =
-    if x > maxNum xs then x
-    else maxNum xs
+    if x > mx then x
+    else mx
+    where mx = maxNum xs
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
