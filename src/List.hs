@@ -10,16 +10,26 @@ data List a = Empty -- пустой список без элементов, a.k.
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+sumAndMult Empty = (0, 1)
+sumAndMult (AtLeastOne x xs) = (x + first(sumAndMult(xs)), x * second(sumAndMult(xs)))
+  where
+    first (a, b) = a
+    second (a, b) = b
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
+max' :: (Int, Int) -> Int
+max'(a, b) = if a > b then a else b
+
 maxNum :: List Int -> Int
-maxNum _ = undefined
+maxNum Empty = minBound :: Int
+maxNum (AtLeastOne x xs) = max'(x, maxNum(xs))
+
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append _ _ = undefined
+append Empty a = a
+append (AtLeastOne x xs) a = AtLeastOne x (append xs a)
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
