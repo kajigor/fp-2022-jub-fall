@@ -1,25 +1,31 @@
 module List where
 
+import Control.Arrow (Arrow (first, second))
+
 -- [1, 2, 3, 4] === 1 : (2 : (3 : (4 : [])))
 
 -- data [] a = [] | : a ([] a)
-data List a = Empty -- пустой список без элементов, a.k.a. []
-            | AtLeastOne a (List a) -- список, у которого есть голова типа a и хвост-список, a.k.a. :
-            deriving (Show)
+data List a
+  = Empty -- пустой список без элементов, a.k.a. []
+  | AtLeastOne a (List a) -- список, у которого есть голова типа a и хвост-список, a.k.a. :
+  deriving (Show)
 
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+sumAndMult Empty = (0, 1)
+sumAndMult (AtLeastOne el other) = let (sum, mul) = sumAndMult other in (el + sum, el * mul)
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
-maxNum _ = undefined
+maxNum Empty = minBound
+maxNum (AtLeastOne el other) = max el (maxNum other)
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append _ _ = undefined
+append Empty list = list
+append (AtLeastOne el other) list = AtLeastOne el (append other list)
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
@@ -53,7 +59,7 @@ map' f (AtLeastOne x xs) = AtLeastOne (f x) (map' f xs)
 -- (2*) называется section of an infix operator
 -- https://wiki.haskell.org/Section_of_an_infix_operator
 double' :: List Int -> List Int
-double' xs = map' (2*) xs
+double' xs = map' (2 *) xs
 
 -- Можно использовать анонимную функцию, она же лямбда-функция
 -- double' xs = map' (\x -> 2 * x) xs
@@ -64,7 +70,7 @@ double' xs = map' (2*) xs
 
 -- Утроение элементов списка через map
 triple' :: List Int -> List Int
-triple' xs = map' (*3) xs
+triple' xs = map' (* 3) xs
 
 -- Сложить все элементы списка целых чисел
 sumListUp :: List Int -> Int
@@ -85,7 +91,6 @@ multListUp Empty = 1
 fold :: (a -> b -> b) -> b -> List a -> b
 fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
 fold _ acc Empty = acc
-
 
 -- Сложение элементов списка целых чисел
 sumListUp' :: List Int -> Int
