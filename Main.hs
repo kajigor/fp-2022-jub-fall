@@ -45,7 +45,7 @@ normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) =
   Rectangle 
   (PointD (min x0 x1) (min y0 y1)) 
   (PointD (max x0 x1) (max y0 y1))
-normalizeRectangle (Circle c r) = Circle c r
+normalizeRectangle circle = circle
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
