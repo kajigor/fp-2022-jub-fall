@@ -7,19 +7,24 @@ data List a = Empty -- пустой список без элементов, a.k.
             | AtLeastOne a (List a) -- список, у которого есть голова типа a и хвост-список, a.k.a. :
             deriving (Show)
 
+foldList :: (a -> a -> a) -> List a -> a -> a
+foldList _ Empty base = base
+foldList func (AtLeastOne firstElement otherElements) base = foldList func otherElements (func base firstElement)
+
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+sumAndMult list = (foldList (+) list 0, foldList (*) list 1)
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
-maxNum _ = undefined
+maxNum list = foldList max list minBound
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append _ _ = undefined
+append Empty second = second
+append (AtLeastOne firstElement otherElements) second = AtLeastOne firstElement (append otherElements second)
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
