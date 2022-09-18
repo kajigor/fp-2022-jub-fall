@@ -17,6 +17,7 @@ sumAndMult (AtLeastOne x xs) = (x + xs_sum, x * xs_mult)
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
+maxNum Empty = minBound :: Int
 maxNum (AtLeastOne x xs) = max x (maxNum xs)
 
 -- Конкатенация двух списков, работает за длину первого списка
