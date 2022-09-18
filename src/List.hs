@@ -10,15 +10,15 @@ data List a = Empty -- пустой список без элементов, a.k.
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult Empty = (0, 1)
-sumAndMult (AtLeastOne x xs) = (x + xs_sum, x * xs_mult)
-    where (xs_sum, xs_mult) = sumAndMult xs
+sumAndMult = fold sumAndMultSingle (0, 1)
+  where
+    sumAndMultSingle :: Int -> (Int, Int) -> (Int, Int)
+    sumAndMultSingle x (s, m) = (s + x, m * x)
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
-maxNum Empty = minBound :: Int
-maxNum (AtLeastOne x xs) = max x (maxNum xs)
+maxNum = fold max (minBound :: Int)
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a

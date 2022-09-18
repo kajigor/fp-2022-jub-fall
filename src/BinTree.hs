@@ -12,12 +12,12 @@ root (Node x _ _) = x
 -- Возвращает листья дерева, перечисленные слева направо
 leaves :: BinTree a -> [a]
 leaves (Leaf x) = [x]
-leaves (Node _ l r) = (leaves l) ++ (leaves r)
+leaves (Node _ l r) = leaves l ++ leaves r
 
 -- Возвращает узлы дерева, перечисленные слева направо, сверху вниз
 nodes :: BinTree a -> [a]
 nodes (Leaf x) = [x]
-nodes (Node x l r) = (nodes l) ++ [x] ++ (nodes r)
+nodes (Node x l r) = nodes l ++ [x] ++ nodes r
 
 -- Глубина дерева -- длина пути до самого глубокого листа
 -- Глубина дерева из одного листа -- 1
