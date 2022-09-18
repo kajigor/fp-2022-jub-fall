@@ -6,22 +6,27 @@ data BinTree a = Leaf a -- Лист, содержащий значение
 
 -- Возвращает элемент в корне дерева
 root :: BinTree a -> a
-root _ = undefined
+root (Leaf value) = value
+root (Node value left right) = value
 
 -- Возвращает листья дерева, перечисленные слева направо
 leaves :: BinTree a -> [a]
-leaves _ = undefined
+leaves (Leaf value) = [value]
+leaves (Node value left right) = leaves left ++ leaves right
 
 -- Возвращает узлы дерева, перечисленные слева направо, сверху вниз
 nodes :: BinTree a -> [a]
-nodes _ = undefined
+nodes (Leaf value) = [value]
+nodes (Node value left right) = nodes left ++ [value] ++ nodes right
 
 -- Глубина дерева -- длина пути до самого глубокого листа
 -- Глубина дерева из одного листа -- 1
 depth :: BinTree a -> Int
-depth _ = undefined
+depth (Leaf value) = 1
+depth (Node value left right) = 1 + max (depth left) (depth right)
 
 -- Применяет функцию ко всем элементам дерева
 mapTree :: (a -> b) -> BinTree a -> BinTree b
-mapTree _ _ = undefined
+mapTree f (Leaf value) = Leaf (f value)
+mapTree f (Node value left right) = Node (f value) (mapTree f left) (mapTree f right)
 

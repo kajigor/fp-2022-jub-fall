@@ -7,19 +7,23 @@ data List a = Empty -- пустой список без элементов, a.k.
             | AtLeastOne a (List a) -- список, у которого есть голова типа a и хвост-список, a.k.a. :
             deriving (Show)
 
+sumAndMultCertain :: Int -> (Int, Int) -> (Int, Int)
+sumAndMultCertain val (sum, mult) = (sum + val, mult * val)
+
 -- Считает сумму и произведение элементов списка целых чисел за один проход
 -- Постарайтесь обобщить и использовать свертку, но это не обязательно
 sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+sumAndMult xs = fold sumAndMultCertain (0, 1) xs
 
 -- Найти максимальное значение в списке
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
-maxNum _ = undefined
+maxNum xs = fold max (minBound :: Int) xs
 
 -- Конкатенация двух списков, работает за длину первого списка
 append :: List a -> List a -> List a
-append _ _ = undefined
+append Empty xs = xs
+append (AtLeastOne a as) xs = AtLeastOne a (append as xs)
 
 -- Всюду определенная функция взятия первого элемента
 safeHead :: List a -> Maybe a
