@@ -1,96 +1,145 @@
-module List where
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Eta reduce" #-}
+module List (filter', take', zipWith', squaresOfEvens, triangularNumbers) where
 
--- [1, 2, 3, 4] === 1 : (2 : (3 : (4 : [])))
+import Prelude hiding (foldl, foldr, reverse, map, zip)
 
--- data [] a = [] | : a ([] a)
-data List a = Empty -- пустой список без элементов, a.k.a. []
-            | AtLeastOne a (List a) -- список, у которого есть голова типа a и хвост-список, a.k.a. :
-            deriving (Show)
+-- Квадратичная реализация обращения списка.
+-- Каждый раз, когда конкатенируете список к чему-то,
+-- задумайтесь, может это можно переписать как-то иначе.
+reverse :: [a] -> [a]
+reverse [] = []
+reverse (h : t) = reverse t ++ [h]
 
--- Считает сумму и произведение элементов списка целых чисел за один проход
--- Постарайтесь обобщить и использовать свертку, но это не обязательно
-sumAndMult :: List Int -> (Int, Int)
-sumAndMult _ = undefined
+-- Линейная реализация обращения списка.
+-- Аккумулятор накапливает элементы в правильном порядке, конкатенаций нет.
+reverse' :: [a] -> [a]
+reverse' xs =
+    go [] xs
+  where
+    go acc [] = acc
+    go acc (h : t) = go (h : acc) t
 
--- Найти максимальное значение в списке
--- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
-maxNum :: List Int -> Int
-maxNum _ = undefined
+-- Правая свертка
+-- foldr f acc [a1, a2, a3, ..., an] = a1 `f` (a2 `f` (a3 `f` ... (an `f` acc)...))
+-- foldr (^) 4 [2,3] ->
+  -- 2 ^ (foldr (^) 3 [4])  ->
+    -- 2 ^ (3 ^ 4)
+foldr :: (a -> b -> b) -> b -> [a] -> b
+foldr _ acc [] = acc
+foldr f acc (x:xs) =
+  x `f` foldr f acc xs
 
--- Конкатенация двух списков, работает за длину первого списка
-append :: List a -> List a -> List a
-append _ _ = undefined
+-- Левая свертка
+-- foldl f acc [a1, a2, a3, ..., an] = (...((acc `f` a1) `f` a2) `f` ...) `f` an
+foldl :: (b -> a -> b) -> b -> [a] -> b
+foldl _ acc [] = acc
+foldl f acc (x:xs) =
+  foldl f (acc `f` x) xs
 
--- Всюду определенная функция взятия первого элемента
-safeHead :: List a -> Maybe a
-safeHead Empty = Nothing
-safeHead (AtLeastOne x _) = Just x
+-- Превращает два списка в список кортежей из элементов списков на одинаковых позициях.
+-- Если списки имеют разную длину, то длина результата -- минимальная из длин списков.
+-- Работает на бесконечных списках.
+zip :: [a] -> [b] -> [(a, b)]
+zip (x:xs) (y:ys) = (x,y) : zip xs ys
+zip _ _ = []
 
--- Всюду определенная функция взятия хвоста списка
-safeTail :: List a -> Maybe (List a)
-safeTail Empty = Nothing
-safeTail (AtLeastOne _ xs) = Just xs
+-- Проверяет списки целых чисел на равенство
+eqList :: [Int] -> [Int] -> Bool
+eqList [] [] = True
+eqList (x:xs) (y:ys) | x == y = eqList xs ys -- guard
+eqList _ _ = False
 
--- Удваиваем каждый элемент списка
--- [1, 2] -> [2, 4]
-double :: List Int -> List Int
-double Empty = Empty
-double (AtLeastOne x xs) = AtLeastOne (x * 2) (double xs)
+-- -- Оставляет только те элементы, на которых выполняется предикат p
+-- -- filter isEven [1,2,3,4,5] -> [2,4]
+-- filter :: (a -> Bool) -> [a] -> [a]
+-- filter _ [] = []
+-- filter p (h : t) =
+--   if p h
+--   then h : filter p t
+--   else filter p t
 
--- Утраиваем каждый элемент списка
--- [1, 2] -> [3, 6]
-triple :: List Int -> List Int
-triple Empty = Empty
-triple (AtLeastOne x xs) = AtLeastOne (x * 3) (triple xs)
+-- -- Дальше несколько эквивалентных реализаций filter, демонстрирующих разный синтаксис
+-- -- Альтернативная реализация фильтра с guard
+-- filter :: (a -> Bool) -> [a] -> [a]
+-- filter _ [] = []
+-- filter p (h : t) | p h = h : filter p t
+-- filter p (h : t) = filter p t
 
--- Применяем функцию f к каждому элементу списка
-map' :: (a -> b) -> List a -> List b
-map' _ Empty = Empty
-map' f (AtLeastOne x xs) = AtLeastOne (f x) (map' f xs)
+-- -- Альтернативная реализация фильтра с guard и otherwise
+-- filter :: (a -> Bool) -> [a] -> [a]
+-- filter _ [] = []
+-- filter p (h : t) | p h = h : filter p t -- guard
+--                  | otherwise = filter p t
 
--- Удвоение элементов списка через map
--- Используем (2*) как функцию удвоения числа
--- (2*) называется section of an infix operator
--- https://wiki.haskell.org/Section_of_an_infix_operator
-double' :: List Int -> List Int
-double' xs = map' (2*) xs
+-- -- Альтернативная реализация фильтра с case
+-- filter :: (a -> Bool) -> [a] -> [a]
+-- filter p xs =
+--   case xs of
+--     [] -> []
+--     (h : t) | p h -> h : filter p t
+--             | otherwise -> filter p t
 
--- Можно использовать анонимную функцию, она же лямбда-функция
--- double' xs = map' (\x -> 2 * x) xs
+-- Реализация map через foldr
+map :: (a -> b) -> [a] -> [b]
+map g xs =
+    foldr f [] xs
+  where
+    f x acc = g x : acc
 
--- Можно завести вспомогательную функцию f
--- double' xs = map' f xs
---   where f x = 2 * x
+-- Берет первые n элементов списка.
+-- Если в списке меньше n элементов -- возвращает все
+take' :: Int -> [a] -> [a]
+take' n xs = undefined
 
--- Утроение элементов списка через map
-triple' :: List Int -> List Int
-triple' xs = map' (*3) xs
+-- Реализуйте функцию filter с использованием foldr
+filter' :: (a -> Bool) -> [a] -> [a]
+filter' p xs =
+    foldr f [] xs
+  where
+    f = undefined
 
--- Сложить все элементы списка целых чисел
-sumListUp :: List Int -> Int
-sumListUp (AtLeastOne x xs) = x + sumListUp xs
-sumListUp Empty = 0
+-- Функция-комбинация zip и map
+-- Применяет функцию f к соответствующим элементам списков xs и ys
+-- zipWith (+) [1,2,3] [10, 20, 30] = [11, 22, 33]
+zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith' f xs ys = undefined
 
--- Перемножить элементы списка целых чисел
-multListUp :: List Int -> Int
-multListUp (AtLeastOne x xs) = x * multListUp xs
-multListUp Empty = 1
+-- Бесконечный список от a: [a..]
+-- Диапазон от a до b: [a..b]
+-- Диапазон от a до с c шагом (b - a): [a, b .. c]
 
--- -- Универсальная функция свертки
--- fold :: (Int -> Int -> Int) -> Int -> List Int -> Int
--- fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
--- fold _ acc Empty = acc
+-- Прямоугольные треугольники со сторонами не больше n
+rightTriangles :: Int -> [(Int, Int, Int)]
+rightTriangles n =
+  [ (a, b, c) | a <- [1 .. n]
+              , b <- [1 .. a] -- тут порядок важен
+              , c <- [1 .. b] -- если переставить строку выше, то b окажется не объявленной
+              , a * a == b * b + c * c ]
 
--- Универсальная функция свертки
-fold :: (a -> b -> b) -> b -> List a -> b
-fold f acc (AtLeastOne x xs) = fold f (x `f` acc) xs
-fold _ acc Empty = acc
+-- Квадраты четных целых чисел
+-- В результате должен получиться бесконечный список
+-- С помощью take из него можно взять конечный список
+squaresOfEvens :: [Int]
+squaresOfEvens = undefined
 
+-- Бесконечный список из единиц
+x :: [Int]
+x = 1 : x
 
--- Сложение элементов списка целых чисел
-sumListUp' :: List Int -> Int
-sumListUp' xs = fold (+) 0 xs
+-- Бесконечный список, чередующий 0 и 1
+y :: [Int]
+y = 0 : 1 : y
 
--- Перемножение элементов списка целых чисел
-multListUp' :: List Int -> Int
-multListUp' xs = fold (*) 1 xs
+-- Бесконечный список натуральных чисел
+nat :: [Int]
+nat = 1 : map (+1) nat
+
+-- Бесконечный список чисел Фибоначчи
+fibs :: [Int]
+fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
+
+-- Треугольные числа
+-- https://en.wikipedia.org/wiki/Triangular_number
+triangularNumbers :: [Int]
+triangularNumbers = undefined
