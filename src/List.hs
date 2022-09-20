@@ -8,8 +8,10 @@ import Prelude hiding (foldl, foldr, reverse, map, zip)
 -- Каждый раз, когда конкатенируете список к чему-то,
 -- задумайтесь, может это можно переписать как-то иначе.
 reverse :: [a] -> [a]
-reverse [] = []
-reverse (h : t) = reverse t ++ [h]
+reverse = go []
+    where
+        go acc [] = acc
+        go acc (head : tail) = go (head : acc) tail
 
 -- Линейная реализация обращения списка.
 -- Аккумулятор накапливает элементы в правильном порядке, конкатенаций нет.
@@ -90,20 +92,25 @@ map g xs =
 -- Берет первые n элементов списка.
 -- Если в списке меньше n элементов -- возвращает все
 take' :: Int -> [a] -> [a]
-take' n xs = undefined
+take' n [] = []
+take' 0 _ = []
+take' n (x : xs) = x : take' (n - 1) xs
 
 -- Реализуйте функцию filter с использованием foldr
 filter' :: (a -> Bool) -> [a] -> [a]
 filter' p xs =
     foldr f [] xs
   where
-    f = undefined
+    f x acc | p x = x : acc
+            | otherwise = acc
 
 -- Функция-комбинация zip и map
 -- Применяет функцию f к соответствующим элементам списков xs и ys
 -- zipWith (+) [1,2,3] [10, 20, 30] = [11, 22, 33]
 zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith' f xs ys = undefined
+zipWith' f xs ys = foldr (add) ([]) (zip xs ys)
+    where
+        add (x, y) acc = (f x y) : acc
 
 -- Бесконечный список от a: [a..]
 -- Диапазон от a до b: [a..b]
@@ -121,7 +128,7 @@ rightTriangles n =
 -- В результате должен получиться бесконечный список
 -- С помощью take из него можно взять конечный список
 squaresOfEvens :: [Int]
-squaresOfEvens = undefined
+squaresOfEvens = map (^2) [0, 2..]
 
 -- Бесконечный список из единиц
 x :: [Int]
@@ -142,4 +149,8 @@ fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
 -- Треугольные числа
 -- https://en.wikipedia.org/wiki/Triangular_number
 triangularNumbers :: [Int]
-triangularNumbers = undefined
+-- triangularNumbers = map f [0..]
+--     where
+--         f n = (n * (n + 1)) `div` 2
+-- более интересная реализация
+triangularNumbers = 0 : zipWith (+) triangularNumbers [1..]
