@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Eta reduce" #-}
-module List (filter', take', zipWith', squaresOfEvens, triangularNumbers) where
+module List (filter', take', zipWith', squaresOfEvens, slowTriangularNumbers, triangularNumbers) where
 
 import Prelude hiding (foldl, foldr, reverse, map, zip)
 
@@ -89,21 +89,38 @@ map g xs =
 
 -- Берет первые n элементов списка.
 -- Если в списке меньше n элементов -- возвращает все
+-- take' :: Int -> [a] -> [a]
+-- take' n xs =  (go n [] xs) where
+--   go _ acc [] = acc
+--   go 0 acc xs  = acc
+--   go n acc (x : xs)  = x : (go (n-1) acc xs)
+
+-- take' :: Int -> [a] -> [a]
+-- take' n xs =  (go n xs) where
+--   go _ [] = []
+--   go 0 xs  = []
+--   go n (x : xs)  = x : (go (n-1) xs)
+
 take' :: Int -> [a] -> [a]
-take' n xs = undefined
+take' _ [] = []
+take' 0 xs = []
+take' n (x : xs) = x : (take' (n-1) xs)
 
 -- Реализуйте функцию filter с использованием foldr
 filter' :: (a -> Bool) -> [a] -> [a]
 filter' p xs =
     foldr f [] xs
   where
-    f = undefined
+    f x | p x = (x : )
+        | otherwise = ([] ++ )
 
 -- Функция-комбинация zip и map
 -- Применяет функцию f к соответствующим элементам списков xs и ys
 -- zipWith (+) [1,2,3] [10, 20, 30] = [11, 22, 33]
 zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith' f xs ys = undefined
+zipWith' f [] _ = []
+zipWith' f _ [] = []
+zipWith' f (x : xs) (y : ys) = (f x y) : (zipWith' f xs ys)
 
 -- Бесконечный список от a: [a..]
 -- Диапазон от a до b: [a..b]
@@ -121,11 +138,12 @@ rightTriangles n =
 -- В результате должен получиться бесконечный список
 -- С помощью take из него можно взять конечный список
 squaresOfEvens :: [Int]
-squaresOfEvens = undefined
+squaresOfEvens = map (\ x -> ((x-1)*2)^2) nat
+
 
 -- Бесконечный список из единиц
-x :: [Int]
-x = 1 : x
+-- x :: [Int]
+-- x = 1 : x
 
 -- Бесконечный список, чередующий 0 и 1
 y :: [Int]
@@ -142,4 +160,12 @@ fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
 -- Треугольные числа
 -- https://en.wikipedia.org/wiki/Triangular_number
 triangularNumbers :: [Int]
-triangularNumbers = undefined
+triangularNumbers = go 1 zero where
+  zero = 0 : zero
+  go k (x : acc) = x : (go (k+1) ((x+k) : acc))
+  
+
+slowTriangularNumbers :: [Int]
+slowTriangularNumbers = go 0 (constant' 0) where
+  constant' el = el : (constant' el)
+  go k (x:acc) = x : (zipWith (+) (constant' $ k+1) (go (k+1) acc))
