@@ -27,7 +27,7 @@ reverse' xs =
     -- 2 ^ (3 ^ 4)
 foldr :: (a -> b -> b) -> b -> [a] -> b
 foldr _ acc [] = acc
-foldr f acc (x:xs) =
+foldr f acc (x : xs) =
   x `f` foldr f acc xs
 
 -- Левая свертка
@@ -90,20 +90,26 @@ map g xs =
 -- Берет первые n элементов списка.
 -- Если в списке меньше n элементов -- возвращает все
 take' :: Int -> [a] -> [a]
-take' n xs = undefined
+take' n xs = 
+    reverse (f n [] xs)
+  where 
+    f 0 ans xs = ans
+    f n ans [] = ans
+    f n ans (h : xs) = f (n - 1) (h : ans) xs
 
 -- Реализуйте функцию filter с использованием foldr
 filter' :: (a -> Bool) -> [a] -> [a]
-filter' p xs =
+filter' p xs = 
     foldr f [] xs
   where
-    f = undefined
+  x `f` y | p x = x : y | otherwise = y 
 
 -- Функция-комбинация zip и map
 -- Применяет функцию f к соответствующим элементам списков xs и ys
 -- zipWith (+) [1,2,3] [10, 20, 30] = [11, 22, 33]
 zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith' f xs ys = undefined
+zipWith' f (x:xs) (y:ys) = (x `f` y) : (zipWith' f xs ys)
+zipWith' f _ _ = []
 
 -- Бесконечный список от a: [a..]
 -- Диапазон от a до b: [a..b]
@@ -121,7 +127,10 @@ rightTriangles n =
 -- В результате должен получиться бесконечный список
 -- С помощью take из него можно взять конечный список
 squaresOfEvens :: [Int]
-squaresOfEvens = undefined
+squaresOfEvens = 
+    0 : map (f) squaresOfEvens
+  where
+    f x = round((sqrt(fromIntegral x) + 2)^2) 
 
 -- Бесконечный список из единиц
 x :: [Int]
@@ -142,4 +151,9 @@ fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
 -- Треугольные числа
 -- https://en.wikipedia.org/wiki/Triangular_number
 triangularNumbers :: [Int]
-triangularNumbers = undefined
+triangularNumbers = 0 : map (f) (nat)
+   where
+  f x = (x * (x + 1)) `div` 2
+  -- f x = ((round(sqrt(fromIntegral x * 2)) + 1) * (round(sqrt(fromIntegral x * 2)) + 2)) `div` 2 - 
+  -- строка выше работает для вызова triangularNumbers = 0 : map (f) (triangularNumbers)
+  
