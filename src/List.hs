@@ -20,10 +20,7 @@ sumAndMult (AtLeastOne h t) =
 -- Рекомендую использовать вспомогательную функцию, принимающую значение текущего максимума
 maxNum :: List Int -> Int
 maxNum Empty = minBound
-maxNum (AtLeastOne h t) = 
-        if empty t
-            then h
-            else max h (maxNum t)
+maxNum (AtLeastOne h t) = max h (maxNum t)
     where 
         empty :: List Int -> Bool
         empty Empty = True
