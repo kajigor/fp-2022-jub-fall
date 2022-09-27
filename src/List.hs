@@ -90,20 +90,23 @@ map g xs =
 -- Берет первые n элементов списка.
 -- Если в списке меньше n элементов -- возвращает все
 take' :: Int -> [a] -> [a]
-take' n xs = undefined
+take' n (x : xs) | n > 0 = x : take' (n - 1) xs
+take' _ _ = []
 
 -- Реализуйте функцию filter с использованием foldr
 filter' :: (a -> Bool) -> [a] -> [a]
 filter' p xs =
     foldr f [] xs
   where
-    f = undefined
+    f x acc | p x = x : acc
+            | otherwise = acc
 
 -- Функция-комбинация zip и map
 -- Применяет функцию f к соответствующим элементам списков xs и ys
 -- zipWith (+) [1,2,3] [10, 20, 30] = [11, 22, 33]
 zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
-zipWith' f xs ys = undefined
+zipWith' f (x : xs) (y : ys) = f x y : zipWith' f xs ys
+zipWith' _ _ _ = []
 
 -- Бесконечный список от a: [a..]
 -- Диапазон от a до b: [a..b]
@@ -121,7 +124,7 @@ rightTriangles n =
 -- В результате должен получиться бесконечный список
 -- С помощью take из него можно взять конечный список
 squaresOfEvens :: [Int]
-squaresOfEvens = undefined
+squaresOfEvens = [i * i | i <- [0,2..]]
 
 -- Бесконечный список из единиц
 x :: [Int]
@@ -142,4 +145,4 @@ fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
 -- Треугольные числа
 -- https://en.wikipedia.org/wiki/Triangular_number
 triangularNumbers :: [Int]
-triangularNumbers = undefined
+triangularNumbers = [(n - 1) * n `div` 2 | n <- nat]
