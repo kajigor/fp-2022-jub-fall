@@ -138,8 +138,8 @@ rightTriangles n =
 -- В результате должен получиться бесконечный список
 -- С помощью take из него можно взять конечный список
 squaresOfEvens :: [Int]
-squaresOfEvens = map (\ x -> ((x-1)*2)^2) nat
-
+-- squaresOfEvens = map (\ x -> ((x-1)*2)^2) nat
+squaresOfEvens = map (^ 2) [0, 2 ..]
 
 -- Бесконечный список из единиц
 -- x :: [Int]
@@ -151,7 +151,7 @@ y = 0 : 1 : y
 
 -- Бесконечный список натуральных чисел
 nat :: [Int]
-nat = 1 : map (+1) nat
+nat = 1 : map (+ 1) nat
 
 -- Бесконечный список чисел Фибоначчи
 fibs :: [Int]
@@ -162,10 +162,14 @@ fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
 triangularNumbers :: [Int]
 triangularNumbers = go 1 zero where
   zero = 0 : zero
-  go k (x : acc) = x : (go (k+1) ((x+k) : acc))
+  go k (x : acc) = x : (go (k + 1) ((x + k) : acc))
   
 
 slowTriangularNumbers :: [Int]
 slowTriangularNumbers = go 0 (constant' 0) where
   constant' el = el : (constant' el)
-  go k (x:acc) = x : (zipWith (+) (constant' $ k+1) (go (k+1) acc))
+  go k (x:acc) = x : (zipWith (+) (constant' $ k + 1) (go (k + 1) acc))
+
+-- пора завязывать с математикой...
+prettyTriangularNumbers :: [Int]
+prettyTriangularNumbers = [x * (x + 1) `div` 2 | x <- [0, 1..]]
