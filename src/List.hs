@@ -91,12 +91,11 @@ map g xs =
 -- Если в списке меньше n элементов -- возвращает все
 take' :: Int -> [a] -> [a]
 take' n xs =
-    go n [] xs
+    go n xs
   where
-    go _ acc [] = acc
-    go 0 acc _ = acc
-    go n acc (h : t) = h : take' (n - 1) t
-    --go (n - 1) (acc ++ [h]) t           |------->    O(n^2) ?
+    go _ [] = []
+    go 0 _ = []
+    go n (h : t) = h : take' (n - 1) t
 
 -- Реализуйте функцию filter с использованием foldr
 filter' :: (a -> Bool) -> [a] -> [a]
