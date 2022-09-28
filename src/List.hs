@@ -146,4 +146,4 @@ fibs = 1 : 1 : zipWith (+) fibs (tail fibs)
 -- Треугольные числа
 -- https://en.wikipedia.org/wiki/Triangular_number
 triangularNumbers :: [Int]
-triangularNumbers = map (\x -> sum [0 .. x]) [0 ..]
+triangularNumbers = 0 : zipWith (+) triangularNumbers [1 ..]
