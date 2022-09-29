@@ -91,11 +91,11 @@ map g xs =
 -- Если в списке меньше n элементов -- возвращает все
 take' :: Int -> [a] -> [a]
 take' n xs = 
-    reverse (f n [] xs)
+    f n xs
   where 
-    f 0 ans xs = ans
-    f n ans [] = ans
-    f n ans (h : xs) = f (n - 1) (h : ans) xs
+    f 0 xs = []
+    f n [] = []
+    f n (h : xs) = h : f (n-1) xs
 
 -- Реализуйте функцию filter с использованием foldr
 filter' :: (a -> Bool) -> [a] -> [a]
@@ -128,9 +128,9 @@ rightTriangles n =
 -- С помощью take из него можно взять конечный список
 squaresOfEvens :: [Int]
 squaresOfEvens = 
-    0 : map (f) squaresOfEvens
+    0 : map (f) (nat)
   where
-    f x = round((sqrt(fromIntegral x) + 2)^2) 
+    f x = (2*(x))^2
 
 -- Бесконечный список из единиц
 x :: [Int]
