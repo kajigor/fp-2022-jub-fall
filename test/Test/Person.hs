@@ -3,6 +3,7 @@ module Test.Person where
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
 import Person
 import ToString
+import Data.Maybe (Maybe(Nothing))
 
 person1 :: Person
 person1 =
@@ -10,7 +11,7 @@ person1 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 29
-         , idNumber = (1234, 567890) }
+         , idNumber = PassportId (1234, 567890) }
 
 person1Aged :: Person
 person1Aged =
@@ -18,7 +19,7 @@ person1Aged =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 30
-         , idNumber = (1234, 567890) }
+         , idNumber = PassportId (1234, 567890) }
 
 person1AgedTwice :: Person
 person1AgedTwice =
@@ -26,7 +27,7 @@ person1AgedTwice =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 31
-         , idNumber = (1234, 567890) }
+         , idNumber = PassportId (1234, 567890) }
 
 person2 :: Person
 person2 =
@@ -34,7 +35,7 @@ person2 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 42
-         , idNumber = (9876, 543210) }
+         , idNumber = PassportId (9876, 543210) }
 
 person3 :: Person
 person3 =
@@ -42,7 +43,7 @@ person3 =
          , lastName = "Smith"
          , formerLastNames = []
          , age = 21
-         , idNumber = (2121, 212121) }
+         , idNumber = PassportId (2121, 212121) }
 
 person4 :: Person
 person4 =
@@ -50,7 +51,7 @@ person4 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 23
-         , idNumber = (1111, 111111) }
+         , idNumber = PassportId (1111, 111111) }
 
 person4NewLastName :: Person
 person4NewLastName =
@@ -58,7 +59,7 @@ person4NewLastName =
          , lastName = "Ivanova"
          , formerLastNames = ["Verbitskaia"]
          , age = 23
-         , idNumber = (1111, 111111) }
+         , idNumber = PassportId (1111, 111111) }
 
 person4NewLastNameNewLastName :: Person
 person4NewLastNameNewLastName =
@@ -66,7 +67,7 @@ person4NewLastNameNewLastName =
          , lastName = "Sidorova"
          , formerLastNames = [ "Ivanova", "Verbitskaia" ]
          , age = 23
-         , idNumber = (1111, 111111) }
+         , idNumber = PassportId (1111, 111111) }
 
 child1 :: Person
 child1 =
@@ -74,7 +75,7 @@ child1 =
          , lastName = "Ivanov"
          , formerLastNames = []
          , age = 7
-         , idNumber = (0000, 000000) }
+         , idNumber = BirthCertificateId 123000 }
 
 child2 :: Person
 child2 =
@@ -82,7 +83,7 @@ child2 =
          , lastName = "Ivanova"
          , formerLastNames = []
          , age = 3
-         , idNumber = (0000, 000000) }
+         , idNumber = BirthCertificateId 120003 }
 
 notValid1 :: Person
 notValid1 =
@@ -90,7 +91,7 @@ notValid1 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 29
-         , idNumber = (1234, 567890) }
+         , idNumber = PassportId (1234, 567890) }
 
 notValid2 :: Person
 notValid2 =
@@ -98,7 +99,7 @@ notValid2 =
          , lastName = ""
          , formerLastNames = []
          , age = 29
-         , idNumber = (1234, 567890) }
+         , idNumber = PassportId (1234, 567890) }
 
 notValid3 :: Person
 notValid3 =
@@ -106,7 +107,7 @@ notValid3 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = -13
-         , idNumber = (1234, 567890) }
+         , idNumber = PassportId (1234, 567890) }
 
 notValid4 :: Person
 notValid4 =
@@ -114,7 +115,7 @@ notValid4 =
          , lastName = "Ivanova"
          , formerLastNames = []
          , age = 3
-         , idNumber = (1234, 567890) }
+         , idNumber = PassportId (1234, 567890) }
 
 
 unit_ageUp = do
