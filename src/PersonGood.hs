@@ -1,23 +1,36 @@
 {-# LANGUAGE InstanceSigs #-}
-module Person where
+module PersonGood where
 
 import MyEq (MyEq (..))
 import ToString
 
+data PersonId = 
+    Passport { id :: (Int, Int) }
+  | BirthCert { id :: (Int, Int) }
+  deriving (Show, Eq)
+
+isPassport :: PersonId -> Bool
+isPassport (Passport _) = True
+isPassport _ = False
+
+isBirthCert :: PersonId -> Bool
+isBirthCert (BirthCert _) = True
+isBirthCert _ = False
+
 -- Тип данных для человека
 data Person = Person
-  { firstName :: String         -- Имя, должно быть непустым
-  , lastName :: String          -- Фамилия, должна быть непустой
-  , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
-  , age :: Int                  -- Возраст, должен быть неотрицательным
-  , idNumber :: (Int, Int)      -- Номер паспорта: состоит из серии и номера.
-  }                             -- -- У детей (людей младше 14 лет) номера паспорта --- (0000, 000000)
+    { firstName :: String         -- Имя, должно быть непустым
+    , lastName :: String          -- Фамилия, должна быть непустой
+    , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
+    , age :: Int                  -- Возраст, должен быть неотрицательным
+    , personId :: PersonId        -- Документ
+    }                             
   deriving (Show, Eq)
 
 -- У разных людей разные номера паспортов
 instance MyEq Person where
   (===) :: Person -> Person -> Bool
-  (===) x y = idNumber x === idNumber y
+  (===) x y = personId x == personId y
 
 -- Строка должна состоять из имени, фамилии и возраста.
 -- Между именем и фамилией пробел, дальше запятая, пробел, и возраст.
@@ -43,13 +56,14 @@ updateLastName person newLastName =
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
 validatePerson person =
-  let validChild = if idNumber person == (0, 0) then age person < 14 else age person >= 14 in
+  let pid = personId person in
+  let validId = isBirthCert pid && age person < 14 || isPassport pid &&  age person >= 14 in
   let validAge = age person >= 0 in
   let validNames = firstName person /= [] && lastName person /= [] in
-  validNames && validAge && validChild
+  validNames && validAge && validId
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
 namesakes :: Person -> Person -> Bool
 namesakes x y =
-  firstName x == firstName y && lastName x == lastName y && idNumber x /= idNumber y
+  firstName x == firstName y && lastName x == lastName y && personId x /= personId y
