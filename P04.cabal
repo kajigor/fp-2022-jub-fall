@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
 
@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      CustomPerson
       List
       MyEq
       Person
@@ -55,6 +56,7 @@ test-suite P04-test
   type: exitcode-stdio-1.0
   main-is: Test.hs
   other-modules:
+      Test.CustomPerson
       Test.Person
       Paths_P04
   hs-source-dirs:
