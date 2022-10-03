@@ -139,9 +139,27 @@ notValid5 =
          , birthCertificateNumber = ("", 0)
          , idNumber = (1234, 123456) }
 
+noId1 :: Person
+noId1 =
+  Person { firstName = "Masha"
+         , lastName = "Ivanova"
+         , formerLastNames = []
+         , age = 15
+         , birthCertificateNumber = ("XAB", 123456)
+         , idNumber = (0, 0) }
+
+withId1 :: Person
+withId1 =
+  Person { firstName = "Masha"
+         , lastName = "Ivanova"
+         , formerLastNames = []
+         , age = 15
+         , birthCertificateNumber = ("XAB", 123456)
+         , idNumber = (1234, 123456) }
+
 unit_ageUp = do
-  ageUp person1 (0, 0) @?= person1Aged
-  ageUp (ageUp person1 (0, 0)) (0, 0) @?= person1AgedTwice
+  ageUp person1 @?= person1Aged
+  ageUp (ageUp person1) @?= person1AgedTwice
 
 
 unit_updateLastName = do
@@ -151,6 +169,9 @@ unit_updateLastName = do
   person4'' @?= person4NewLastNameNewLastName
   person4 @?= updateLastName person4 (lastName person4)
 
+unit_addIdNumber = do
+  withId1 @?= addIdNumber noId1 (1234, 123456)
+  withId1 @?= addIdNumber withId1 (1111, 111111)
 
 unit_namesakes = do
   assertBool "namesakes" (namesakes person1 person2)
@@ -182,12 +203,14 @@ unit_valid = do
   assertBool "valid" (validatePerson person4NewLastNameNewLastName)
   assertBool "valid" (validatePerson child1)
   assertBool "valid" (validatePerson child2)
+  assertBool "valid" (validatePerson withId1)
 
   assertBool "not valid: no first name" (not $ validatePerson notValid1)
   assertBool "not valid: no last name" (not $ validatePerson notValid2)
   assertBool "not valid: negative age" (not $ validatePerson notValid3)
   assertBool "not valid: child with id" (not $ validatePerson notValid4)
   assertBool "not valid: no birth certificate number" (not $ validatePerson notValid5)
+  assertBool "not valid: no id" (not $ validatePerson noId1)
 
 
 

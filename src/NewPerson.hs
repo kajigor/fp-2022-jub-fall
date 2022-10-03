@@ -31,10 +31,16 @@ instance ToString Person where
   toString person =
     firstName person ++ " " ++ lastName person ++ ", " ++ show (age person)
 
-ageUp :: Person -> (Int, Int) -> Person
-ageUp person id
-    | age person == 13 = person { age = age person + 1, idNumber = id }
-    | otherwise = person { age = age person + 1 }
+-- Увеличить возраст на 1
+ageUp :: Person -> Person
+ageUp person =
+  person { age = age person + 1 }
+
+-- Увеличить возраст на 1
+addIdNumber :: Person -> (Int, Int) -> Person
+addIdNumber person id 
+  | idNumber person == (0, 0) = person { idNumber = id }
+  | otherwise = person
 
 validatePerson :: Person -> Bool
 validatePerson person =
@@ -44,7 +50,7 @@ validatePerson person =
   ((age person < 14 && idNumber person == (0000, 000000)) ||
   (age person >= 14 && idNumber person /= (0000, 000000))) &&
   birthCertificateNumber person /= ("", 000000)
-  
+
 -- Сменить фамилию.
 -- Если новая фамилия совпадает с текущей, ничего не меняется
 -- Старая фамилия запоминается в formerLastNames
