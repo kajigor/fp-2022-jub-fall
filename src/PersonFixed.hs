@@ -1,7 +1,8 @@
 {-# LANGUAGE InstanceSigs #-}
 
-module Person where
+module PersonFixed where
 
+import Data.List
 import MyEq (MyEq (..))
 import ToString
 
@@ -45,7 +46,7 @@ updateLastName person newLastName
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
-validatePerson person = firstName person /= "" && lastName person /= "" && age person >= 0 && ((age person >= 14) /= (idNumber person == Passport (0, 0)))
+validatePerson person = firstName person /= "" && lastName person /= "" && age person >= 0 && ((age person < 14) /= isInfixOf "Passport" (show (idNumber person)))
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
