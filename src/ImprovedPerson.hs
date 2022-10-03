@@ -10,7 +10,7 @@ data ImprovedPerson = ImprovedPerson
   , lastName :: String          -- Фамилия, должна быть непустой
   , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
   , age :: Int                  -- Возраст, должен быть неотрицательным
-  , certificateNumber :: (String, Int)  -- Номер свидетельства о рождении: состоит из серии и номера
+  , certificateNumber :: (String, Int)  -- Номер свидетельства о рождении: состоит из серии (непустая строка) и номера
   }                             -- Верим, что хотя бы свидетельство о рождении у всех есть
   deriving (Show, Eq)
 
