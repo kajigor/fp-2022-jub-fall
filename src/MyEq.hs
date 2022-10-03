@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 module MyEq where
 
@@ -29,6 +30,16 @@ instance MyEq Bool where
 instance MyEq Int where
   (===) :: Int -> Int -> Bool
   (===) = (==)
+
+instance MyEq Char where
+  (===) :: Char -> Char -> Bool
+  (===) = (==)
+
+instance MyEq String where
+  (===) :: String -> String -> Bool
+  (===) (x:xs) (y:ys) = x == y && xs === ys
+  (===) [] [] = True
+  (===) _ _ = False
 
 -- Как сравнивать на равенство пары значений
 instance (MyEq a, MyEq b) => MyEq (a, b) where
