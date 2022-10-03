@@ -27,29 +27,41 @@ square = Rectangle (PointD 0 0) (PointD 1 1)
 -- чтобы его левый нижний угол был первым аргументом конструктора,
 -- а правый верхний -- вторым.
 normalizeRectangle :: Shape -> Shape
-normalizeRectangle _ = undefined
+normalizeRectangle (Rectangle (PointD x0 y0) (PointD x1 y1)) = (Rectangle (PointD (min x0 x1) (min y0 y1)) (PointD (max x0 x1) (max y0 y1)))
+normalizeRectangle (Circle center r) = (Circle center r)
 
 -- Проверяет, является ли фигура корректной
 -- У круга должен быть положительный радиус
 -- Стороны прямоугольника должны иметь положительную длину
 validateShape :: Shape -> Bool
-validateShape _ = undefined
+validateShape (Circle center radius) = (radius > 0)
+validateShape (Rectangle (PointD x0 y0) (PointD x1 y1)) =
+  (not (x1 == x0) && (not (y1 == y0)))
+
 
 -- Считает периметр фигуры
 perimeter :: Shape -> Double
-perimeter _ = undefined
+perimeter (Circle center radius) = pi * radius * 2
+perimeter (Rectangle (PointD x0 y0) (PointD x1 y1)) =
+  (2 * abs (x1 - x0)) + (2 * abs (y1 - y0))
 
 -- Проверяет, является ли фигура квадратом
 isSquare :: Shape -> Bool
-isSquare _ = undefined
+isSquare (Circle center radius) = False 
+isSquare (Rectangle (PointD x0 y0) (PointD x1 y1)) =
+  (abs (x1 - x0) == abs (y1 - y0))
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 slideShape :: Shape -> PointT -> Shape
-slideShape _ _ = undefined
+slideShape (Circle (PointD x0 y0) radius) (PointD x2 y2) = (Circle (PointD (x0 + x2) (y0 + y2)) radius) 
+slideShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x2 y2) =
+  (Rectangle (PointD (x0 + x2) (y0 + y2)) (PointD (x2 + x1) (y1 + y2)))
 
 -- Проверяет, находится ли точка внутри данной фигуры
 isPointInShape :: Shape -> PointT -> Bool
-isPointInShape _ _ = undefined
+isPointInShape (Circle (PointD x0 y0) radius) (PointD x2 y2) = ((x2 - x0) ^ 2 + (y2 - y0) ^ 2 < radius ^ 2) 
+isPointInShape (Rectangle (PointD x0 y0) (PointD x1 y1)) (PointD x2 y2) =
+  ((x0 < x2 && x2 < x1 || x1 < x2 && x2 < x0) && (y0 < y2 && y2 < y1 || y1 < y2 && y2 < y0))
 
 -- В результате выполнения программы в консоль должно напечататься True
 -- Если решите не реализовывать одну из функций, закомментируйте соответствующий ей тест
