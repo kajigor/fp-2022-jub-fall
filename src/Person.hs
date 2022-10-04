@@ -1,4 +1,5 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE NumericUnderscores #-}
 module Person where
 
 import MyEq (MyEq (..))
@@ -12,7 +13,7 @@ data Person = Person
   , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
   , age :: Int                  -- Возраст, должен быть неотрицательным
   , idNumber :: Identificator      -- Номер паспорта: состоит из серии и номера.
-  }                             -- -- У детей (людей младше 14 лет) номера паспорта --- (0000, 000000)
+  }                             -- У детей (людей младше 14 лет) BirthCertificateId - шестизначное число
   deriving (Show, Eq)
 
 -- У разных людей разные номера паспортов
@@ -40,8 +41,6 @@ updateLastName person newLastName | lastName person == newLastName = person
                                   | otherwise =
                                     person {formerLastNames = lastName person : formerLastNames person, lastName = newLastName}
 
-nonEmpty :: String -> Bool
-nonEmpty s = s /= ""
 
 isPassportId :: Identificator -> Bool
 isPassportId (PassportId (_,_)) = True
@@ -50,13 +49,21 @@ isPassportId _ = False
 hasPassport :: Person -> Bool
 hasPassport = isPassportId . idNumber
 
+isValidIdentificator :: Identificator -> Bool
+isValidIdentificator (PassportId (ser,num)) = (0 <= ser && ser <= 9999) && (0 <= num && num <= 99_999_999)
+isValidIdentificator (BirthCertificateId id) = 0 <= id && id <= 999_999
+
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
 validatePerson person =
-  nonEmpty (firstName person) &&
-  nonEmpty (lastName person) &&
+  not (null $ firstName person) &&
+  not (null $ lastName person) &&
   age person >= 0 &&
-  hasPassport person == (age person > 14)
+  hasPassport person == (age person > 14) 
+  && isValidIdentificator (idNumber person) 
+  && notElem (lastName person) (formerLastNames person) -- formerLastNames can't contain current lastName
+
+
 
 
 -- Проверить, что два человека -- тезки.
