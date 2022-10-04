@@ -1,8 +1,24 @@
 {-# LANGUAGE InstanceSigs #-}
-module Person where
+module Person1 where
 
 import MyEq (MyEq (..))
 import ToString
+
+-- Тип данных для удостоверения личности
+data IdNumber = Passport (Int, Int)   -- Номер паспорта: состоит из серии и номера.
+    | BirthSertificate ([Char], Int)  -- Номер свидетельсята о рождении: состоит из серии и номера.
+    deriving (Show, Eq)
+
+instance MyEq IdNumber where
+    (===) :: IdNumber -> IdNumber -> Bool
+    (===) (Passport _) (BirthSertificate _) = False
+    (===) (BirthSertificate _) (Passport _) = False
+    (===) (Passport x) (Passport y) = x === y
+    (===) (BirthSertificate x) (BirthSertificate y) = x == y
+
+isPassport :: IdNumber -> Bool
+isPassport (Passport _) = True
+isPassport (BirthSertificate _) = False
 
 -- Тип данных для человека
 data Person = Person
@@ -10,9 +26,9 @@ data Person = Person
   , lastName :: String          -- Фамилия, должна быть непустой
   , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
   , age :: Int                  -- Возраст, должен быть неотрицательным
-  , idNumber :: (Int, Int)      -- Номер паспорта: состоит из серии и номера.
-  }                             -- -- У детей (людей младше 14 лет) номера паспорта --- (0000, 000000)
-  deriving (Show, Eq)
+  , idNumber :: IdNumber        -- Номер документа, удостоверяющего личность,
+  }                             -- -- У детей (людей младше 14 лет) это свидетельство о рождении,
+  deriving (Show, Eq)           -- -- У взрослых - паспорт.
 
 -- У разных людей разные номера паспортов
 instance MyEq Person where
@@ -42,7 +58,7 @@ updateLastName person newLastName =
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
 validatePerson person =
-  and [firstName person /= "", lastName person /= "", age person >= 0, age person >= 14 || idNumber person == (0,0)]
+  and [firstName person /= "", lastName person /= "", age person >= 0, (age person >= 14) == isPassport (idNumber person)]
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
