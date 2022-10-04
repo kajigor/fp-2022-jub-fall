@@ -28,6 +28,7 @@ library
       List
       MyEq
       Person
+      PersonRedesign
       Syntax
       ToString
   other-modules:
@@ -56,6 +57,7 @@ test-suite P04-test
   main-is: Test.hs
   other-modules:
       Test.Person
+      Test.PersonRedesign
       Paths_P04
   hs-source-dirs:
       test
