@@ -40,7 +40,8 @@ updateLastName person newLastName | newLastName /= lastName person = person {for
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: PersonUpdated -> Bool
-validatePerson person | null (firstName person) || null(lastName person) || age person < 0 || (idNumber person /= (0000, 000000) && age person < 14) = False
+validatePerson person | null (firstName person) || null (lastName person) || age person < 0
+                      || ((idNumber person /= (0000, 000000) || null (fst (birthCertificate person))) && age person < 14) = False
                       | otherwise = True
 
 -- Проверить, что два человека -- тезки.
