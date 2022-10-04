@@ -1,23 +1,31 @@
 {-# LANGUAGE InstanceSigs #-}
-module Person where
+module BetterPerson where
 
 import MyEq (MyEq (..))
 import ToString
 
 -- Тип данных для человека
-data Person = Person
-  { firstName :: String         -- Имя, должно быть непустым
-  , lastName :: String          -- Фамилия, должна быть непустой
-  , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
-  , age :: Int                  -- Возраст, должен быть неотрицательным
-  , idNumber :: (Int, Int)      -- Номер паспорта: состоит из серии и номера.
-  }                             -- -- У детей (людей младше 14 лет) номера паспорта --- (0000, 000000)
+data Person = Child {
+    firstName :: String
+  , lastName :: String
+  , formerLastNames :: [String]
+  , age :: Int
+  , birthCertificate :: (Int, Int)
+  } | Adult {
+    firstName :: String
+  , lastName :: String
+  , formerLastNames :: [String]
+  , age :: Int
+  , passport :: (Int, Int)
+  }
   deriving (Show, Eq)
 
 -- У разных людей разные номера паспортов
 instance MyEq Person where
   (===) :: Person -> Person -> Bool
-  (===) x y = idNumber x === idNumber y
+  (===) Child { birthCertificate = x } Child { birthCertificate = y } = x === y
+  (===) Adult { passport = x } Adult { passport = y } = x === y
+  (===) _ _ = False
 
 -- Строка должна состоять из имени, фамилии и возраста.
 -- Между именем и фамилией пробел, дальше запятая, пробел, и возраст.
@@ -44,8 +52,7 @@ updateLastName person newLastName =
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
 validatePerson person =
-  not (null (firstName person)) && not (null (lastName person)) && age person >= 0 &&
-  (age person >= 14 || idNumber person == (0, 0))
+  not (null (firstName person)) && not (null (lastName person)) && age person >= 0
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями

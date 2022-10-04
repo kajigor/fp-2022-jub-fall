@@ -1,120 +1,128 @@
-module Test.Person where
+module Test.BetterPerson where
 
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
-import Person
+import BetterPerson
 import ToString
 
 person1 :: Person
 person1 =
-  Person { firstName = "Kate"
+  Adult { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 29
-         , idNumber = (1234, 567890) }
+         , passport = (1234, 567890) }
 
 person1Aged :: Person
 person1Aged =
-  Person { firstName = "Kate"
+  Adult { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 30
-         , idNumber = (1234, 567890) }
+         , passport = (1234, 567890) }
 
 person1AgedTwice :: Person
 person1AgedTwice =
-  Person { firstName = "Kate"
+  Adult { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 31
-         , idNumber = (1234, 567890) }
+         , passport = (1234, 567890) }
 
 person2 :: Person
 person2 =
-  Person { firstName = "Kate"
+  Adult { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 42
-         , idNumber = (9876, 543210) }
+         , passport = (9876, 543210) }
 
 person3 :: Person
 person3 =
-  Person { firstName = "Kate"
+  Adult { firstName = "Kate"
          , lastName = "Smith"
          , formerLastNames = []
          , age = 21
-         , idNumber = (2121, 212121) }
+         , passport = (2121, 212121) }
 
 person4 :: Person
 person4 =
-  Person { firstName = "Maria"
+  Adult { firstName = "Maria"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 23
-         , idNumber = (1111, 111111) }
+         , passport = (1111, 111111) }
 
 person4NewLastName :: Person
 person4NewLastName =
-  Person { firstName = "Maria"
+  Adult { firstName = "Maria"
          , lastName = "Ivanova"
          , formerLastNames = ["Verbitskaia"]
          , age = 23
-         , idNumber = (1111, 111111) }
+         , passport = (1111, 111111) }
 
 person4NewLastNameNewLastName :: Person
 person4NewLastNameNewLastName =
-  Person { firstName = "Maria"
+  Adult { firstName = "Maria"
          , lastName = "Sidorova"
          , formerLastNames = [ "Ivanova", "Verbitskaia" ]
          , age = 23
-         , idNumber = (1111, 111111) }
+         , passport = (1111, 111111) }
+
+person5 :: Person
+person5 =
+  Adult { firstName = "Ivan"
+         , lastName = "Ivanov"
+         , formerLastNames = []
+         , age = 17
+         , passport = (1234, 567890) }
 
 child1 :: Person
 child1 =
-  Person { firstName = "Ivan"
+  Child { firstName = "Ivan"
          , lastName = "Ivanov"
          , formerLastNames = []
          , age = 7
-         , idNumber = (0000, 000000) }
+         , birthCertificate = (1234, 567890) }
 
 child2 :: Person
 child2 =
-  Person { firstName = "Masha"
+  Child { firstName = "Masha"
          , lastName = "Ivanova"
          , formerLastNames = []
          , age = 3
-         , idNumber = (0000, 000000) }
+         , birthCertificate = (1234, 567890) }
+
+child3 :: Person
+child3 =
+  Child { firstName = "Ivan"
+         , lastName = "Ivanov"
+         , formerLastNames = []
+         , age = 7
+         , birthCertificate = (1234, 567891) }
 
 notValid1 :: Person
 notValid1 =
-  Person { firstName = ""
+  Adult { firstName = ""
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 29
-         , idNumber = (1234, 567890) }
+         , passport = (1234, 567890) }
 
 notValid2 :: Person
 notValid2 =
-  Person { firstName = "Kate"
+  Adult { firstName = "Kate"
          , lastName = ""
          , formerLastNames = []
          , age = 29
-         , idNumber = (1234, 567890) }
+         , passport = (1234, 567890) }
 
 notValid3 :: Person
 notValid3 =
-  Person { firstName = "Kate"
+  Child { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = -13
-         , idNumber = (1234, 567890) }
-
-notValid4 :: Person
-notValid4 =
-  Person { firstName = "Masha"
-         , lastName = "Ivanova"
-         , formerLastNames = []
-         , age = 3
-         , idNumber = (1234, 567890) }
+         , birthCertificate = (1234, 567890) }
 
 
 unit_ageUp = do
@@ -135,6 +143,9 @@ unit_namesakes = do
   assertBool "notNamesakes: same person" (not $ namesakes person1 person1Aged)
   assertBool "notNamesakes: different last name" (not $ namesakes person1 person3)
   assertBool "notNamesakes: different first name" (not $ namesakes person1 person4)
+  assertBool "namesakes: person and child" (namesakes person5 child1)
+  assertBool "namesakes: child and child" (namesakes child1 child3)
+  assertBool "notNamesakes: same person" (not $ namesakes child1 child1)
 
 unit_toString = do
   toString person1 @?= "Kate Verbitskaia, 29"
@@ -163,5 +174,3 @@ unit_valid = do
   assertBool "not valid: no first name" (not $ validatePerson notValid1)
   assertBool "not valid: no last name" (not $ validatePerson notValid2)
   assertBool "not valid: negative age" (not $ validatePerson notValid3)
-  assertBool "not valid: child with id" (not $ validatePerson notValid4)
-  
