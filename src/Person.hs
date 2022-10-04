@@ -53,5 +53,5 @@ validatePerson person = and [
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
 namesakes :: Person -> Person -> Bool
-namesakes x y = (getPersonName x === getPersonName y) && (idNumber x =/= idNumber y)
+namesakes x y = (getPersonName x === getPersonName y) && (x =/= y)
   where getPersonName person = (firstName person, lastName person)
