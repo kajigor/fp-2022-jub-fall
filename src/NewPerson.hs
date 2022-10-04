@@ -36,7 +36,7 @@ ageUp person = person { age = age person + 1 }
 -- Старая фамилия запоминается в formerLastNames
 updateLastName :: NewPerson -> String -> NewPerson
 updateLastName person newLastName | (lastName person) == newLastName = person 
-                                  | otherwise =  person { formerLastNames = [lastName person] ++ (formerLastNames person), lastName = newLastName }
+                                  | otherwise =  person { formerLastNames = lastName person : (formerLastNames person), lastName = newLastName }
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validateNewPerson :: NewPerson -> Bool
@@ -45,4 +45,4 @@ validateNewPerson person = (firstName person) /= [] && (lastName person) /= [] &
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
 namesakes :: NewPerson -> NewPerson -> Bool
-namesakes x y = (firstName x) == (firstName y) && (lastName x) == (lastName y) && ((idNumber x) /= (idNumber y) || (birthCertificate x) /= (birthCertificate y))
+namesakes x y = (firstName x) == (firstName y) && (lastName x) == (lastName y) && not (x===y)

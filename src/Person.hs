@@ -34,7 +34,7 @@ ageUp person = person { age = age person + 1}
 -- Старая фамилия запоминается в formerLastNames
 updateLastName :: Person -> String -> Person
 updateLastName person newLastName | (lastName person) == newLastName = person 
-                                  | otherwise =  person { formerLastNames = [lastName person] ++ (formerLastNames person), lastName = newLastName }
+                                  | otherwise =  person { formerLastNames = lastName person : (formerLastNames person), lastName = newLastName }
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
