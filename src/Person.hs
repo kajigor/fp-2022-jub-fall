@@ -24,27 +24,33 @@ instance MyEq Person where
 instance ToString Person where
   toString :: Person -> String
   toString person =
-    undefined
+    firstName person ++ " " ++ lastName person ++ ", " ++ toString (age person)
 
 -- Увеличить возраст на 1
 ageUp :: Person -> Person
 ageUp person =
-  undefined
+  person{age = age person + 1}
 
 -- Сменить фамилию.
 -- Если новая фамилия совпадает с текущей, ничего не меняется
 -- Старая фамилия запоминается в formerLastNames
 updateLastName :: Person -> String -> Person
-updateLastName person newLastName =
-  undefined
+updateLastName person newLastName | lastName person == newLastName =
+  person
+updateLastName person newLastName = person{
+  lastName = newLastName,
+  formerLastNames = lastName person : formerLastNames person 
+  }
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
 validatePerson person =
-  undefined
+  firstName person /= "" && lastName person /= "" && age person >= 0 && validateId (idNumber person) (age person)
+  where 
+    validateId (x, y) age' = age' >= 14 || (x == 0 && y == 0)
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
 namesakes :: Person -> Person -> Bool
 namesakes x y =
-  undefined
+  firstName x == firstName y && lastName x == lastName y && idNumber x /= idNumber y
