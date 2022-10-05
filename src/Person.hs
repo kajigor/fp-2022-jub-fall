@@ -51,4 +51,6 @@ validatePerson person =
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
 namesakes :: Person -> Person -> Bool
 namesakes x y =
-  undefined
+       firstName x == firstName y
+    && lastName x == lastName y
+    && idNumber x /= idNumber y
