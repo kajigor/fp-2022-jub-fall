@@ -7,113 +7,132 @@ import ToString
 
 person1 :: NewPerson
 person1 =
-  AdultPerson Adult { aFirstName = "Kate"
-         , aLastName = "Verbitskaia"
-         , aFormerLastNames = []
-         , aAge = 29
-         , aIdNumber = (1234, 567890) }
+  AdultPerson Adult { personData = Child { firstName = "Kate"
+         , lastName = "Verbitskaia"
+         , formerLastNames = []
+         , age = 29 }
+         , idNumber = (1234, 567890) }
 
 person1Aged :: NewPerson
 person1Aged =
-  AdultPerson Adult { aFirstName = "Kate"
-         , aLastName = "Verbitskaia"
-         , aFormerLastNames = []
-         , aAge = 30
-         , aIdNumber = (1234, 567890) }
+  AdultPerson Adult { personData = Child {firstName = "Kate"
+         , lastName = "Verbitskaia"
+         , formerLastNames = []
+         , age = 30 }
+         , idNumber = (1234, 567890) }
 
 person1AgedTwice :: NewPerson
 person1AgedTwice =
-  AdultPerson Adult { aFirstName = "Kate"
-         , aLastName = "Verbitskaia"
-         , aFormerLastNames = []
-         , aAge = 31
-         , aIdNumber = (1234, 567890) }
+  AdultPerson Adult { personData = Child { firstName = "Kate"
+         , lastName = "Verbitskaia"
+         , formerLastNames = []
+         , age = 31 }
+         , idNumber = (1234, 567890) }
 
 person2 :: NewPerson
 person2 =
-  AdultPerson Adult { aFirstName = "Kate"
-         , aLastName = "Verbitskaia"
-         , aFormerLastNames = []
-         , aAge = 42
-         , aIdNumber = (9876, 543210) }
+  AdultPerson Adult { personData = Child { firstName = "Kate"
+         , lastName = "Verbitskaia"
+         , formerLastNames = []
+         , age = 42 }
+         , idNumber = (9876, 543210) }
 
 person3 :: NewPerson
 person3 =
-  AdultPerson Adult { aFirstName = "Kate"
-         , aLastName = "Smith"
-         , aFormerLastNames = []
-         , aAge = 21
-         , aIdNumber = (2121, 212121) }
+  AdultPerson Adult { personData = Child {firstName = "Kate"
+         , lastName = "Smith"
+         , formerLastNames = []
+         , age = 21 }
+         , idNumber = (2121, 212121) }
 
 person4 :: NewPerson
 person4 =
-  AdultPerson Adult { aFirstName = "Maria"
-         , aLastName = "Verbitskaia"
-         , aFormerLastNames = []
-         , aAge = 23
-         , aIdNumber = (1111, 111111) }
+  AdultPerson Adult { personData = Child { firstName = "Maria"
+         , lastName = "Verbitskaia"
+         , formerLastNames = []
+         , age = 23 }
+         , idNumber = (1111, 111111) }
 
 person4NewLastName :: NewPerson
 person4NewLastName =
-  AdultPerson Adult { aFirstName = "Maria"
-         , aLastName = "Ivanova"
-         , aFormerLastNames = ["Verbitskaia"]
-         , aAge = 23
-         , aIdNumber = (1111, 111111) }
+  AdultPerson Adult { personData = Child {firstName = "Maria"
+         , lastName = "Ivanova"
+         , formerLastNames = ["Verbitskaia"]
+         , age = 23 }
+         , idNumber = (1111, 111111) }
 
 person4NewLastNameNewLastName :: NewPerson
 person4NewLastNameNewLastName =
-  AdultPerson Adult { aFirstName = "Maria"
-         , aLastName = "Sidorova"
-         , aFormerLastNames = [ "Ivanova", "Verbitskaia" ]
-         , aAge = 23
-         , aIdNumber = (1111, 111111) }
+  AdultPerson Adult { personData = Child { firstName = "Maria"
+         , lastName = "Sidorova"
+         , formerLastNames = [ "Ivanova", "Verbitskaia" ]
+         , age = 23 }
+         , idNumber = (1111, 111111) }
 
 child1 :: NewPerson
 child1 =
-  ChildPerson Child { cFirstName = "Ivan"
-         , cLastName = "Ivanov"
-         , cFormerLastNames = []
-         , cAge = 7 }
+  ChildPerson Child { firstName = "Ivan"
+         , lastName = "Ivanov"
+         , formerLastNames = []
+         , age = 7 }
 
 child2 :: NewPerson
 child2 =
-  ChildPerson Child { cFirstName = "Masha"
-         , cLastName = "Ivanova"
-         , cFormerLastNames = []
-         , cAge = 3 }
+  ChildPerson Child { firstName = "Masha"
+         , lastName = "Ivanova"
+         , formerLastNames = []
+         , age = 3 }
 
 notValid1 :: NewPerson
 notValid1 =
-  AdultPerson Adult { aFirstName = ""
-         , aLastName = "Verbitskaia"
-         , aFormerLastNames = []
-         , aAge = 29
-         , aIdNumber = (1234, 567890) }
+  AdultPerson Adult { personData = Child {firstName = ""
+         , lastName = "Verbitskaia"
+         , formerLastNames = []
+         , age = 29 }
+         , idNumber = (1234, 567890) }
 
 notValid2 :: NewPerson
 notValid2 =
-  AdultPerson Adult { aFirstName = "Kate"
-         , aLastName = ""
-         , aFormerLastNames = []
-         , aAge = 29
-         , aIdNumber = (1234, 567890) }
+  AdultPerson Adult { personData = Child { firstName = "Kate"
+         , lastName = ""
+         , formerLastNames = []
+         , age = 29 }
+         , idNumber = (1234, 567890) }
 
 notValid3 :: NewPerson
 notValid3 =
-  AdultPerson Adult { aFirstName = "Kate"
-         , aLastName = "Verbitskaia"
-         , aFormerLastNames = []
-         , aAge = -13
-         , aIdNumber = (1234, 567890) }
+  AdultPerson Adult { personData = Child {firstName = "Kate"
+         , lastName = "Verbitskaia"
+         , formerLastNames = []
+         , age = -13 }
+         , idNumber = (1234, 567890) }
 
 notValid4 :: NewPerson
 notValid4 =
-  AdultPerson Adult { aFirstName = "Masha"
-         , aLastName = "Ivanova"
-         , aFormerLastNames = []
-         , aAge = 3
-         , aIdNumber = (1234, 567890) }
+  AdultPerson Adult { personData = Child {firstName = "Masha"
+         , lastName = "Ivanova"
+         , formerLastNames = []
+         , age = 3 }
+         , idNumber = (1234, 567890) }
+
+notValidChild1 :: NewPerson
+notValidChild1 =
+  ChildPerson Child { firstName = "Masha"
+         , lastName = "Ivanova"
+         , formerLastNames = []
+         , age = 14 }
+child3 :: NewPerson
+child3 = ChildPerson Child { firstName = "Sergey"
+         , lastName = "KhB"
+         , formerLastNames = []
+         , age = 13}
+person5 :: NewPerson
+person5 = AdultPerson Adult { personData = Child{
+  firstName = "Sergey",
+  lastName = "KhB",
+  formerLastNames = ["KekLol"],
+  age = 1337
+}, idNumber = (1234, 567890)}
 
 
 unit_ageUp = do
@@ -126,7 +145,7 @@ unit_updateLastName = do
   person4' @?= person4NewLastName
   person4'' @?= person4NewLastNameNewLastName
   let AdultPerson adultPerson4 = person4
-  person4 @?= updateLastName person4 (aLastName adultPerson4)
+  person4 @?= updateLastName person4 ((lastName . personData) adultPerson4)
 
 
 unit_namesakes = do
@@ -135,6 +154,10 @@ unit_namesakes = do
   assertBool "notNamesakes: same person" (not $ namesakes person1 person1Aged)
   assertBool "notNamesakes: different last name" (not $ namesakes person1 person3)
   assertBool "notNamesakes: different first name" (not $ namesakes person1 person4)
+  assertBool "namesakes Adult Child" (namesakes person5 child3)
+  assertBool "namesakes Child Adult" (namesakes child3 person5)
+  assertBool "not namesakes Adult Child" (not $ namesakes person5 child2)
+  assertBool "not namesakes Child Adult" (not $ namesakes child2 person5)
 
 unit_toString = do
   toString person1 @?= "Kate Verbitskaia, 29"
@@ -159,12 +182,14 @@ unit_valid = do
   assertBool "valid" (validatePerson person4NewLastNameNewLastName)
   assertBool "valid" (validatePerson child1)
   assertBool "valid" (validatePerson child2)
+  assertBool "valid" (validatePerson child3)
+  assertBool "valid" (validatePerson (ageUp child3))
 
   assertBool "not valid: no first name" (not $ validatePerson notValid1)
   assertBool "not valid: no last name" (not $ validatePerson notValid2)
   assertBool "not valid: negative age" (not $ validatePerson notValid3)
   assertBool "not valid: child with id" (not $ validatePerson notValid4)
-
+  assertBool "not valid: too old child" (not $ validatePerson notValidChild1)
 
 
 

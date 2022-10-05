@@ -5,20 +5,17 @@ module NewPerson where
 import MyEq (MyEq (..))
 import ToString
 
-data Adult = Adult
-  { aFirstName :: String, -- Имя, должно быть непустым
-    aLastName :: String, -- Фderiving (Show, Eq)амилия, должна быть непустой
-    aFormerLastNames :: [String], -- Предыдущие фамилии, если фамилия менялась
-    aAge :: Int, -- Возраст, должен быть неотрицательным
-    aIdNumber :: (Int, Int) -- Номер паспорта: состоит из серии и номера.
+data Child = Child
+  { firstName :: String, -- Имя, должно быть непустым
+    lastName :: String, -- Фамилия, должна быть непустой
+    formerLastNames :: [String], -- Предыдущие фамилии, если фамилия менялась
+    age :: Int -- Возраст, должен быть неотрицательным
   }
   deriving (Show, Eq)
 
-data Child = Child
-  { cFirstName :: String, -- Имя, должно быть непустым
-    cLastName :: String, -- Фамилия, должна быть непустой
-    cFormerLastNames :: [String], -- Предыдущие фамилии, если фамилия менялась
-    cAge :: Int -- Возраст, должен быть неотрицательным
+data Adult = Adult
+  { personData :: Child, -- основаня информация о человеке
+    idNumber :: (Int, Int) -- Номер паспорта: состоит из серии и номера.
   }
   deriving (Show, Eq)
 
@@ -29,53 +26,69 @@ data NewPerson
 
 instance MyEq NewPerson where
   (===) :: NewPerson -> NewPerson -> Bool
-  (===) (AdultPerson a) (AdultPerson b) = aIdNumber a == aIdNumber b
-  (===) (ChildPerson a) (ChildPerson b) = cFirstName a == cFirstName b && cLastName a == cLastName b && cAge a == cAge b
+  (===) (AdultPerson a) (AdultPerson b) = idNumber a == idNumber b
+  (===) (ChildPerson a) (ChildPerson b) = firstName a == firstName b && lastName a == lastName b
   (===) _ _ = False
 
 -- Строка должна состоять из имени, фамилии и возраста.
 -- Между именем и фамилией пробел, дальше запятая, пробел, и возраст.
+instance ToString Child where
+  toString:: Child -> String
+  toString child = firstName child ++ " " ++ lastName child ++ ", " ++ toString (age child)
+
 instance ToString NewPerson where
   toString :: NewPerson -> String
-  toString (AdultPerson person) = aFirstName person ++ " " ++ aLastName person ++ ", " ++ toString (aAge person)
-  toString (ChildPerson person) = cFirstName person ++ " " ++ cLastName person ++ ", " ++ toString (cAge person)
+  toString (AdultPerson person) = toString (personData person)
+  toString (ChildPerson person) = toString person
 
 -- Увеличить возраст на 1
+ageUpChild :: Child -> Child
+ageUpChild child = child {age = age child + 1}
+
 ageUp :: NewPerson -> NewPerson
 ageUp (AdultPerson person) =
-  AdultPerson person {aAge = aAge person + 1}
+  AdultPerson person {personData = (ageUpChild . personData) person}
 ageUp (ChildPerson person)
-  | cAge person == 13 =
-    AdultPerson
+  | age person == 13 =
+    AdultPerson -- это corner case, красиво не обработать :(
       Adult
-        { aFirstName = cLastName person,
-          aLastName = cLastName person,
-          aFormerLastNames = cFormerLastNames person,
-          aAge = 14,
-          aIdNumber = undefined
+        { personData = person {age = 14},
+          idNumber = (0, 0) -- паспорт пока не выдали, ничего не можем сказать про это
         }
-  | otherwise = ChildPerson person {cAge = cAge person + 1}
+  | otherwise = ChildPerson (ageUpChild person)
 
 -- Сменить фамилию.
 -- Если новая фамилия совпадает с текущей, ничего не меняется
 -- Старая фамилия запоминается в formerLastNames
+
+updateLastNameChild :: Child -> String -> Child
+updateLastNameChild a newLastName 
+  | lastName a == newLastName = a
+  | otherwise =
+      a
+        { formerLastNames = lastName a : formerLastNames a,
+          lastName = newLastName
+        }
 updateLastName :: NewPerson -> String -> NewPerson
-updateLastName (ChildPerson person) newLastName
-  | cLastName person == newLastName = ChildPerson person
-  | otherwise = ChildPerson person {cLastName = newLastName, cFormerLastNames = cLastName person : cFormerLastNames person}
-updateLastName (AdultPerson person) newLastName
-  | aLastName person == newLastName = AdultPerson person
-  | otherwise = AdultPerson person {aLastName = newLastName, aFormerLastNames = aLastName person : aFormerLastNames person}
+updateLastName (ChildPerson a) newLastName = ChildPerson (updateLastNameChild a newLastName)
+updateLastName (AdultPerson a) newLastName = AdultPerson a {personData = updateLastNameChild (personData a) newLastName}
+
+validateBasicPerson :: Child -> Bool
+validateBasicPerson person = firstName person /= [] && lastName person /= [] && age person >= 0
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: NewPerson -> Bool
-validatePerson (AdultPerson a) = aFirstName a /= [] && aLastName a /= [] && aAge a >= 0 && aAge a >= 14 && aIdNumber a /= (0000, 000000)
-validatePerson (ChildPerson c) = cFirstName c /= [] && cLastName c /= [] && cAge c >= 0 && cAge c < 14
+validatePerson (AdultPerson person) = (validateBasicPerson . personData) person && (age . personData) person >= 14
+validatePerson (ChildPerson person) = validateBasicPerson person && age person < 14
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
+
+namesakesBasicPerson :: Child -> Child -> Bool
+namesakesBasicPerson a b = firstName a == firstName b && lastName a == lastName b
+
 namesakes :: NewPerson -> NewPerson -> Bool
-namesakes (AdultPerson a) (ChildPerson b) = aFirstName a == cFirstName b && aLastName a == cLastName b
-namesakes (AdultPerson a) (AdultPerson b) = aFirstName a == aFirstName b && aLastName a == aLastName b && aIdNumber a /= aIdNumber b
+namesakes (AdultPerson a) (ChildPerson b) = namesakesBasicPerson (personData a) b
+namesakes (AdultPerson a) (AdultPerson b) = namesakesBasicPerson (personData a) (personData b)  && idNumber a /= idNumber b
 namesakes (ChildPerson a) (AdultPerson b) = namesakes (AdultPerson b) (ChildPerson a)
-namesakes (ChildPerson a) (ChildPerson b) = cFirstName a == cFirstName b && cLastName a == cLastName b && cAge a /= cAge b
+namesakes (ChildPerson a) (ChildPerson b) = namesakesBasicPerson a b
