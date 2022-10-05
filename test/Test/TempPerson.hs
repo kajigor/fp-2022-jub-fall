@@ -1,120 +1,123 @@
-module Test.Person where
+module Test.TempPerson where
 
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
-import Person
+import TempPerson
 import ToString
+-- import TempPerson (IdType(Passport))
+import TempPerson (TempPerson)
 
-person1 :: Person
+
+person1 :: TempPerson
 person1 =
-  Person { firstName = "Kate"
+  TempPerson { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 29
-         , idNumber = (1234, 567890) }
+         , idType = Passport (1234, 567890) }
 
-person1Aged :: Person
+person1Aged :: TempPerson
 person1Aged =
-  Person { firstName = "Kate"
+  TempPerson { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 30
-         , idNumber = (1234, 567890) }
+         , idType = Passport (1234, 567890) }
 
-person1AgedTwice :: Person
+person1AgedTwice :: TempPerson
 person1AgedTwice =
-  Person { firstName = "Kate"
+  TempPerson { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 31
-         , idNumber = (1234, 567890) }
+         , idType = Passport (1234, 567890) }
 
-person2 :: Person
+person2 :: TempPerson
 person2 =
-  Person { firstName = "Kate"
+  TempPerson { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 42
-         , idNumber = (9876, 543210) }
+         , idType = Passport (9876, 543210) }
 
-person3 :: Person
+person3 :: TempPerson
 person3 =
-  Person { firstName = "Kate"
+  TempPerson { firstName = "Kate"
          , lastName = "Smith"
          , formerLastNames = []
          , age = 21
-         , idNumber = (2121, 212121) }
+         , idType = Passport (2121, 212121) }
 
-person4 :: Person
+person4 :: TempPerson
 person4 =
-  Person { firstName = "Maria"
+  TempPerson { firstName = "Maria"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 23
-         , idNumber = (1111, 111111) }
+         , idType = Passport (1111, 111111) }
 
-person4NewLastName :: Person
+person4NewLastName :: TempPerson
 person4NewLastName =
-  Person { firstName = "Maria"
+  TempPerson { firstName = "Maria"
          , lastName = "Ivanova"
          , formerLastNames = ["Verbitskaia"]
          , age = 23
-         , idNumber = (1111, 111111) }
+         , idType = Passport (1111, 111111) }
 
-person4NewLastNameNewLastName :: Person
+person4NewLastNameNewLastName :: TempPerson
 person4NewLastNameNewLastName =
-  Person { firstName = "Maria"
+  TempPerson { firstName = "Maria"
          , lastName = "Sidorova"
          , formerLastNames = [ "Ivanova", "Verbitskaia" ]
          , age = 23
-         , idNumber = (1111, 111111) }
+         , idType = Passport (1111, 111111) }
 
-child1 :: Person
+child1 :: TempPerson
 child1 =
-  Person { firstName = "Ivan"
+  TempPerson { firstName = "Ivan"
          , lastName = "Ivanov"
          , formerLastNames = []
          , age = 7
-         , idNumber = (0000, 000000) }
+         , idType = Bc (0000, 000000) }
 
-child2 :: Person
+child2 :: TempPerson
 child2 =
-  Person { firstName = "Masha"
+  TempPerson { firstName = "Masha"
          , lastName = "Ivanova"
          , formerLastNames = []
          , age = 3
-         , idNumber = (0000, 000000) }
+         , idType = Bc (0000, 000000) }
 
-notValid1 :: Person
+notValid1 :: TempPerson
 notValid1 =
-  Person { firstName = ""
+  TempPerson { firstName = ""
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 29
-         , idNumber = (1234, 567890) }
+         , idType = Passport (1234, 567890) }
 
-notValid2 :: Person
+notValid2 :: TempPerson
 notValid2 =
-  Person { firstName = "Kate"
+  TempPerson { firstName = "Kate"
          , lastName = ""
          , formerLastNames = []
          , age = 29
-         , idNumber = (1234, 567890) }
+         , idType = Passport (1234, 567890) }
 
-notValid3 :: Person
+notValid3 :: TempPerson
 notValid3 =
-  Person { firstName = "Kate"
+  TempPerson { firstName = "Kate"
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = -13
-         , idNumber = (1234, 567890) }
+         , idType = Passport (1234, 567890) }
 
-notValid4 :: Person
+notValid4 :: TempPerson
 notValid4 =
-  Person { firstName = "Masha"
+  TempPerson { firstName = "Masha"
          , lastName = "Ivanova"
          , formerLastNames = []
          , age = 3
-         , idNumber = (1234, 567890) }
+         , idType = Passport (1234, 567890) }
 
 
 unit_ageUp = do
@@ -164,6 +167,7 @@ unit_valid = do
   assertBool "not valid: no last name" (not $ validatePerson notValid2)
   assertBool "not valid: negative age" (not $ validatePerson notValid3)
   assertBool "not valid: child with id" (not $ validatePerson notValid4)
+
 
 
 

@@ -4,16 +4,9 @@ module TempPerson where
 import MyEq (MyEq (..))
 import ToString
 
-data IdNumber = Passport (Int, Int) | Bc (Int, String)
-    deriving (Show, Eq)
-
-instance MyEq IdNumber where
-    (===) :: IdNumber -> IdNumber -> Bool
-    (===) (Bc _) (Passport _) = False
-    (===) (Bc x) (Bc y) = x == y
-    (===) (Passport _) (Bc _) = False
-    (===) (Passport x) (Passport y) = x === y
-
+data IdType = Passport { idNumber :: (Int, Int) } 
+    | Bc { idNumber :: (Int, Int)}
+    deriving (Show , Eq)
 
 -- Тип данных для человека
 data TempPerson = TempPerson
@@ -21,15 +14,22 @@ data TempPerson = TempPerson
   , lastName :: String          -- Фамилия, должна быть непустой
   , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
   , age :: Int                  -- Возраст, должен быть неотрицательным
-  , idNumber :: (Int, Int)      -- Номер паспорта: состоит из серии и номера.
+  , idType :: IdType     -- Номер паспорта: состоит из серии и номера.
   }                             -- -- У детей (людей младше 14 лет) номера паспорта --- (0000, 000000)
   deriving (Show, Eq)
 
-  
+isPassport :: IdType -> Bool
+isPassport (Passport (_,_)) = True
+isPassport _ = False
+
+hasPassport :: TempPerson -> Bool
+hasPassport = isPassport . idType
+
+
 -- У разных людей разные номера паспортов
 instance MyEq TempPerson where
   (===) :: TempPerson -> TempPerson -> Bool
-  (===) x y = idNumber x === idNumber y
+  (===) x y = idType x == idType y
 
 -- Строка должна состоять из имени, фамилии и возраста.
 -- Между именем и фамилией пробел, дальше запятая, пробел, и возраст.
@@ -54,7 +54,7 @@ updateLastName person newLastName =
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: TempPerson -> Bool
 validatePerson person =
-  firstName person /= "" && lastName person /= "" && age person >= 0 && (age person >= 14 )
+  firstName person /= "" && lastName person /= "" && age person >= 0 && ((age person >= 14) == hasPassport person)
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями

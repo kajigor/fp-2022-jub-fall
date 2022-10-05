@@ -29,6 +29,7 @@ library
       MyEq
       Person
       Syntax
+      TempPerson
       ToString
   other-modules:
       Paths_P04
@@ -55,7 +56,7 @@ test-suite P04-test
   type: exitcode-stdio-1.0
   main-is: Test.hs
   other-modules:
-      Test.Person
+      Test.TempPerson
       Paths_P04
   hs-source-dirs:
       test
