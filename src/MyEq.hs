@@ -1,4 +1,5 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE FlexibleInstances #-}
 module MyEq where
 
 -- Класс типа, эквивалентный Eq из стандартной библиотеки
@@ -28,6 +29,10 @@ instance MyEq Bool where
 -- а значит можно воспользоваться равенством для Int
 instance MyEq Int where
   (===) :: Int -> Int -> Bool
+  (===) = (==)
+
+instance MyEq String where
+  (===) :: String -> String -> Bool
   (===) = (==)
 
 -- Как сравнивать на равенство пары значений
