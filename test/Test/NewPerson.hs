@@ -130,6 +130,23 @@ notValid4 =
          , idNumber = (1234, 567890)
          , birthCertificate = ("IIIP", 123456) }
 
+notValidChild5 :: NewPerson
+notValidChild5 =
+  NewPerson { firstName = "Masha"
+         , lastName = "Ivanova"
+         , formerLastNames = []
+         , age = 3
+         , idNumber = (0, 0)
+         , birthCertificate = ("IIIIP", 123456)}
+
+notValidChild6 :: NewPerson
+notValidChild6 =
+  NewPerson { firstName = "Masha"
+         , lastName = "Ivanova"
+         , formerLastNames = []
+         , age = 4
+         , idNumber = (1234, 123456)
+         , birthCertificate = ("IIIIP", 123456) }
 
 unit_ageUp = do
   ageUp person1 @?= person1Aged
@@ -178,8 +195,9 @@ unit_valid = do
   assertBool "not valid: no last name" (not $ validateNewPerson notValid2)
   assertBool "not valid: negative age" (not $ validateNewPerson notValid3)
   assertBool "not valid: child with id" (not $ validateNewPerson notValid4)
-
-
+  assertBool "not valid: child with birthCertificate" (not $ validateNewPerson notValidChild5)
+  assertBool "not valid: child with birthCertificate and id" (not $ validateNewPerson notValidChild6)
+  
 
 
 

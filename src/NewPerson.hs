@@ -40,7 +40,7 @@ updateLastName person newLastName | (lastName person) == newLastName = person
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validateNewPerson :: NewPerson -> Bool
-validateNewPerson person = (firstName person) /= [] && (lastName person) /= [] && ((age person) >= 0) && ((age person) > 13 || (idNumber person) == (0, 0))
+validateNewPerson person = (firstName person) /= [] && (lastName person) /= [] && ((age person) >= 0) && ((age person) > 13 || ((idNumber person) == (0, 0) && (length $ fst $ (birthCertificate person)) == 4 ))
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
