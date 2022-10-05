@@ -1,7 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
 module Person where
 
-import MyEq (MyEq (..))
 import ToString
 
 -- Тип данных для человека
@@ -13,11 +12,6 @@ data Person = Person
   , idNumber :: (Int, Int)      -- Номер паспорта: состоит из серии и номера.
   }                             -- -- У детей (людей младше 14 лет) номера паспорта --- (0000, 000000)
   deriving (Show, Eq)
-
--- У разных людей разные номера паспортов
-instance MyEq Person where
-  (===) :: Person -> Person -> Bool
-  (===) x y = idNumber x === idNumber y
 
 -- Строка должна состоять из имени, фамилии и возраста.
 -- Между именем и фамилией пробел, дальше запятая, пробел, и возраст.
