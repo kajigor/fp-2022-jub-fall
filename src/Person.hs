@@ -27,7 +27,7 @@ instance MyEq Person where
 -- Иисус Христос, 2022
 instance ToString Person where
   toString :: Person -> String
-  toString (Person {firstName=fName, lastName=lName, age=age}) = fName ++ " " ++ lName ++ ", " ++ (show age)
+  toString (Person { .. }) = firstName ++ " " ++ lastName ++ ", " ++ (show age)
 --  toString person =
 --    undefined
 
