@@ -47,7 +47,11 @@ updateLastName (Person { .. }) newLastName | lastName /= newLastName && (not $ i
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
-validatePerson Person { .. } = (isCorrectFirstName firstName) && (isCorrectLastName lastName) && (isCorrectFormerNames formerLastNames) && (isCorrectAge age) && (isCorrectIdNumber idNumber)
+validatePerson Person { .. } = (isCorrectFirstName firstName) && 
+                               (isCorrectLastName lastName) && 
+                               (isCorrectFormerNames formerLastNames) && 
+                               (isCorrectAge age) && 
+                               (isCorrectIdNumber idNumber)
   where
     isCorrectFirstName :: String -> Bool
     isCorrectFirstName fName = (length fName) > 0
