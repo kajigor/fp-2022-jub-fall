@@ -124,6 +124,7 @@ notValid5 =
          , age = 74
          , documentID = BirthCertificate 000000001 }
 
+notValid6 :: Human
 notValid6 = 
   Human { firstName = "Staryi"
          , lastName = "Ded"
