@@ -41,8 +41,8 @@ updateLastName person newLastName | lastName person == newLastName = person
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
 validatePerson person =
-       firstName person /= ""
-    && lastName person /= ""
+       not (null firstName person)
+    && not (null lastName person)
     && age person >= 0
     && (age person < 14 && idNumber person == (0, 0) || age person >= 14 && idNumber person /= (0, 0))
 
