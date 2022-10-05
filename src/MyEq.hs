@@ -1,4 +1,5 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE FlexibleInstances #-}
 module MyEq where
 
 -- Класс типа, эквивалентный Eq из стандартной библиотеки

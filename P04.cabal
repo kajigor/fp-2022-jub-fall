@@ -25,6 +25,7 @@ source-repository head
 
 library
   exposed-modules:
+      BetterPerson
       List
       MyEq
       Person
@@ -55,6 +56,7 @@ test-suite P04-test
   type: exitcode-stdio-1.0
   main-is: Test.hs
   other-modules:
+      Test.BetterPerson
       Test.Person
       Paths_P04
   hs-source-dirs:
