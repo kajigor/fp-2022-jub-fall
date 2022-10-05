@@ -70,7 +70,7 @@ validatePerson Person { .. } = (isCorrectFirstName firstName) &&
 	
     isCorrectIdNumber :: (Int, Int) -> Bool 
     isCorrectIdNumber (x, y) | age >= 14 = (0 < x && x < 10000) && (0 < y && y < 1000000)
-                             | otherwise = (x == 0) && (y == 0)
+                             | otherwise = (x, y) == (0, 0)
 -- validatePerson person =       
 --   undefined
 
