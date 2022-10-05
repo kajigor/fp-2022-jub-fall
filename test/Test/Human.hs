@@ -122,7 +122,14 @@ notValid5 =
          , lastName = "Stalin"
          , formerLastNames = ["Dzhugashvili"]
          , age = 74
-         , documentID = BirthCertificate 000000001
+         , documentID = BirthCertificate 000000001 }
+
+notValid6 = 
+  Human { firstName = "Staryi"
+         , lastName = "Ded"
+         , formerLastNames = ["Sovsem", "Staryi", ""]
+         , age = 3
+         , documentID = BirthCertificate 1234567890 }
 
 
 unit_ageUp = do
@@ -173,6 +180,7 @@ unit_valid = do
   assertBool "not valid: negative age" (not $ validateHuman notValid3)
   assertBool "not valid: child with Passport" (not $ validateHuman notValid4)
   assertBool "not valid: adult with BrithCertificate" (not $ validateHuman notValid5)
+  assertBool "not valid: invalid last names list" (not $ validateHuman notValid6)
 
 
 
