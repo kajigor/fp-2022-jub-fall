@@ -74,7 +74,7 @@ child1 =
          , lastName = "Ivanov"
          , formerLastNames = []
          , age = 7
-         , idNumber = BirthCertificateNo (0000, 000000) }
+         , idNumber = BirthCertificateNo ("MU", 123456) }
 
 child2 :: PersonFixed
 child2 =
@@ -82,7 +82,7 @@ child2 =
          , lastName = "Ivanova"
          , formerLastNames = []
          , age = 3
-         , idNumber = BirthCertificateNo (0000, 000000) }
+         , idNumber = BirthCertificateNo ("I-AK", 654321) }
 
 notValid1 :: PersonFixed
 notValid1 =
@@ -106,7 +106,7 @@ notValid3 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = -13
-         , idNumber = PassportNo (1234, 567890) }
+         , idNumber = BirthCertificateNo ("ABOBA", 567890) }
 
 notValid4 :: PersonFixed
 notValid4 =
