@@ -54,10 +54,10 @@ validatePerson Person { .. } = (isCorrectFirstName firstName) &&
                                (isCorrectIdNumber idNumber)
   where
     isCorrectFirstName :: String -> Bool
-    isCorrectFirstName fName = (length fName) > 0
+    isCorrectFirstName fName = not $ null fName
 
     isCorrectLastName :: String -> Bool
-    isCorrectLastName lName = (length lName) > 0
+    isCorrectLastName lName = not $ null lName
 
     isCorrectFormerNames :: [String] -> Bool
     isCorrectFormerNames = foldr f True
@@ -77,6 +77,7 @@ validatePerson Person { .. } = (isCorrectFirstName firstName) &&
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
 namesakes :: Person -> Person -> Bool
-namesakes (Person {firstName=n1, lastName=s1, idNumber=id1}) (Person {firstName=n2, lastName=s2, idNumber=id2}) = ((n1, s1) == (n2, s2)) && (id1 /= id2)
+namesakes p1 p2 = (firstName p1, lastName p1) == (firstName p2, lastName p2) && p1 =/= p2 
+-- namesakes (Person {firstName=n1, lastName=s1, idNumber=id1}) (Person {firstName=n2, lastName=s2, idNumber=id2}) = ((n1, s1) == (n2, s2)) && (id1 /= id2)
 -- namesakes x y =
 --   undefined
