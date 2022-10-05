@@ -1,8 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE NamedFieldPuns #-}
 module BetterPerson where
 
-import MyEq (MyEq (..))
 import ToString
 
 -- Тип данных для человека
@@ -15,11 +13,6 @@ data BetterPerson = BetterPerson
   , birthCert :: (String, Int)  -- Номер свид-ва о рождении для лиц младше 14 лет: две буквы + номер.
   }
   deriving (Show, Eq)
-
--- У разных людей разные номера паспортов
-instance MyEq BetterPerson where
-  (===) :: BetterPerson -> BetterPerson -> Bool
-  (===) x y = idNumber x === idNumber y
 
 -- Строка должна состоять из имени, фамилии и возраста.
 -- Между именем и фамилией пробел, дальше запятая, пробел, и возраст.
