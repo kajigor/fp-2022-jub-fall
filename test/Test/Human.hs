@@ -116,6 +116,14 @@ notValid4 =
          , age = 3
          , documentID = Passport (1234, 567890) }
 
+notValid5 :: Human
+notValid5 =
+  Human { firstName = "Joseph"
+         , lastName = "Stalin"
+         , formerLastNames = ["Dzhugashvili"]
+         , age = 74
+         , documentID = BirthCertificate 000000001
+
 
 unit_ageUp = do
   ageUp human1 @?= human1Aged
@@ -164,6 +172,7 @@ unit_valid = do
   assertBool "not valid: no last name" (not $ validateHuman notValid2)
   assertBool "not valid: negative age" (not $ validateHuman notValid3)
   assertBool "not valid: child with Passport" (not $ validateHuman notValid4)
+  assertBool "not valid: adult with BrithCertificate" (not $ validateHuman notValid5)
 
 
 
