@@ -84,6 +84,14 @@ child2 =
          , age = 3
          , idNumber = BirthSertificate ("IV-ЖЕ", 746512) }
 
+child3 :: Person
+child3 = 
+  Person { firstName = "Masha"
+         , lastName = "Ivanova"
+         , formerLastNames = []
+         , age = 7
+         , idNumber = BirthSertificate ("V-УД", 398275) }
+
 notValid1 :: Person
 notValid1 =
   Person { firstName = ""
@@ -115,6 +123,13 @@ notValid4 =
          , formerLastNames = []
          , age = 3
          , idNumber = Passport (1234, 567890) }
+notValid5 :: Person
+notValid5 =
+  Person { firstName = "Masha"
+         , lastName = "Ivanova"
+         , formerLastNames = []
+         , age = 20
+         , idNumber = BirthSertificate ("IV-ЖЕ", 746512) }
 
 
 unit_ageUp = do
@@ -131,10 +146,13 @@ unit_updateLastName = do
 
 unit_namesakes = do
   assertBool "namesakes" (namesakes person1 person2)
+  assertBool "namesakes" (namesakes child2 child3)
   assertBool "notNamesakes: same person" (not $ namesakes person1 person1)
   assertBool "notNamesakes: same person" (not $ namesakes person1 person1Aged)
+  assertBool "notNamesakes: same person" (not $ namesakes child1 child1)
   assertBool "notNamesakes: different last name" (not $ namesakes person1 person3)
   assertBool "notNamesakes: different first name" (not $ namesakes person1 person4)
+  assertBool "notNamesakes: different first name" (not $ namesakes child1 child2)
 
 unit_toString = do
   toString person1 @?= "Kate Verbitskaia, 29"
@@ -163,7 +181,8 @@ unit_valid = do
   assertBool "not valid: no first name" (not $ validatePerson notValid1)
   assertBool "not valid: no last name" (not $ validatePerson notValid2)
   assertBool "not valid: negative age" (not $ validatePerson notValid3)
-  assertBool "not valid: child with id" (not $ validatePerson notValid4)
+  assertBool "not valid: child with passport" (not $ validatePerson notValid4)
+  assertBool "not valid: adult without passport" (not $ validatePerson notValid5)
 
 
 
