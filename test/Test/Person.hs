@@ -119,7 +119,7 @@ notValid3 =
          , formerLastNames = []
          , age = -13
          , passport = Nothing
-         , birthCertificate = ("V-AA", 123456)}
+         , birthCertificate = ("V-CC", 123456)}
 
 notValid4 :: Person
 notValid4 =
@@ -129,6 +129,15 @@ notValid4 =
          , age = 3
          , passport = Just (1234, 567890)
          , birthCertificate = ("V-AA", 123456)}
+
+notValid5 :: Person
+notValid5 =
+  Person { firstName = "Ivan"
+         , lastName = "Ivanov"
+         , formerLastNames = []
+         , age = 14
+         , passport = Nothing
+         , birthCertificate = ("V-AA", 013434)}
 
 
 unit_ageUp = do
@@ -178,3 +187,4 @@ unit_valid = do
   assertBool "not valid: no last name" (not $ validatePerson notValid2)
   assertBool "not valid: negative age" (not $ validatePerson notValid3)
   assertBool "not valid: child with id" (not $ validatePerson notValid4)
+  assertBool "not valid: adult without passport" (not $ validatePerson notValid5)
