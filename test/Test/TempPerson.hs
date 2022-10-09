@@ -3,8 +3,6 @@ module Test.TempPerson where
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
 import TempPerson
 import ToString
--- import TempPerson (IdType(Passport))
-import TempPerson (TempPerson)
 
 
 person1 :: TempPerson
