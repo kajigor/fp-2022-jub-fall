@@ -39,7 +39,7 @@ updateLastName person newLastName
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
-validatePerson person = firstName person /= "" && lastName person /= "" && age person >= 0 && (age person <= 14) <= (idNumber person == (0, 0))
+validatePerson person = firstName person /= "" && lastName person /= "" && age person >= 0 && (age person <= 14) == (idNumber person == (0, 0))
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями

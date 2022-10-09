@@ -19,7 +19,7 @@ data NewPerson = NewPerson
   , lastName :: String          -- Фамилия, должна быть непустой
   , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
   , age :: Int                  -- Возраст, должен быть неотрицательным
-  , idDocument :: ID                    -- Документ, удостоверяющий личность
+  , idDocument :: ID            -- Документ, удостоверяющий личность
   }  deriving (Show, Eq)
 
 -- У разных людей разные номера паспортов
@@ -47,7 +47,7 @@ updateLastName person newLastName
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validateNewPerson :: NewPerson -> Bool
-validateNewPerson person = firstName person /= "" && lastName person /= "" && age person >= 0 && (age person <= 14) <= (isBirthCertificate $ idDocument person)
+validateNewPerson person = firstName person /= "" && lastName person /= "" && age person >= 0 && (age person <= 14) == (isBirthCertificate $ idDocument person)
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
