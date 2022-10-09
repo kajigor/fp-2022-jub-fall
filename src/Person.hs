@@ -2,9 +2,12 @@ module Person where
 
 import qualified Data.Set as Set
 
-data Tree = ???
+-- Дерево хранит корневую вершину, а также детей корневой вершины в виде списка.
+data Tree a = Tree a (Set.Set (Tree a))
+  deriving (Show, Eq, Ord)
 
-data Document = ???
+data Document = Passport Int Int | BirthCertificate Int Int
+  deriving (Show, Eq, Ord)
 
 -- Тип данных для человека
 data Person = Person
@@ -13,13 +16,14 @@ data Person = Person
   , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
   , age :: Int                  -- Возраст, должен быть неотрицательным
   , idNumber :: Maybe Document  -- Какое-то удостоверение личности
-  , parents :: ??? Person       -- Родители данного человека. Выбрать подходящий контейнер.
+  , parents :: Set.Set Person       -- Родители данного человека. Выбрать подходящий контейнер.
+  -- Используется контейнер Set, так как нам не важен порядок родителей
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 -- Создание ребенка данных родителей
-createChild :: ??? Person -> Person
-createChild = undefined
+createChild :: Set.Set Person -> String -> String -> Maybe Document -> Person
+createChild = undefined 
 
 -- Самый далекий предок данного человека.
 -- Если на одном уровне иерархии больше одного предка -- вывести самого старшего из них.
