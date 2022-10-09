@@ -1,4 +1,5 @@
 {-# LANGUAGE InstanceSigs #-}
+
 module TempPerson where
 
 import MyEq (MyEq (..))
