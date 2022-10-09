@@ -3,7 +3,7 @@ module Person where
 
 import qualified Data.Set as Set
 
-data Tree a = Leaf a | OneChild a (Tree a) | TwoChildren a (Tree a) (Tree a) deriving (Show, Eq)
+data Tree a = Leaf a | Node a [Tree a] deriving (Show, Eq)
 
 
 data Document = Passport (Int, Int) | BirthCertificate (String, Int) deriving (Show, Eq, Ord)
@@ -93,9 +93,20 @@ ancestors level person
       (Just a, Just b) -> Set.union (f a) (f b)
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
-descendants :: Person -> Tree Person
-descendants person = case parents person of
-  (Nothing, Nothing) -> Leaf person
-  (Just a, Nothing) -> OneChild person (descendants a)
-  (Nothing, Just a) -> OneChild person (descendants a)
-  (Just a, Just b) -> TwoChildren person (descendants a) (descendants b)
+descendants :: Person -> Set.Set Person -> Tree Person
+descendants person allPersons = case childs of
+  [] -> Leaf person
+  _ -> Node person (map descendants' childs)
+  where
+    childs :: [Person]
+    childs = Set.toList (Set.filter isChild allPersons)
+    
+    isChild :: Person -> Bool
+    isChild p = case parents p of
+      (Just p1, Just p2) -> p1 == person || p2 == person
+      (Just p1, _) -> p1 == person
+      (_, Just p2) -> p2 == person
+      _ -> False
+
+    descendants' :: Person -> Tree Person
+    descendants' p = descendants p allPersons

@@ -8,7 +8,7 @@ import Person
       greatestAncestor,
       Document(BirthCertificate, Passport),
       Person(..),
-      Tree(TwoChildren, Leaf, OneChild) )
+      Tree(Leaf, Node) )
 import qualified Data.Set as Set
 
 person1 :: Person
@@ -103,12 +103,10 @@ unit_ancestors = do
     ancestors 2 person5 @?= Set.fromList [person1]
 
 unit_descendants = do
-    let t1 = Leaf person1
-    let t2 = Leaf person2
-    let t3 = TwoChildren person3 t1 t2
-    let t4 = OneChild person4 t1
-    let t5 = TwoChildren person5 t4 t2
-    let res = [t1, t2, t3, t4, t5]
-    let persons = [descendants person1, descendants person2, descendants person3, descendants person4, descendants person5]
+    let allPersons = Set.fromList [person1, person2, person3, person4, person5]
 
-    persons @?= res
+    descendants person3 allPersons @?= Leaf person3
+    descendants person1 allPersons @?= Node person1 [Leaf person3, Node person4 [Leaf person5]]
+    descendants person2 allPersons @?= Node person2 [Leaf person3, Leaf person5]
+    descendants person4 allPersons @?= Node person4 [Leaf person5]
+    descendants person5 allPersons @?= Leaf person5
