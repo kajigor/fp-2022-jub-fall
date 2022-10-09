@@ -2,18 +2,18 @@ module Person where
 
 import qualified Data.Set as Set
 
-data Tree = ???
+data Tree = Orphan | ChildOf (Tree, Tree)
 
-data Document = ???
+data Document = Document Int
 
 -- Тип данных для человека
 data Person = Person
-  { firstName :: String         -- Имя, должно быть непустым
-  , lastName :: String          -- Фамилия, должна быть непустой
-  , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
-  , age :: Int                  -- Возраст, должен быть неотрицательным
-  , idNumber :: Maybe Document  -- Какое-то удостоверение личности
-  , parents :: ??? Person       -- Родители данного человека. Выбрать подходящий контейнер.
+  { firstName :: String           -- Имя, должно быть непустым
+  , lastName :: String            -- Фамилия, должна быть непустой
+  , formerLastNames :: [String]   -- Предыдущие фамилии, если фамилия менялась
+  , age :: Int                    -- Возраст, должен быть неотрицательным
+  , idNumber :: Maybe Document    -- Какое-то удостоверение личности
+  , parents :: (Person, Person) -- Родители данного человека. Выбрать подходящий контейнер.
   }
   deriving (Show, Eq)
 
