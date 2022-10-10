@@ -11,7 +11,7 @@ person1 =
          , formerLastNames = []
          , age = 56
          , idNumber = Just (Passport (1234, 567890))
-         , parents = Set.empty }
+         , parents = (Nothing, Nothing) }
 
 person2 :: Person
 person2 =
@@ -20,7 +20,7 @@ person2 =
          , formerLastNames = []
          , age = 59
          , idNumber = Just (Passport (1234, 567820))
-         , parents = Set.empty }
+         , parents = (Nothing, Nothing) }
 
 person3 :: Person
 person3 =
@@ -29,17 +29,17 @@ person3 =
          , formerLastNames = []
          , age = 84
          , idNumber = Just (Passport (1234, 186183))
-         , parents = Set.empty }
+         , parents = (Nothing, Nothing) }
 
-person4 = (createChild (Set.fromList [person1, person2]) "Artem" "Verbistkiy") {age = 32}
+person4 = (createChild (Just person1) (Just person2) "Artem" "Verbistkiy") {age = 32}
 
-person5 = (createChild (Set.fromList [person3]) "Elena" "Arama") {age = 60}
+person5 = (createChild (Just person3) Nothing "Elena" "Arama") {age = 60}
 
-person6 = (createChild (Set.fromList [person5]) "Ekaterina" "Arama") {age = 28}
+person6 = (createChild (Just person5) Nothing "Ekaterina" "Arama") {age = 28}
 
-person7 = (createChild (Set.fromList [person4, person6]) "Anna" "Verbitskaia") {age = 28}
+person7 = (createChild (Just person4) (Just person6) "Anna" "Verbitskaia") {age = 28}
 
-person8 = (createChild (Set.fromList [person3]) "Anna" "Trott") {age = 58}
+person8 = (createChild (Just person3) Nothing "Anna" "Trott") {age = 58}
 
 setAll = Set.fromList [person1, person2, person3, person4, person5, person6, person7, person8]
 
