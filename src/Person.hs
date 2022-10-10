@@ -4,7 +4,7 @@ import qualified Data.Set as Set
 
 data Tree a = Leaf a | OneParent a (Tree a) | TwoParents a (Tree a) (Tree a) deriving (Show, Eq)
 
-data Document = Passport( Int, Int) | BirthCert (String, Int) deriving (Show, Eq)
+data Document = Passport( Int, Int) | BirthCert (String, Int) deriving (Show, Eq, Ord)
 
 
 
@@ -17,7 +17,7 @@ data Person = Person
   , idNumber :: Document                        -- Какое-то удостоверение личности
   , parents :: (Maybe Person, Maybe Person)     -- Родители данного человека. Выбрать подходящий контейнер.
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 
 
@@ -58,7 +58,16 @@ greatestAncestor person = fst (helper person) where
 
 -- Предки на одном уровне иерархии.
 ancestors :: Int -> Person -> Set.Set Person
-ancestors = undefined
+ancestors level person
+    | level < 0 = Set.empty
+    | level == 0 = Set.singleton person
+    | otherwise = case parents person of
+        (Nothing , Nothing) -> Set.empty
+        (Nothing, Just p2) -> ancestors (level - 1) p2
+        (Just p1, Nothing) -> ancestors (level - 1) p1
+        (Just p1, Just p2) -> Set.union (ancestors (level - 1) p1) (ancestors (level - 1) p2)
+
+
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
 descendants :: Person -> Set.Set Person -> Tree Person
