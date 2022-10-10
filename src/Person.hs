@@ -6,6 +6,8 @@ data Tree a = Leaf a | OneParent a (Tree a) | TwoParents a (Tree a) (Tree a) der
 
 data Document = Passport( Int, Int) | BirthCert (String, Int) deriving (Show, Eq)
 
+
+
 -- Тип данных для человека
 data Person = Person
   { firstName :: String                         -- Имя, должно быть непустым
@@ -16,6 +18,8 @@ data Person = Person
   , parents :: (Maybe Person, Maybe Person)     -- Родители данного человека. Выбрать подходящий контейнер.
   }
   deriving (Show, Eq)
+
+
 
 -- Создание ребенка данных родителей
 createChild :: String -> String -> (Maybe Person, Maybe Person) -> Person
