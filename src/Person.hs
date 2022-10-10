@@ -7,7 +7,7 @@ data Tree = Tree {
   children :: Set.Set Tree
 } deriving (Show, Eq, Ord)
 
-data Document = Passport (Int, Int) | MiscDocument String deriving (Show, Eq, Ord)
+data Document = Passport Int Int | MiscDocument String deriving (Show, Eq, Ord)
 
 -- Тип данных для человека
 data Person = Person
