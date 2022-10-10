@@ -3,6 +3,7 @@ module Test.PersonRedesign where
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
 import PersonRedesign
 import ToString
+import PersonRedesign (Person (formerLastNames), Id (RussianBirthCertificate, RussianPassport), ageOfGettingAPassport)
 
 person1 :: Person
 person1 =
@@ -10,7 +11,7 @@ person1 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 29
-         , id' = RussianPassport (1234, 567890) }
+         , id' = Just $ RussianPassport (1234, 567890) }
 
 person1Aged :: Person
 person1Aged =
@@ -18,7 +19,7 @@ person1Aged =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 30
-         , id' = RussianPassport (1234, 567890) }
+         , id' = Just $ RussianPassport (1234, 567890) }
 
 person1AgedTwice :: Person
 person1AgedTwice =
@@ -26,7 +27,7 @@ person1AgedTwice =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 31
-         , id' = RussianPassport (1234, 567890) }
+         , id' = Just $ RussianPassport (1234, 567890) }
 
 person2 :: Person
 person2 =
@@ -34,7 +35,7 @@ person2 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 42
-         , id' = RussianPassport (9876, 543210) }
+         , id' = Just $ RussianPassport (9876, 543210) }
 
 person3 :: Person
 person3 =
@@ -42,7 +43,7 @@ person3 =
          , lastName = "Smith"
          , formerLastNames = []
          , age = 21
-         , id' = RussianPassport (2121, 212121) }
+         , id' = Just $ RussianPassport (2121, 212121) }
 
 person4 :: Person
 person4 =
@@ -50,7 +51,7 @@ person4 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 23
-         , id' = RussianPassport (1111, 111111) }
+         , id' = Just $ RussianPassport (1111, 111111) }
 
 person4NewLastName :: Person
 person4NewLastName =
@@ -58,7 +59,7 @@ person4NewLastName =
          , lastName = "Ivanova"
          , formerLastNames = ["Verbitskaia"]
          , age = 23
-         , id' = RussianPassport (1111, 111111) }
+         , id' = Just $ RussianPassport (1111, 111111) }
 
 person4NewLastNameNewLastName :: Person
 person4NewLastNameNewLastName =
@@ -66,7 +67,7 @@ person4NewLastNameNewLastName =
          , lastName = "Sidorova"
          , formerLastNames = [ "Ivanova", "Verbitskaia" ]
          , age = 23
-         , id' = RussianPassport (1111, 111111) }
+         , id' = Just $ RussianPassport (1111, 111111) }
 
 child1 :: Person
 child1 =
@@ -74,7 +75,7 @@ child1 =
          , lastName = "Ivanov"
          , formerLastNames = []
          , age = 7
-         , id' = RussianBirthCertificate ("V36", 331112) }
+         , id' = Just $ RussianBirthCertificate ("V36", 331112) }
 
 child2 :: Person
 child2 =
@@ -82,7 +83,23 @@ child2 =
          , lastName = "Ivanova"
          , formerLastNames = []
          , age = 3
-         , id' = RussianBirthCertificate ("III99", 123456) }
+         , id' = Just $ RussianBirthCertificate ("III99", 123456) }
+
+child3 :: Person
+child3 =
+  Person { firstName = "Yagami"
+         , lastName = "Light"
+         , formerLastNames = []
+         , age = ageOfGettingAPassport - 1
+         , id' = Just $ RussianBirthCertificate ("L33", 515422) }
+
+child3AgedUp :: Person
+child3AgedUp =
+  Person { firstName = "Yagami"
+         , lastName = "Light"
+         , formerLastNames = []
+         , age = ageOfGettingAPassport
+         , id' = Nothing }
 
 notValid1 :: Person
 notValid1 =
@@ -90,7 +107,7 @@ notValid1 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = 29
-         , id' = RussianPassport (1234, 567890) }
+         , id' = Just $ RussianPassport (1234, 567890) }
 
 notValid2 :: Person
 notValid2 =
@@ -98,7 +115,7 @@ notValid2 =
          , lastName = ""
          , formerLastNames = []
          , age = 29
-         , id' = RussianPassport (1234, 567890) }
+         , id' = Just $ RussianPassport (1234, 567890) }
 
 notValid3 :: Person
 notValid3 =
@@ -106,7 +123,7 @@ notValid3 =
          , lastName = "Verbitskaia"
          , formerLastNames = []
          , age = -13
-         , id' = RussianPassport (1234, 567890) }
+         , id' = Just $ RussianPassport (1234, 567890) }
 
 notValid4 :: Person
 notValid4 =
@@ -114,12 +131,29 @@ notValid4 =
          , lastName = "Ivanova"
          , formerLastNames = []
          , age = 3
-         , id' = RussianPassport (1234, 567890) }
+         , id' = Just $ RussianPassport (1234, 567890) }
+
+notValid5 :: Person
+notValid5 =
+  Person { firstName = "Yagami"
+         , lastName = "Light"
+         , formerLastNames = []
+         , age = ageOfGettingAPassport
+         , id' = Just $ RussianBirthCertificate ("L33", 515422) }
+
+notValid6 :: Person
+notValid6 =
+  Person { firstName = "L"
+         , lastName = "Lawliet"
+         , formerLastNames = []
+         , age = ageOfGettingAPassport - 1
+         , id' = Just $ RussianPassport (1985, 311000) }
 
 
 unit_ageUp = do
   ageUp person1 @?= person1Aged
   ageUp (ageUp person1) @?= person1AgedTwice
+  ageUp child3 @?= child3AgedUp
 
 unit_updateLastName = do
   let person4' = updateLastName person4 "Ivanova"
@@ -147,6 +181,8 @@ unit_toString = do
   toString person4NewLastNameNewLastName @?= "Maria Sidorova, 23"
   toString child1 @?= "Ivan Ivanov, 7"
   toString child2 @?= "Masha Ivanova, 3"
+  toString child3 @?= "Yagami Light, " ++ show (ageOfGettingAPassport - 1)
+  toString child3AgedUp @?= "Yagami Light, " ++ show ageOfGettingAPassport
 
 unit_valid = do
   assertBool "valid" (validatePerson person1)
@@ -159,11 +195,15 @@ unit_valid = do
   assertBool "valid" (validatePerson person4NewLastNameNewLastName)
   assertBool "valid" (validatePerson child1)
   assertBool "valid" (validatePerson child2)
+  assertBool "valid" (validatePerson child3)
+  assertBool "valid" (validatePerson child3AgedUp)
 
   assertBool "not valid: no first name" (not $ validatePerson notValid1)
   assertBool "not valid: no last name" (not $ validatePerson notValid2)
   assertBool "not valid: negative age" (not $ validatePerson notValid3)
   assertBool "not valid: child with id" (not $ validatePerson notValid4)
+  assertBool "not valid: too old to have a birth certificate" (not $ validatePerson notValid5)
+  assertBool "not valid: too young to have a passport" (not $ validatePerson notValid6)
 
 
 

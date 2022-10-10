@@ -6,6 +6,9 @@ import ToString
 
 data Id = RussianPassport (Int, Int) | RussianBirthCertificate (String, Int) deriving (Show, Eq)
 
+ageOfGettingAPassport :: Int
+ageOfGettingAPassport = 14
+
 validateId :: Id -> Bool
 validateId (RussianPassport (series, number)) = (0 <= series) && (series <= 9999)
 validateId (RussianBirthCertificate (series, number)) = (0 <= number) && (number <= 999999)
@@ -16,9 +19,9 @@ data Person = Person
   , lastName :: String          -- Фамилия, должна быть непустой
   , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
   , age :: Int                  -- Возраст, должен быть неотрицательным
-  , id' :: Id           -- Информация о документе, удостоверяющем личность
-  }                             -- У детей (людей младше 14 лет) id обязательно RussianBirthCertificate,
-                                -- у остальных — обязательно паспорт
+  , id' :: Maybe Id             -- Информация о документе, удостоверяющем личность
+  }                             -- У детей (людей младше 14 лет) id это RussianBirthCertificate или ничего,
+                                -- у остальных — паспорт или ничего
   deriving (Show, Eq)
 
 instance MyEq Id where
@@ -30,7 +33,8 @@ instance MyEq Id where
 -- У разных людей разные preferredId
 instance MyEq Person where
   (===) :: Person -> Person -> Bool
-  (===) x y = id' x === id' y
+  (===) Person { id' = Just idX } Person { id' = Just idY } = idX === idY
+  (===) x y = (firstName x === firstName y) && (lastName x === lastName y) && (age x === age y)
 
 -- Строка должна состоять из имени, фамилии и возраста.
 -- Между именем и фамилией пробел, дальше запятая, пробел, и возраст.
@@ -40,7 +44,9 @@ instance ToString Person where
 
 -- Увеличить возраст на 1
 ageUp :: Person -> Person
-ageUp person = person { age = age person + 1 }
+ageUp person
+  | age person == (ageOfGettingAPassport - 1) = person { age = age person + 1, id' = Nothing }
+  | otherwise = person { age = age person + 1 }
 
 -- Сменить фамилию.
 -- Если новая фамилия совпадает с текущей, ничего не меняется
@@ -53,13 +59,14 @@ updateLastName person newLastName
 
 -- Проверки на корректность (указаны в комментариях к типу данных)
 validatePerson :: Person -> Bool
-validatePerson person = 
-  not (null (firstName person))     &&
-  not (null (lastName person))      &&
-  validateId (id' person)   && 
+validatePerson person =
+  not (null (firstName person))      &&
+  not (null (lastName person))       &&
+  maybe True validateId (id' person) &&
   case id' person of
-    (RussianBirthCertificate _) -> age person < 14
-    (RussianPassport _) -> age person >= 14
+    Just (RussianBirthCertificate _) -> age person < ageOfGettingAPassport
+    Just (RussianPassport _) -> age person >= ageOfGettingAPassport
+    Nothing -> True
 
 -- Проверить, что два человека -- тезки.
 -- Тезки -- разные люди с одинаковыми именами и фамилиями
