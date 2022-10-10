@@ -11,7 +11,7 @@ ageOfGettingAPassport = 14
 
 validateId :: Id -> Bool
 validateId (RussianPassport (series, number)) = (0 <= series) && (series <= 9999)
-validateId (RussianBirthCertificate (series, number)) = (0 <= number) && (number <= 999999)
+validateId (RussianBirthCertificate (series, number)) = not (null series) && (0 <= number) && (number <= 999999)
 
 -- Тип данных для человека
 data Person = Person
