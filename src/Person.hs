@@ -2,14 +2,16 @@ module Person where
 
 import qualified Data.Set as Set
 
-data Tree a = Leaf a | OneChild a (Tree a) | TwoChildren a (Tree a) (Tree a)
-  deriving (Show, Eq)
+data Tree a = Tree 
+  { person :: Person
+  , parent1 :: Maybe (Tree Person)
+  , parent2 :: Maybe (Tree Person)
+  , children :: [Person]
+  }
+  deriving (Show, Eq, Ord)
 
 data Document = Passport { series :: Int, number :: Int }
-  deriving (Show, Eq)
-
-instance Ord Document where
-  (<=) pass1 pass2 = (series pass1) < (series pass2) || ((series pass1) == (series pass2) && (number pass1) <= (number pass2))
+  deriving (Show, Eq, Ord)
 
 -- Тип данных для человека
 data Person = Person
@@ -20,14 +22,7 @@ data Person = Person
   , idNumber :: Maybe Document  -- Какое-то удостоверение личности
   , parents :: (Maybe Person, Maybe Person) -- Родители данного человека. Выбрать подходящий контейнер.
   }
-  deriving (Show, Eq)
-
-instance Ord Person where 
-  (<=) person1 person2 = case (idNumber person1, idNumber person2) of
-    (Just passport1, Just passport2) -> passport1 <= passport2
-    (Just _, Nothing) -> False
-    (Nothing, Just _) -> True
-    (Nothing, Nothing) -> (lastName person1) <= (lastName person2)
+  deriving (Show, Eq, Ord)
 
 -- Создание ребенка данных родителей
 createChild :: (Maybe Person, Maybe Person) -> Person
@@ -52,7 +47,6 @@ greatestAncestor person = fst $ greatestWithAcc 0 (person, 0) person
       (person1, x1) else (person2, x2)
     
 
-
 -- Предки на одном уровне иерархии.
 ancestors :: Int -> Person -> Set.Set Person
 ancestors 0 person = Set.singleton person
@@ -63,9 +57,14 @@ ancestors depth person = case parents person of
   (Nothing, Nothing) -> Set.empty
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
-descendants :: Person -> Tree Person
-descendants person = case parents person of
-  (Just person1, Just person2) -> TwoChildren person (descendants person1) (descendants person2)
-  (Just person1, Nothing) -> OneChild person (descendants person1)
-  (Nothing, Just person2) -> OneChild person (descendants person2)
-  (Nothing, Nothing) -> Leaf person
+descendants :: Person -> Set.Set Person -> Tree Person
+descendants person children = parentTree person (Set.toList (Set.filter (isChildOf person) children))
+  where
+    parentTree :: Person -> [Person] -> Tree Person
+    parentTree person children = case parents person of
+      (Just person1, Just person2) -> Tree person (Just $ parentTree person1 [person]) (Just $ parentTree person2 [person]) children
+      (Just person1, Nothing) -> Tree person (Just $ parentTree person1 [person]) Nothing children
+      (Nothing, Just person2) -> Tree person Nothing (Just $ parentTree person2 [person]) children
+      (Nothing, Nothing) -> Tree person Nothing Nothing children
+    
+    isChildOf parent child = (fst $ parents child) == Just parent || (snd $ parents child) == Just parent
