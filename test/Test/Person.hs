@@ -115,16 +115,11 @@ unit_ancestors = do
   ancestors 1 child1 @?= Set.singleton person1
 
 unit_descendants = do
-  let p2 = Terminal person2
-  let p3 = Terminal person3
-  let p1 = Node2 person1 p2 p3
-  let p5 = Node2 person5 p1 p3
-  descendants person1 @?= p1
-  descendants person3 @?= p3
-  descendants person4 @?= Node2 person4 p1 p5
-  descendants person6 @?= Node1 person6 p1
-
-
+  let persons = Set.fromList [person1, person2, person3, person4, person5, person6]
+  descendants person4 persons @?= Leaf person4
+  descendants person5 persons @?= Tree person5 (Set.singleton (Leaf person4)) -- будем дальше использовать этот результат
+  let p5_tree = descendants person5 persons
+  descendants person1 persons @?= Tree person1 (Set.fromList [p5_tree, Leaf person4, Leaf person6])
 
 
 

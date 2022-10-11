@@ -2,7 +2,7 @@ module Person where
 
 import qualified Data.Set as Set
 import Data.Maybe
-data Tree t = Node2 t (Tree t) (Tree t) | Node1 t (Tree t) | Terminal t deriving (Show, Eq)
+data Tree t = Tree t (Set.Set (Tree t)) | Leaf t deriving (Show, Eq, Ord)
 
 data Document = Passport (Int, Int) | BirthCert (String, Int) deriving (Show, Eq, Ord)
 
@@ -36,6 +36,7 @@ greatestAncestor person | (not $ isNothing $ fst $ parents person) && (not $ isN
                         | (not $ isNothing $ snd $ parents person) = (greatestAncestor $ cast $ snd $ parents person)
                         | otherwise = person
   where
+    f :: Person -> Person -> Person
     f p1 p2 | (age p1) >= (age p2) = p1 | otherwise = p2 
 
 
@@ -48,8 +49,13 @@ ancestors level person | (not $ isNothing $ fst $ parents person) && (not $ isNo
                        | otherwise = Set.empty
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
-descendants :: Person -> Tree Person
-descendants person | (not $ isNothing $ fst $ parents person) && (not $ isNothing $ snd $ parents person) = Node2 person (descendants $ cast $ fst $ parents person) (descendants $ cast $ snd $ parents person)
-                   | (not $ isNothing $ fst $ parents person) = Node1 person (descendants $ cast $ fst $ parents person)
-                   | (not $ isNothing $ snd $ parents person) = Node1 person (descendants $ cast $ snd $ parents person)
-                   | otherwise = Terminal person
+descendants :: Person -> Set.Set Person -> Tree Person
+descendants person people | (Set.null people)  || Set.null (Set.filter (f person) people) = Leaf person
+                          | otherwise = Tree person (Set.map (to_tree people) (Set.filter (f person) people))
+  where
+    f :: Person -> Person -> Bool
+    f person1 person2 = ((fst $ parents $ person2) == (Just person1)) || ((snd $ parents $ person2) == (Just person1))
+
+    to_tree :: Set.Set Person -> Person -> Tree Person 
+    to_tree people person | Set.null people = Leaf person
+                          | otherwise =  descendants person (Set.delete person people) 
