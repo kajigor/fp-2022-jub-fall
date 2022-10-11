@@ -7,7 +7,7 @@ import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
 import Person
 
 -- =========================================================================
--- |     Семейное дерево Иосифа Сталина (на глубину один вниз и вверх)     |
+-- |     РЎРµРјРµР№РЅРѕР№ РґРµСЂРµРІРѕ РРѕСЃРёС„Р° РЎС‚Р°Р»РёРЅР° (РЅР° РіР»СѓР±РёРЅСѓ РѕРґРёРЅ РІРІРµСЂС… Рё РІРЅРёР·)     |
 -- =========================================================================
 --
 --                  grand1-----grand2     grand3
@@ -41,7 +41,7 @@ grand3 :: Person
 grand3 = Person { firstName = "Semon"
                  , lastName = "Svanidze"
                  , formerLastNames = []
-                 , age=177                 -- это направда скорее всего, но его возраста я не нашел
+                 , age=177                 -- СЌС‚Рѕ РЅР°РїСЂР°РІРґР° СЃРєРѕСЂРµРµ РІСЃРµРіРѕ, РЅРѕ РµРіРѕ РІРѕР·СЂР°СЃС‚Р° СЏ РЅРµ РЅР°С€РµР»
                  , idNumber = Nothing
                  , parents = Set.empty }
 
@@ -154,9 +154,9 @@ grand3Descendants = Tree grand3 (Set.singleton (Tree parent2 (Set.singleton (Tre
 
 
 unit_general = do
-  False @?= testChild1 == testChild2                                                 -- НЕ равны
-  True @?= testChild1 <= testChild2 && testChild2 <= testChild1                      -- НО такое выполняется, потому что сравниваем по возрасту
-                                                                                     -- (автору за это стыдно, но исправлять тоже не хочется)
+  False @?= testChild1 == testChild2                                                 -- РќР• СЂР°РІРЅС‹
+  True @?= testChild1 <= testChild2 && testChild2 <= testChild1                      -- РќРћ С‚Р°РєРѕРµ РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ, РїРѕС‚РѕРјСѓ С‡С‚Рѕ СЃСЂР°РІРЅРёРІР°РµРј РїРѕ РІРѕР·СЂР°СЃС‚Сѓ
+                                                                                     -- (Р°РІС‚РѕСЂСѓ Р·Р° СЌС‚Рѕ СЃС‚С‹РґРЅРѕ, РЅРѕ РёСЃРїСЂР°РІР»СЏС‚СЊ С‚РѕР¶Рµ РЅРµ С…РѕС‡РµС‚СЃСЏ)
 
 unit_createChild = do
   testChild1 @?= createChild "Yakov" "Jugashvili" (Set.fromList [parent1, parent2])
