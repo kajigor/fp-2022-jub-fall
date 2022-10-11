@@ -65,4 +65,5 @@ tests:
     - tasty-hedgehog
     - tasty-hunit
     - tasty-discover
+    - containers
     - P05
