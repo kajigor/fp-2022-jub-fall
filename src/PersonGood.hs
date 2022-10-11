@@ -57,7 +57,7 @@ updateLastName person newLastName =
 validatePerson :: Person -> Bool
 validatePerson person =
   let pid = personId person in
-  let validId = isBirthCert pid && age person < 14 || isPassport pid &&  age person >= 14 in
+  let validId = isBirthCert pid && age person < 14 || isPassport pid && age person >= 14 in
   let validAge = age person >= 0 in
   let validNames = firstName person /= [] && lastName person /= [] in
   validNames && validAge && validId

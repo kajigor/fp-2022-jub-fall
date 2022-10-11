@@ -1,6 +1,7 @@
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
 module Test.PersonGood where
 
-import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
+import Test.Tasty.HUnit ((@?=), assertBool)
 import PersonGood
 import ToString
 
@@ -108,6 +109,7 @@ notValid3 =
          , age = -13
          , personId = Passport (1234, 567890) }
 
+
 notValid4 :: Person
 notValid4 =
   Person { firstName = "Masha"
@@ -116,11 +118,20 @@ notValid4 =
          , age = 3
          , personId = Passport (1234, 567890) }
 
+notValid5 :: Person
+notValid5 =
+  Person { firstName = "Kate"
+         , lastName = "Verbitskaia"
+         , formerLastNames = []
+         , age = 14
+         , personId = BirthCert (1234, 567890) }
 
+unit_ageUp :: IO ()
 unit_ageUp = do
   ageUp person1 @?= person1Aged
   ageUp (ageUp person1) @?= person1AgedTwice
 
+unit_updateLastName :: IO ()
 unit_updateLastName = do
   let person4' = updateLastName person4 "Ivanova"
   let person4'' = updateLastName person4NewLastName "Sidorova"
@@ -129,6 +140,7 @@ unit_updateLastName = do
   person4 @?= updateLastName person4 (lastName person4)
 
 
+unit_namesakes :: IO ()
 unit_namesakes = do
   assertBool "namesakes" (namesakes person1 person2)
   assertBool "notNamesakes: same person" (not $ namesakes person1 person1)
@@ -137,6 +149,7 @@ unit_namesakes = do
   assertBool "notNamesakes: different first name" (not $ namesakes person1 person4)
   assertBool "notEqual: different documents" (child1 /= person4)
 
+unit_toString :: IO ()
 unit_toString = do
   toString person1 @?= "Kate Verbitskaia, 29"
   toString person1Aged @?= "Kate Verbitskaia, 30"
@@ -149,6 +162,7 @@ unit_toString = do
   toString child1 @?= "Ivan Ivanov, 7"
   toString child2 @?= "Masha Ivanova, 3"
 
+unit_valid :: IO ()
 unit_valid = do
   assertBool "valid" (validatePerson person1)
   assertBool "valid" (validatePerson person1Aged)
@@ -164,24 +178,5 @@ unit_valid = do
   assertBool "not valid: no first name" (not $ validatePerson notValid1)
   assertBool "not valid: no last name" (not $ validatePerson notValid2)
   assertBool "not valid: negative age" (not $ validatePerson notValid3)
-  assertBool "not valid: child with id" (not $ validatePerson notValid4)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  assertBool "not valid: child with passport" (not $ validatePerson notValid4)
+  assertBool "not valid: adult with birth certificate" (not $ validatePerson notValid5)
