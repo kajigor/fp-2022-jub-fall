@@ -16,6 +16,9 @@ data Document =
 pattern DefaultDocument :: Document
 pattern DefaultDocument = BirthCert (0, 0)
 
+-- Тип данных для родителей. Если какой-то родитель неизвестен, то ставится Nothing
+-- Красиво, функционально, для удобного обращения есть функции fatherOf, safeFatherOf и т. д.
+-- Для удобного pattern matching'а есть паттерны
 data Parents = Parents
   { mother :: Maybe Person
   , father :: Maybe Person
