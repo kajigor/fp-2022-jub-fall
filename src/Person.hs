@@ -1,4 +1,4 @@
-module Person (createChild, greatestAncestor, ancestors, descendants) where
+module Person (Tree(..), BirthCertificate(..), Passport(..), Document(..), Person(..), createChild, greatestAncestor, ancestors, descendants) where
 
 import qualified Data.Set as Set
 

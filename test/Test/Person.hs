@@ -1,7 +1,7 @@
-module Test.Person where
+module Test.Person(unit_createChild, unit_greatestAncestor, unit_ancestors, unit_descendants) where
 
-import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
 import Person
+import Test.Tasty.HUnit ((@?=))
 import qualified Data.Set as Set
 
 -- grandparent 1
@@ -95,9 +95,11 @@ michael =
          , idDocument = BirthCertificate_ BirthCertificate { birthCertSeries = "M7", birthCertNumber = 201476 }
          , parents = (Just sibi, Just christian)}
 
+unit_createChild :: IO ()
 unit_createChild = do
   createChild (Just sibi) (Just christian) "Michael" "Bale" (BirthCertificate_ BirthCertificate { birthCertSeries = "M7", birthCertNumber = 201476 }) @?= michael
 
+unit_greatestAncestor :: IO ()
 unit_greatestAncestor = do
   greatestAncestor joseph @?= david
   greatestAncestor sibi @?= slobodan
@@ -105,6 +107,7 @@ unit_greatestAncestor = do
   greatestAncestor christian @?= david
   greatestAncestor david @?= david
 
+unit_ancestors :: IO ()
 unit_ancestors = do
   ancestors 1 jenny @?= Set.empty
   ancestors 1 sibi @?= Set.fromList [slobodan, nadezda]
@@ -118,8 +121,10 @@ unit_ancestors = do
   ancestors 2 joseph @?= Set.fromList [slobodan, nadezda, david, jenny]
   ancestors 3 joseph @?= Set.empty
 
+allPeople :: Set.Set Person
 allPeople = Set.fromList [jenny, david, slobodan, nadezda, sibi, christian, emmeline, joseph, michael]
 
+unit_descendants :: IO ()
 unit_descendants = do
   thisPerson (descendants david allPeople) @?= david
   Set.size (allDescendants (descendants david allPeople)) @?= 1
