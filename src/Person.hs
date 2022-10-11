@@ -47,13 +47,13 @@ greatestAncestor per = fst (grAnc per 0)
 
 -- Предки на одном уровне иерархии.
 ancestors :: Int -> Person -> Set.Set Person
-ancestors r p = anc 0 r p
+ancestors = anc 0
   where
     anc :: Int -> Int -> Person -> Set.Set Person
     anc level reqlev person
-      | level < reqlev && length (parents person) == 0 = Set.empty
-      | level < reqlev && length (parents person) == 1 = anc (level + 1) reqlev (parents person !! 0)
-      | level < reqlev && length (parents person) == 2 = Set.union (anc (level + 1) reqlev (parents person !! 0)) (anc (level + 1) reqlev (parents person !! 1))
+      | level < reqlev && null (parents person) = Set.empty
+      | level < reqlev && length (parents person) == 1 = anc (level + 1) reqlev (head (parents person))
+      | level < reqlev && length (parents person) == 2 = Set.union (anc (level + 1) reqlev (head (parents person))) (anc (level + 1) reqlev (parents person !! 1))
       | level == reqlev = Set.insert person Set.empty
       | otherwise = undefined
 
