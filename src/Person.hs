@@ -6,10 +6,10 @@ import Data.Maybe (fromJust, isNothing, isJust)
 -- (1) дерево состоит из людей и их детей
 -- (2) дети тоже деревья, которые состоят из (1)
 data Tree a = Tree {
-    node :: a,
+    person :: a,
     children :: Set.Set (Tree a)
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 data Document = Passport (Int, Int) -- Номер паспорта состоит из серии и номера, выдается в 14 лет.
   | BirthCertificate Int -- Номер свидетельства о рождении.
@@ -74,13 +74,17 @@ ancestors level person =
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
 descendants :: Person -> Set.Set Person -> Tree Person
-descendants currentPerson allPersons = undefined
---   if allPersons == Set.empty
---     then Tree currentPerson Set.empty
---     else Tree currentPerson (filter (isParent currentPerson) allPersons)
+descendants currentPerson allPersons =
+  if allPersons == Set.empty
+    then Tree currentPerson Set.empty
+    else
+      let chidren = Set.filter (isParent currentPerson) allPersons in -- найти все детей для этого человека
+      let chidrenTrees = Set.map (`descendants` allPersons) chidren   -- для каждого из ребенка собрать дерево
+      in Tree currentPerson chidrenTrees                              -- собрать финальное дерево для человека
 
--- isParent :: Person -> Person -> Bool
--- isParent parent person =
---   isJust (parents person) && (
---     let personParents = fromJust(parents person) in
---       (parent == fst personParents) || ( parent == snd personParents))
+-- Проверяет, что первый переданный человек является родителем второго.
+isParent :: Person -> Person -> Bool
+isParent parent currentPerson =
+  isJust (parents currentPerson) && (
+    let personParents = fromJust(parents currentPerson) in
+      (parent == fst personParents) || ( parent == snd personParents))
