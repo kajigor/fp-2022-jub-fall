@@ -4,7 +4,7 @@ import qualified Data.Set as Set
 
 data Tree = Node Person (Set.Set Tree) deriving (Show, Eq, Ord)
 
-data Document = Passport( Int, Int) | BirthCert (String, Int) deriving (Show, Eq, Ord)
+data Document = Passport ( Int, Int) | BirthCert (String, Int) deriving (Show, Eq, Ord)
 
 
 
@@ -38,21 +38,27 @@ createChild name surname (p1, p2) =
 -- Самый далекий предок данного человека.
 -- Если на одном уровне иерархии больше одного предка -- вывести самого старшего из них.
 -- Если на одном уровне иерархии больше одного предка одного максимального возраста -- вывести любого из них
-greatestAncestor :: Person -> Maybe Person
+
+chooseMaxDepth :: (Person, Int) -> (Person, Int) -> (Person, Int)
+chooseMaxDepth (person1, depth1) (person2, depth2) =
+    if depth1 > depth2
+        then (person1, depth1)
+    else if depth1 == depth2 && age person1 >= age person2
+        then (person1, depth1)
+    else (person2, depth2)
+
+greatestAncestor :: Person -> Person
 greatestAncestor person = fst (helper person) where
-    helper :: Person -> (Maybe Person, Int)
+    helper :: Person -> (Person, Int)
     helper arg =
         case parents arg of
-            (Nothing , Nothing) -> (Nothing, 0)
+            (Nothing , Nothing) -> (arg, 0)
             (Nothing, Just p2) -> let (ancestor, depth) = helper p2
                                       in (ancestor, depth + 1)
             (Just p1, Nothing) -> let (ancestor, depth) = helper p1
                                       in (ancestor, depth + 1)
-            (Just p1, Just p2) -> let (ancestor1, depth1) = helper p1
-                                      in let (ancestor2, depth2) = helper p2
-                                          in if depth1 > depth2
-                                                 then (ancestor1, depth1 + 1)
-                                             else (ancestor2, depth2 + 1)
+            (Just p1, Just p2) -> let (ancestor, depth) = chooseMaxDepth (helper p1) (helper p2)
+                                      in (ancestor, depth + 1)
 
 
 
