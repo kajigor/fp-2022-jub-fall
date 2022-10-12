@@ -2,7 +2,7 @@ module Person where
 
 import qualified Data.Set as Set
 
-data Tree a = Leaf a | OneParent a (Tree a) | TwoParents a (Tree a) (Tree a) deriving (Show, Eq)
+data Tree = Node Person (Set.Set Tree) deriving (Show, Eq, Ord)
 
 data Document = Passport( Int, Int) | BirthCert (String, Int) deriving (Show, Eq, Ord)
 
@@ -41,8 +41,8 @@ createChild name surname (p1, p2) =
 greatestAncestor :: Person -> Maybe Person
 greatestAncestor person = fst (helper person) where
     helper :: Person -> (Maybe Person, Int)
-    helper person =
-        case parents person of
+    helper arg =
+        case parents arg of
             (Nothing , Nothing) -> (Nothing, 0)
             (Nothing, Just p2) -> let (ancestor, depth) = helper p2
                                       in (ancestor, depth + 1)
@@ -69,6 +69,14 @@ ancestors level person
 
 
 
+-- проверяет, является ли person родителем child
+isChild :: Person -> Person -> Bool
+isChild person child = fst (parents child) == Just person || snd (parents child) == Just person
+
 -- Возвращает семейное древо данного человека, описывающее его потомков.
-descendants :: Person -> Set.Set Person -> Tree Person
-descendants = undefined
+descendants :: Set.Set Person -> Person -> Tree
+descendants people person =
+    let children = Set.filter (isChild person) people in
+        if (null children)
+            then Node person Set.empty
+        else Node person (Set.map (descendants people) children)
