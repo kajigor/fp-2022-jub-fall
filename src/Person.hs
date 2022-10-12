@@ -2,35 +2,40 @@ module Person where
 
 import qualified Data.Set as Set
 
-data Tree = ???
-
-data Document = ???
-
--- Тип данных для человека
-data Person = Person
-  { firstName :: String         -- Имя, должно быть непустым
-  , lastName :: String          -- Фамилия, должна быть непустой
-  , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
-  , age :: Int                  -- Возраст, должен быть неотрицательным
-  , idNumber :: Maybe Document  -- Какое-то удостоверение личности
-  , parents :: ??? Person       -- Родители данного человека. Выбрать подходящий контейнер.
+data Tree = Tree
+  { person :: Person
+  , children :: [Tree]
   }
   deriving (Show, Eq)
 
+data Document = PassportNo (Int, Int) | BirthCertificateNo (String, Int) deriving (Show, Eq)
+
+-- Тип данных для человека
+data Person = Person
+  { firstName :: String            -- Имя, должно быть непустым
+  , lastName :: String             -- Фамилия, должна быть непустой
+  , formerLastNames :: [String]    -- Предыдущие фамилии, если фамилия менялась
+  , age :: Int                     -- Возраст, должен быть неотрицательным
+  , idNumber :: Maybe Document     -- Какое-то удостоверение личности
+  , parents :: [Person]            -- Родители данного человека
+  }
+  deriving (Show, Eq)
+
+instance Ord Person where
+--  compare :: Person -> Person -> Ordering
+  compare a b =  compare (age a, firstName a, lastName a) (age b, firstName b, lastName b)
+
 -- Создание ребенка данных родителей
-createChild :: ??? Person -> Person
-createChild = undefined
+createChild :: String -> String -> Int -> String -> Int -> [Person] -> Person
+createChild firstName lastName age idNumberSeries idNumberNo parents =
+  Person firstName lastName [] age (Just (BirthCertificateNo (idNumberSeries, idNumberNo))) parents
 
 -- Самый далекий предок данного человека.
 -- Если на одном уровне иерархии больше одного предка -- вывести самого старшего из них.
 -- Если на одном уровне иерархии больше одного предка одного максимального возраста -- вывести любого из них
 greatestAncestor :: Person -> Person
-greatestAncestor = undefined
+greatestAncestor person = snd $ greatestAncestor' (0, person) where
+    greatestAncestor' (n, p) = case parents p of
+      [] -> (n, p)
+      ps -> foldl1 max $ map (\x -> greatestAncestor' (n + 1, x)) ps
 
--- Предки на одном уровне иерархии.
-ancestors :: Int -> Person -> Set.Set Person
-ancestors = undefined
-
--- Возвращает семейное древо данного человека, описывающее его потомков.
-descendants :: Person -> Set.Set Person -> Tree Person
-descendants = undefined
