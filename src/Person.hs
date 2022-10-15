@@ -2,11 +2,10 @@ module Person where
 
 import qualified Data.Set as Set
 
-data Tree a = Tree 
+
+data Tree = Tree 
   { person :: Person
-  , parent1 :: Maybe (Tree Person)
-  , parent2 :: Maybe (Tree Person)
-  , children :: [Person]
+  , children :: [Tree]
   }
   deriving (Show, Eq, Ord)
 
@@ -57,14 +56,13 @@ ancestors depth person = case parents person of
   (Nothing, Nothing) -> Set.empty
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
-descendants :: Person -> Set.Set Person -> Tree Person
-descendants person children = parentTree person (Set.toList (Set.filter (isChildOf person) children))
+descendants :: Person -> Set.Set Person -> Tree
+descendants person children | children == Set.empty = Tree person []
+                            | otherwise = Tree person $ map (\child -> descendants child otherDescendants) $ Set.toList directChildren
   where
-    parentTree :: Person -> [Person] -> Tree Person
-    parentTree person children = case parents person of
-      (Just person1, Just person2) -> Tree person (Just $ parentTree person1 [person]) (Just $ parentTree person2 [person]) children
-      (Just person1, Nothing) -> Tree person (Just $ parentTree person1 [person]) Nothing children
-      (Nothing, Just person2) -> Tree person Nothing (Just $ parentTree person2 [person]) children
-      (Nothing, Nothing) -> Tree person Nothing Nothing children
-    
     isChildOf parent child = (fst $ parents child) == Just parent || (snd $ parents child) == Just parent
+    
+    directChildren = Set.filter (isChildOf person) children
+
+    otherDescendants = Set.difference children directChildren
+    

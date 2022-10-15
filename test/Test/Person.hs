@@ -95,16 +95,19 @@ unit_ancestors = do
     ancestors 0 person6 @?= Set.fromList [person6]
 
 unit_descendants = do
-    let tree1 = Tree person1 Nothing Nothing [person4]
-    let tree2 = Tree person2 Nothing Nothing [person4]
-    let tree3 = Tree person3 Nothing Nothing [person5]
-    let tree4 = Tree person4 (Just tree1) (Just tree2) [person6]
-    let tree5 = Tree person5 (Just tree3) Nothing [person6]
-    let tree6 = Tree person6 (Just tree4) (Just tree5) []
+    let tree6 = Tree person6 []
+    let tree5 = Tree person5 [tree6]
+    let tree4 = Tree person4 [tree6]
+    let tree3 = Tree person3 [tree5]
+    let tree2 = Tree person2 [tree4]
+    let tree1 = Tree person1 [tree4]
+    
 
-    descendants person1 (Set.fromList [person4]) @?= tree1
-    descendants person2 (Set.fromList [person4]) @?= tree2
-    descendants person3 (Set.fromList [person5]) @?= tree3
-    descendants person4 (Set.fromList [person6]) @?= tree4
-    descendants person5 (Set.fromList [person6]) @?= tree5
-    descendants person6 (Set.fromList [person1, person2, person4]) @?= tree6
+    let setAll = Set.fromList [person1, person2, person3, person4, person5, person6]
+
+    descendants person1 setAll @?= tree1
+    descendants person2 setAll @?= tree2
+    descendants person3 setAll @?= tree3
+    descendants person4 setAll @?= tree4
+    descendants person5 setAll @?= tree5
+    descendants person6 setAll @?= tree6
