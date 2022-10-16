@@ -1,7 +1,8 @@
 module Person where
 
-import Control.Monad
+
 import qualified Data.Set as Set
+import Data.Maybe (isJust)
 
 data Passport = Passport {passNum :: (Int, Int)} deriving (Show, Eq)
 
@@ -9,22 +10,24 @@ data BirthCert = BirthCert {bcNum :: (String, Int)} deriving (Show, Eq)
 
 data Document = Passport_ Passport | BirthCert_ BirthCert deriving (Show, Eq)
 
+
 -- Тип данных для человека
 data Person = Person
-  { firstName :: String, -- Имя, должно быть непустым
+  { personId :: Int, -- Нужно для строгого порядка людей в Set. 
+    firstName :: String, -- Имя, должно быть непустым
     lastName :: String, -- Фамилия, должна быть непустой
     formerLastNames :: [String], -- Предыдущие фамилии, если фамилия менялась
     age :: Int, -- Возраст, должен быть неотрицательным
     idDoc :: Maybe Document, -- Какое-то удостоверение личности
-    parents :: Set.Set Person -- Родители данного человека. Set так как все различны, доступ к каждому за одинаковое время (логарифм). И так как бывают семьи в которых <2 или >2 (мать+отец+отчем)
+    parents :: Set.Set Person -- Родители данного человека. Set так как все различны, удобно методы применять через мап. И так как бывают семьи в которых <2 или >2 (если под родителями понимать не только биологических, но и опекунов)
   }
-  deriving (Show)
-
-instance Eq Person where
-  (==) p1 p2 = (idDoc p1) == (idDoc p2)
+  deriving (Show, Eq)
 
 instance Ord Person where
-  (<=) p1 p2 = (age p1) <= (age p2)
+  (<=) p1 p2 = 
+    if (age p1) == (age p2) then (personId p1) < (personId p2)
+    else (age p1) < (age p2)
+
 
 validateDoc :: Maybe Document -> Int -> Bool
 validateDoc (Just (Passport_ p)) age =
@@ -42,7 +45,7 @@ validateDoc Nothing _ = True
 
 -- Проверяем, что все родители старше ребенка
 checkParents :: Person -> Bool
-checkParents person = Set.null (Set.filter (person <=) (parents person))
+checkParents person = Set.null (Set.filter (person >=) (parents person))
 
 -- Проверяем, что имя и фамилия не пустые, возраст >=0, документ если есть, то валидный, ребенок не старше родителей.
 validatePerson :: Person -> Bool
@@ -56,20 +59,20 @@ validatePerson person
   | otherwise = False
 
 -- Создание ребенка данных родителей. Возвращает Nothing если пытаемся создать невалидного ребенка, иначе Just.
-createChild :: String -> String -> Int -> Maybe Document -> Set.Set Person -> Maybe Person
-createChild newFirstName newLastName newAge newId newParents =
+createChild :: Int -> String -> String -> Int -> Maybe Document -> Set.Set Person -> Maybe Person
+createChild newPersonId newFirstName newLastName newAge newId newParents =
   if validatePerson newPerson
     then Just newPerson
     else Nothing
   where
-    newPerson = Person newFirstName newLastName [] newAge newId newParents
+    newPerson = Person newPersonId newFirstName newLastName [] newAge newId newParents
 
 -- Самый далекий предок данного человека.
 -- Если на одном уровне иерархии больше одного предка -- вывести самого старшего из них.
 -- Если на одном уровне иерархии больше одного предка одного максимального возраста -- вывести любого из них
-greatestAncestor :: Person -> Maybe Person
-greatestAncestor person | Set.null (parents person) = Nothing
-greatestAncestor person = join $ Set.lookupMax (Set.map greatestAncestor (parents person))
+greatestAncestor :: Person -> Person
+greatestAncestor person | Set.null (parents person) = person
+greatestAncestor person = Set.findMax (Set.map greatestAncestor (parents person))
 
 unionSets :: Ord a => Set.Set a -> [Set.Set a] -> Set.Set a
 unionSets acc [] = acc
@@ -84,8 +87,10 @@ ancestors level person = unionSets Set.empty (map (ancestors (level -1)) (Set.to
 
 data Tree v = Empty | Node v [Tree v] deriving (Show, Eq, Ord)
 
+
 isChild :: Person -> Person -> Bool
-isChild parent person = Set.lookupGE parent (parents person) == Just parent
+isChild parent person = isJust (Set.lookupIndex parent (parents person))
+
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
 descendants :: Set.Set Person -> Person -> Tree Person
