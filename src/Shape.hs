@@ -15,11 +15,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x1 y1) (PointD x2 y2) = PointD (x1 + x2) (y1 + y2)
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,17 +30,22 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Circle center radius) shifter = Circle (center <> shifter) radius
+slideShape (Rectangle a b) shifter = Rectangle (a <> shifter) (b <> shifter)
+slideShape (Overlay a b) shifter = Overlay (slideShape a shifter) (slideShape b shifter)
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround shape slideSequence = slideShape shape (mconcat slideSequence)
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
+-- Shape -- представляет с собой множества. У нас уже есть определенная операция -- пересечения, то есть overlay
+-- Но тут надо аккуратно со сравнением -- сейчас Overlay a b /= Overlay b a, хотя по факту они равны
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
   (<>) = undefined
 
+-- В качестве mempty можно было бы использовать Bounding-box (нельзя ибо Double не Bounded) или ввести класс всей плоскости. Но тогда у нас точно равенства не будет, ибо разные конструкторы
 instance Monoid Shape where
   mempty = undefined
