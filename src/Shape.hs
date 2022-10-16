@@ -15,11 +15,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x1 y1) (PointD x2 y2) = PointD (x1 + x2) (y1 + y2)
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,17 +30,27 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Circle c r) s = Circle (c <> s) r
+slideShape (Rectangle ll ur) s = Rectangle (ll <> s) (ur <> s)
+slideShape (Overlay s1 s2) s = Overlay (slideShape s1 s) (slideShape s2 s)
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround s seq = slideShape s (mconcat seq)
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
+
+-- Какая может быть ассоциативная операция на Shape?
+-- Интуитивная ассоциативная операция на фигурах - пересечение
+-- Но эту операцию невозможно реализовать, ведь при любой реализации она не будет ассоциативной
+-- A <> B = Overlay A B \= Overlay B A = B <> A
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
   (<>) = undefined
 
+
+-- Для операции пересечения можно было бы в класс Shape добавить отдельный объект,
+-- выражающий всю плоскость
 instance Monoid Shape where
   mempty = undefined

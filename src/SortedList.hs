@@ -8,8 +8,8 @@ data SortedList a = SortedList { getSortedList :: [a] }
 -- <> должен сохранять отсортированность списка
 instance Ord a => Semigroup (SortedList a) where
   (<>) :: SortedList a -> SortedList a -> SortedList a
-  (<>) = undefined
+  (<>) a b = undefined
 
 instance Ord a => Monoid (SortedList a) where
   mempty :: SortedList a
-  mempty = undefined
+  mempty = SortedList []
