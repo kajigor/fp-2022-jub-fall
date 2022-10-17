@@ -49,7 +49,7 @@ ancestors level person = case (parents person) of
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
 descendants :: Person -> Set.Set Person -> Tree Person
-descendants person people | (Set.null people)  || Set.null (Set.filter (f person) people) = Leaf person
+descendants person people | Set.null (Set.filter (f person) people) = Leaf person
                           | otherwise = Tree person (Set.map (to_tree people) (Set.filter (f person) people))
   where
     f :: Person -> Person -> Bool
