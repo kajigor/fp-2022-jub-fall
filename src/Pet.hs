@@ -2,6 +2,7 @@ module Pet where
 
 import           Data.Function (on)
 import           Data.List     (sortBy)
+import           Data.Ord      (comparing)
 
 -- Тип данных для представления результатов сравнения
 -- data Ordering = LT | EQ | GT deriving Show
@@ -74,6 +75,10 @@ data Person =
     }
   deriving (Show, Eq)
 
+instance Ord Person where
+  compare =
+    mconcat [comparing lastName, comparing firstName, comparing identification]
+
 data Animal
   = Dog
   | Cat
@@ -95,10 +100,4 @@ data Pet =
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
 sortPets :: [Pet] -> [Pet]
-sortPets = sortBy helper
-  where
-    helper p1 p2 =
-      compare (lastName (owner p1)) (lastName (owner p2)) <>
-      compare (firstName (owner p1)) (firstName (owner p2)) <>
-      compare (identification (owner p1)) (identification (owner p2)) <>
-      compare (species p1) (species p2) <> compare (name p1) (name p2)
+sortPets = sortBy $ mconcat [comparing owner, comparing species, comparing name]
