@@ -101,5 +101,7 @@ data Pet = Pet
 -- * В случае, если два человека -- тезки, упорядочиваем по номеру документа.
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
+comparePets :: Pet -> Pet -> Ordering
+comparePets pet1 pet2 = compare (lastName $ owner  pet1, firstName $ owner  pet1, identification $ owner  pet1, species pet1, name pet1) (lastName $ owner  pet2, firstName $ owner  pet2, identification $ owner  pet2, species pet2, name pet2) 
 sortPets :: [Pet] -> [Pet]
-sortPets = undefined
+sortPets array = sortBy comparePets array 
