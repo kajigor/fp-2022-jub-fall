@@ -27,14 +27,12 @@ createChild (Nothing, Nothing) = Person {firstName = "orphan", lastName = "orpha
 -- Самый далекий предок данного человека.
 -- Если на одном уровне иерархии больше одного предка -- вывести самого старшего из них.
 -- Если на одном уровне иерархии больше одного предка одного максимального возраста -- вывести любого из них
-cast :: Maybe Person -> Person
-cast (Just person) = person
-
 greatestAncestor :: Person -> Person
-greatestAncestor person | (not $ isNothing $ fst $ parents person) && (not $ isNothing $ snd $ parents person)  = (greatestAncestor $ cast $ fst $ parents person) `f` (greatestAncestor $ cast $ snd $ parents person)
-                        | (not $ isNothing $ fst $ parents person) = (greatestAncestor $ cast $ fst $ parents person)
-                        | (not $ isNothing $ snd $ parents person) = (greatestAncestor $ cast $ snd $ parents person)
-                        | otherwise = person
+greatestAncestor person = case (parents person) of  
+                            (Just p1, Just p2) -> (greatestAncestor p1) `f` (greatestAncestor p2)
+                            (Just p1, Nothing) -> (greatestAncestor p1)
+                            (Nothing, Just p2) -> (greatestAncestor p2)
+                            (Nothing, Nothing) -> (person)
   where
     f :: Person -> Person -> Person
     f p1 p2 | (age p1) >= (age p2) = p1 | otherwise = p2 
@@ -43,10 +41,11 @@ greatestAncestor person | (not $ isNothing $ fst $ parents person) && (not $ isN
 -- Предки на одном уровне иерархии.
 ancestors :: Int -> Person -> Set.Set Person
 ancestors 0 person = Set.singleton person
-ancestors level person | (not $ isNothing $ fst $ parents person) && (not $ isNothing $ snd $ parents person) = Set.union (ancestors (level - 1) (cast $ fst $ parents person)) (ancestors (level - 1) (cast $ snd $ parents person))
-                       | (not $ isNothing $ fst $ parents person) = ancestors (level - 1) (cast $ fst $ parents person)
-                       | (not $ isNothing $ snd $ parents person) = ancestors (level - 1) (cast $ snd $ parents person)
-                       | otherwise = Set.empty
+ancestors level person = case (parents person) of  
+                            (Just p1, Just p2) -> Set.union (ancestors (level - 1) p1) (ancestors (level - 1) p2)
+                            (Just p1, Nothing) -> ancestors (level - 1) p1
+                            (Nothing, Just p2) -> ancestors (level - 1) p2
+                            (Nothing, Nothing) -> Set.empty
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
 descendants :: Person -> Set.Set Person -> Tree Person
