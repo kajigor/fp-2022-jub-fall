@@ -58,6 +58,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - containers
     - hedgehog
     - HUnit
     - HUnit-approx
