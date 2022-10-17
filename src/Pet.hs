@@ -102,4 +102,6 @@ data Pet = Pet
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
 sortPets :: [Pet] -> [Pet]
-sortPets = undefined
+sortPets = sortBy comparator
+  where comparator pet1 pet2 = mconcat $ map (($ pet2) . ($ pet1)) [(compareOwners `on` owner), (compare `on` species), (compare `on` name)]
+        compareOwners person1 person2 = mconcat $ map (($ person2) . ($ person1)) [(compare `on` lastName), (compare `on` firstName), (compare `on` identification)]
