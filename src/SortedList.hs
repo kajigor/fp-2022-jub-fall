@@ -17,14 +17,12 @@ instance Ord a => Semigroup (SortedList a) where
       ([], []) -> SortedList []
       (nempty, []) -> SortedList nempty
       ([], nempty) -> SortedList nempty
-      ((lh:lt), (rh:rt)) ->
-        case lh < rh of
-          True ->
-            SortedList
-              (lh : getSortedList (SortedList lt <> SortedList (rh : rt)))
-          False ->
-            SortedList
-              (rh : getSortedList (SortedList rt <> SortedList (lh : lt)))
+      (lh:lt, rh:rt) ->
+        if lh < rh then
+          SortedList
+            (lh : getSortedList (SortedList lt <> SortedList (rh : rt))) else
+          SortedList
+            (rh : getSortedList (SortedList rt <> SortedList (lh : lt)))
 
 instance Ord a => Monoid (SortedList a) where
   mempty :: SortedList a

@@ -1,3 +1,5 @@
+{-# LANGUAGE StrictData #-}
+
 module Pet where
 
 import           Data.Function (on)
