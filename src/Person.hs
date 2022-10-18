@@ -2,10 +2,12 @@ module Person where
 
 import qualified Data.Set as Set
 
--- data Tree = ???
+data Tree a = Node a (Set.Set (Tree a))
+                deriving (Show, Eq, Ord)
 
 data Document = Passport (Int, Int) | CertOfBirth (String, Int)
-                deriving (Show, Eq)
+                deriving (Show, Eq, Ord)
+
 -- Тип данных для человека
 data Person = Person
   { firstName :: String          -- Имя, должно быть непустым
@@ -13,13 +15,14 @@ data Person = Person
   , formerLastNames :: [String] -- Предыдущие фамилии, если фамилия менялась
   , age :: Int                  -- Возраст, должен быть неотрицательным
   , idNumber :: Maybe Document  -- Какое-то удостоверение личности
-  , parents :: Maybe (Person, Person) -- Родители данного человека. Выбрать подходящий контейнер.
+  , parents :: Maybe (Person, Person) -- (Биологические) родители данного человека. 
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 -- Создание ребенка данных родителей
 createChild :: Person -> Person -> (String, String, Document) -> Person
-createChild parent1 parent2 (fn, ln, cert) = Person { firstName = fn, lastName = ln, idNumber = Just cert, parents = Just (parent1, parent2), age = 0, formerLastNames = [] }
+createChild parent1 parent2 (fn, ln, doc@(CertOfBirth _)) = Person { firstName = fn, lastName = ln, idNumber = Just doc, parents = Just (parent1, parent2), age = 0, formerLastNames = [] }
+createChild parent1 parent2 (fn, ln, _) = Person { firstName = fn, lastName = ln, idNumber = Nothing, parents = Just (parent1, parent2), age = 0, formerLastNames = [] } -- CertOfBirth wasn't provided
 
 -- Самый далекий предок данного человека.
 -- Если на одном уровне иерархии больше одного предка -- вывести самого старшего из них.
@@ -28,30 +31,35 @@ createChild parent1 parent2 (fn, ln, cert) = Person { firstName = fn, lastName =
 greatestAncestor :: Person -> Person
 greatestAncestor p =
   fst $ helper p
-  where 
+  where
     helper :: Person -> (Person, Int)
-    helper person = 
+    helper person =
       case parents person of
-        Nothing -> 
+        Nothing ->
           (person, 0)
-        Just (parent1, parent2) -> 
+        Just (parent1, parent2) ->
           let firstCandidate = helper parent1 in
           let secondCandidate = helper parent2 in
             if snd firstCandidate == snd secondCandidate
-              then if (age $ fst firstCandidate) > (age $ fst secondCandidate)
+              then if age (fst firstCandidate) > age (fst secondCandidate)
                 then (fst firstCandidate, snd firstCandidate + 1)
                 else (fst secondCandidate, snd firstCandidate + 1)
-            else if (snd firstCandidate > snd secondCandidate)
+            else if snd firstCandidate > snd secondCandidate
               then (fst firstCandidate, snd firstCandidate + 1)
               else (fst secondCandidate, snd firstCandidate + 1)
 
--- greatestAncestor person | parents person == Nothing = person
---                         | otherwise = person
-
 -- Предки на одном уровне иерархии.
 ancestors :: Int -> Person -> Set.Set Person
-ancestors = undefined
+ancestors 0 p = Set.singleton p
+ancestors n p = case parents p of
+  Just (p1, p2) -> Set.union (ancestors (n - 1) p1) (ancestors (n - 1) p2)
+  Nothing -> Set.empty
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
--- descendants :: Person -> Set.Set Person -> Tree Person
--- descendants = undefined
+descendants :: Person -> Set.Set Person -> Tree Person
+descendants person people = Node person (Set.map (\p -> descendants p people) (children person)) where
+  children :: Person -> Set.Set Person
+  children p = Set.filter isChild people where
+    isChild c = case parents c of 
+      Nothing -> False
+      Just (p1, p2) -> p1 == p || p2 == p

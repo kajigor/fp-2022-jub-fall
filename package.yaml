@@ -66,3 +66,4 @@ tests:
     - tasty-hunit
     - tasty-discover
     - P05
+    - containers
