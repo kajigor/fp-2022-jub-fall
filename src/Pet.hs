@@ -1,7 +1,7 @@
 module Pet where
 
 import Data.Function (on)
-import Data.List (sortBy)
+import Data.List (sortBy, uncons)
 
 
 -- Тип данных для представления результатов сравнения
@@ -102,4 +102,19 @@ data Pet = Pet
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
 sortPets :: [Pet] -> [Pet]
-sortPets = undefined
+sortPets = sortBy (comparePetByPerson <> comparePetByType <> comparePetByName)
+
+comparePetByPerson :: Pet -> Pet -> Ordering
+comparePetByPerson pet1 pet2 = comparePerson (owner pet1) (owner pet2)
+
+comparePetByType :: Pet -> Pet -> Ordering
+comparePetByType pet1 pet2 = compare (species pet1) (species pet2)
+
+comparePetByName :: Pet -> Pet -> Ordering
+comparePetByName pet1 pet2 = compare (name pet1) (name pet2)
+
+comparePerson :: Person -> Person -> Ordering
+comparePerson person1 person2 = 
+  compare (lastName person1) (lastName person2) 
+    <> compare (firstName person1) (firstName person2) 
+      <> compare (identification person1) (identification person2)
