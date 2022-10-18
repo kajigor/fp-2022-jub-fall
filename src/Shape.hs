@@ -15,11 +15,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x1 y1) (PointD x2 y2) = (PointD (x1 + x2) (y1 + y2))
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,17 +30,23 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Circle center radius) shift = (Circle (center <> shift) radius)
+slideShape (Rectangle corner1 corner2) shift = (Rectangle (corner1 <> shift) (corner2 <> shift))
+slideShape (Overlay shape1 shape2) shift = (Overlay (slideShape shape1 shift) (slideShape shape2 shift))
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround shape [] = shape
+moveShapeAround shape (x : xs) = moveShapeAround (slideShape shape x) xs
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
+-- Операция Overlay
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) = undefined
+  (<>) shape1 shape2 = Overlay shape1 shape2
 
+-- Непонятно, какой должен быть нейтральный элемент. Скорее всего фигура, являющяяся всей плоскостью, 
+-- но такую нужно дополнительно добавлять в Shape (то есть для теккущего Shape не выделить mempty)
 instance Monoid Shape where
   mempty = undefined
