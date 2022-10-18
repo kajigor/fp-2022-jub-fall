@@ -1,7 +1,7 @@
 module Pet where
 
 import Data.Function (on)
-import Data.List (sortBy)
+import Data.List (sort)
 
 
 -- Тип данных для представления результатов сравнения
@@ -87,6 +87,9 @@ data Person = Person
   }
   deriving (Show, Eq)
 
+instance Ord Person where
+  (<=) p1 p2 = (lastName p1, firstName p1, identification p1) <= (lastName p2, firstName p2, identification p2)
+
 data Animal = Dog | Cat | Bunny | Tarantula deriving (Show, Eq, Ord)
 
 data Pet = Pet
@@ -96,10 +99,13 @@ data Pet = Pet
   }
   deriving (Show, Eq)
 
+instance Ord Pet where
+  (<=) p1 p2 = (owner p1, species p1, name p1) <= (owner p2, species p2, name p2)
+
 -- Отсортируйте питомцев по их хозяевам:
 -- * Хозяева упорядочиваются сначала по фамилии, затем по имени.
 -- * В случае, если два человека -- тезки, упорядочиваем по номеру документа.
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
 sortPets :: [Pet] -> [Pet]
-sortPets = undefined
+sortPets = sort
