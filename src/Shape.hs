@@ -15,11 +15,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x1 y1) (PointD x2 y2) = PointD (x1 + x2) (y1 + y2)
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,17 +30,29 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape shape move = case shape of
+  Circle center raidus -> Circle (center <> move) raidus
+  Rectangle left right -> Rectangle (left <> move) (right <> move)
+  Overlay sh1 sh2 -> Overlay (slideShape sh1 move) (slideShape sh2 move)
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround shape points = slideShape shape (mconcat points)
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
+
+-- Если рассматривать в качестве операции пересечение или объединение, то ассоциативность, конечно, будет
+-- Проблема заключается в том, что пересечеение фигур так просто не реализовать, чего одни окружности стоят.
+-- Объединение же будет требовать от нас также чего-то умного по типу всех точек пересечения и выпуклой оболочки.
+-- У нас есть Overlay для объединения, но он не ассоциативный
+
+-- Как вариант можно сделать моноид - немного переписать overly, чтобы хранить в нем просто set
+
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
   (<>) = undefined
 
+-- Для перечисленных операций нейтральные элементы довольно просты: пустой круг для объединения, "бесконечный" квадрат и пустое мн-во для overlay с сетом
 instance Monoid Shape where
   mempty = undefined
