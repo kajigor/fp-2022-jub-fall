@@ -1,6 +1,7 @@
 {-# LANGUAGE InstanceSigs #-}
 module Shape where
 
+
 -- Точка на плоскости
 data PointT = PointD Double Double
             deriving (Show, Eq)
@@ -15,11 +16,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0.0 0.0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x1 y1) (PointD x2 y2) = PointD (x2 + x1) (y2 + y1)
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,14 +31,21 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Circle p r) shift = (Circle (p <> shift) r)
+slideShape (Rectangle p1 p2) shift = (Rectangle (p1 <> shift) (p2 <> shift))
+slideShape (Overlay shape1 shape2) shift = (Overlay (slideShape shape1 shift) (slideShape shape2 shift))
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround shape (x : lst) = (moveShapeAround (slideShape shape x) lst)
+moveShapeAround shape _ = shape
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
+
+-- В условиях данного интерфейса, единстенно возможный вариант:
+-- (<>) a b = Overlay a b
+-- Но данная операция не ассоциативна, поэтому полугруппу с ней не построить
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
   (<>) = undefined
