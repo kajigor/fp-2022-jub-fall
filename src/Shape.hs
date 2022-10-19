@@ -38,10 +38,6 @@ slideShape (Overlay s1 s2) shift        = Overlay (slideShape s1 shift) (slideSh
 moveShapeAround :: Shape -> [PointT] -> Shape
 moveShapeAround shape shifts = slideShape shape (mconcat shifts)
 
-isEmpty :: Shape -> Bool
-isEmpty (Circle _ r) = r <= 0
-isEmpty (Rectangle _ _) = False
-
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
 -- Можно было бы в качестве <> взять операцию Overlay,
