@@ -15,11 +15,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x1 y1) (PointD x2 y2) = PointD (x1 + x2) (y1 + y2)
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,14 +30,29 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Circle center radius) shift = Circle (center <> shift) radius
+slideShape (Rectangle p1 p2) shift      = Rectangle (p1 <> shift) (p2 <> shift)
+slideShape (Overlay s1 s2) shift        = Overlay (slideShape s1 shift) (slideShape s2 shift)
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround shape shifts = slideShape shape (mconcat shifts)
+
+isEmpty :: Shape -> Bool
+isEmpty (Circle _ r) = r <= 0
+isEmpty (Rectangle _ _) = False
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
+-- Можно было бы в качестве <> взять операцию Overlay,
+--  но она не ассоциативна, т.к.
+--    (a <> b) <> c = Overlay (Overlay a b) c
+--    a <> (b <> c) = Overlay a (Overlay b c)
+-- Это можно было исправить, убрав deriving Eq и
+--  добавив собственную проверку на равенство, например,
+--  преобразуя дерево Overlay в Data.Set.Set элементарных
+--  фигур, но это бы потребовало наличия instance Ord Shape, что
+--  подразумевает уже существующую проверку на равенство:(
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
   (<>) = undefined
