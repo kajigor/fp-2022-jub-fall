@@ -3,7 +3,6 @@ module Pet where
 import Data.Function (on)
 import Data.List (sortBy)
 
-
 -- Тип данных для представления результатов сравнения
 -- data Ordering = LT | EQ | GT deriving Show
 
@@ -59,7 +58,6 @@ compareByFirstLetter = compare `on` head
 -- Prelude> compareByFirstLetter "abc" "cba"
 -- LT
 
-
 -- Функции из a в b тоже образуют моноид, если b -- это моноид
 
 -- instance Semigroup b => Semigroup (a -> b) where
@@ -81,25 +79,39 @@ comparePair = (compare `on` snd) <> (compare `on` fst)
 data Identification = Identification Int deriving (Show, Eq, Ord)
 
 data Person = Person
-  { firstName :: String              -- Имя, должно быть непустым
-  , lastName :: String               -- Фамилия, должна быть непустой
-  , identification :: Identification -- Любая форма идентификации человека
+  { firstName :: String, -- Имя, должно быть непустым
+    lastName :: String, -- Фамилия, должна быть непустой
+    identification :: Identification -- Любая форма идентификации человека
   }
   deriving (Show, Eq)
 
 data Animal = Dog | Cat | Bunny | Tarantula deriving (Show, Eq, Ord)
 
 data Pet = Pet
-  { name :: String
-  , owner :: Person
-  , species :: Animal
+  { name :: String,
+    owner :: Person,
+    species :: Animal
   }
   deriving (Show, Eq)
 
+foo :: Pet -> String
+foo p = lastName $ owner p
+
 -- Отсортируйте питомцев по их хозяевам:
+
 -- * Хозяева упорядочиваются сначала по фамилии, затем по имени.
+
 -- * В случае, если два человека -- тезки, упорядочиваем по номеру документа.
+
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
+
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
+
+comparePerson :: Person -> Person -> Ordering
+comparePerson = (compare `on` lastName) <> (compare `on` firstName) <> (compare `on` identification)
+
 sortPets :: [Pet] -> [Pet]
-sortPets = undefined
+sortPets = sortBy ((comparePerson `on` owner) <> (compare `on` species) <> (compare `on` name))
+
+-- Объясните пожалуйста, почему так не работает
+-- sortPets = sortBy (compare `on` lastName $ owner)
