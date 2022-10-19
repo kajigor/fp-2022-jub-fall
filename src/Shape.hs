@@ -15,11 +15,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x1 y1) (PointD x2 y2) = PointD (x1 + x2) (y1 + y2)
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,17 +30,20 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Circle center radius) addPoint = Circle (center <> addPoint) radius
+slideShape (Rectangle point1 point2) addPoint = Rectangle (point1 <> addPoint) (point2 <> addPoint)
+slideShape (Overlay shape1 shape2) addPoint = Overlay (slideShape shape1 addPoint) (slideShape shape2 addPoint)
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround shape [] = shape
+moveShapeAround shape (addPoint : addPoints) = moveShapeAround (slideShape shape addPoint) addPoints
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
+
+-- вроде как есть ассоциативность и всё нормально...
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) = undefined
+  (<>) shape1 shape2 = Overlay shape1 shape2
 
-instance Monoid Shape where
-  mempty = undefined
