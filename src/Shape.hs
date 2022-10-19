@@ -15,11 +15,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x0 y0) (PointD x1 y1) = PointD (x0 + x1) (y0 + y1)
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,17 +30,23 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Circle p r) shift =  Circle (p <> shift) r
+slideShape (Rectangle p_left p_right ) shift = Rectangle (p_left <> shift) (p_right <> shift)
+slideShape (Overlay s1 s2) shift =  Overlay (slideShape s1 shift) (slideShape s2 shift)
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround shape [] = shape
+moveShapeAround shape (x : xs) = moveShapeAround (slideShape shape x) xs
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) = undefined
+  (<>) s1 s2 = Overlay s1 s2
 
-instance Monoid Shape where
+-- можно добавить "пустую фигуру" это либо круг с 0 радиусом 
+-- либо квадрат у которого углы находятся в одной точке, (хотя изначально считали что это невалидно)
+-- и тогда для нее сразу добавить реализацию функций что ее периметр 0 если ее наложить на другую фигуру, то получится она сама
+instance Monoid Shape where 
   mempty = undefined
