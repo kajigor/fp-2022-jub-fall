@@ -12,9 +12,9 @@ instance Ord a => Semigroup (SortedList a) where
   (<>) (SortedList []) b = b
   (<>) (SortedList (x:xs)) (SortedList (y:ys)) = 
     if x < y
-    then let ~(SortedList zs) = SortedList xs <> SortedList (y:ys) in
+    then let (SortedList zs) = SortedList xs <> SortedList (y:ys) in
       SortedList (x : zs)
-    else let ~(SortedList zs) = SortedList (x:xs) <> SortedList ys in
+    else let (SortedList zs) = SortedList (x:xs) <> SortedList ys in
       SortedList (y : zs)
 
 instance Ord a => Monoid (SortedList a) where
