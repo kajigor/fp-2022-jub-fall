@@ -1,4 +1,5 @@
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Shape where
 
 -- Точка на плоскости
@@ -15,11 +16,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x0 y0) (PointD x1 y1) = PointD (x0 + x1) $ y0 + y1
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,17 +31,25 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Rectangle p1 p2) p = Rectangle (p1 <> p) $ p2 <> p
+slideShape (Circle c r) p = Circle (c <> p) r
+slideShape (Overlay sh1 sh2) p = Overlay (slideShape sh1 p) $ slideShape sh2 p
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround = foldl slideShape
 
+
+emptyCircle :: Shape
+emptyCircle = Circle (PointD 0 0) 0
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) = undefined
+  (<>) a b | a == emptyCircle = b
+           | b == emptyCircle = a
+           | otherwise = Overlay a b
+
 
 instance Monoid Shape where
-  mempty = undefined
+  mempty = emptyCircle
