@@ -15,11 +15,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x0 y0) (PointD x1 y1) = PointD (x0 + x1) (y0 + y1)
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,14 +30,23 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Circle center radius) slide = Circle (center <> slide) radius
+slideShape (Rectangle corner1 corner2) slide = Rectangle (corner1 <> slide) (corner2 <> slide)
+slideShape (Overlay shape1 shape2) slide = Overlay (slideShape shape1 slide) (slideShape shape2 slide)
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround shape moves = slideShape shape (mconcat moves)
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
+
+-- Если Shape является полугруппой (=> моноидом),
+-- то должна быть ассоциативная операция (пусть это будет абстрактная операция OP),
+-- но можно придумать такой пример, что
+-- (Overlay shape1 shape2) OP ((Overlay shape2 shape3) OP (Overlay shape1 shape3))
+-- !=
+-- ((Overlay shape1 shape2) OP (Overlay shape2 shape3)) OP (Overlay shape1 shape3)
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
   (<>) = undefined
