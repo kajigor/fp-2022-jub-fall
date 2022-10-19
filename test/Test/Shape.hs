@@ -7,25 +7,7 @@ import Test.HUnit.Approx ((@?~))
 
 import Shape
 
-shouldBeShape :: Shape -> Shape -> Assertion
-shouldBeShape x y =
-    let ?epsilon = 0.000001 in
-    go x y
-  where
-    go (Circle c0 r0) (Circle c1 r1) = do
-      shouldBePoint c0 c1
-      r0 @?~ r1
-    go (Rectangle x0 y0) (Rectangle x1 y1) = do
-      shouldBePoint x0 x1
-      shouldBePoint y0 y1
-    go (Overlay x0 x1) (Overlay y0 y1) = do
-      shouldBeShape x0 y0
-      shouldBeShape x1 y1
-    go _ _ = fail "Shapes are not equal"
-    shouldBePoint (PointD x0 y0) (PointD x1 y1) = do
-      x0 @?~ x1
-      y0 @?~ y1
-
+shouldBeShape = (@?=)
 
 unit_slideShape = do
   slideShape c1  p1 `shouldBeShape` Circle (PointD 0 0) 0.1
@@ -111,6 +93,9 @@ unit_moves = do
   moveShapeAround o3  [p1,p2,p3,p4,p5] `shouldBeShape` Overlay (Rectangle (PointD 1 1) (PointD 1.1 1.2)) (Rectangle (PointD 0 1) (PointD 1 2))
   moveShapeAround o4  [p1,p2,p3,p4,p5] `shouldBeShape` Overlay (Circle (PointD 1 1) 0.1) (Rectangle (PointD 14 (-41)) (PointD (-776) 1))
   moveShapeAround o5  [p1,p2,p3,p4,p5] `shouldBeShape` Overlay (Overlay (Circle (PointD 1 1) 0.1) (Circle (PointD 1 1) 1)) (Overlay (Circle (PointD 1 1) 0.1) (Circle (PointD 1 1) 10))
+
+unit_shapeSemigroup = do
+  ((c1 <> r1) <> r2) <> r3 @?= c1 <> (r1 <> (r2 <> r3))
 
 makeCircleAtZero :: Double -> Shape
 makeCircleAtZero = Circle mempty
