@@ -15,11 +15,11 @@ data PointT = PointD Double Double
 -- * mconcat foldr (<>) mempty
 instance Monoid PointT where
   mempty :: PointT
-  mempty = undefined
+  mempty = PointD 0 0
 
 instance Semigroup PointT where
   (<>) :: PointT -> PointT -> PointT
-  (<>) = undefined
+  (<>) (PointD x1 y1) (PointD x2 y2) = PointD (x1 + x2) (y1 + y2)
 
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
@@ -30,14 +30,26 @@ data Shape = Circle PointT Double    -- Круг характеризуется 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
 slideShape :: Shape -> PointT -> Shape
-slideShape = undefined
+slideShape (Circle center radius) shift = Circle (center <> shift) radius
+slideShape (Rectangle first second) shift = Rectangle (first <> shift) (second <> shift)
+slideShape (Overlay first second) shift = Overlay (slideShape first shift) (slideShape second shift)
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround = undefined
+moveShapeAround shape shifts = slideShape shape (mconcat shifts)
 
 -- Является ли Shape полугруппой? А моноидом?
--- Реализовать инстансы, если является. Иначе -- обосновать.
+-- Так как сейчас нeт ассоциативности, потому что 
+-- в зависимости от того в каком порядке мы будем комбинировать фигуры через Overlay, то получи разные результат: -
+-- (Overlay (Overlay (Circle mempty 1) (Circle mempty 2)) (Circle mempty 3)) /=
+-- (Overlay (Circle mempty 1) (Overlay (Circle mempty 2) (Circle mempty 3)))
+-- это не полугруппа.
+-- Тем не менее если бы и была ассоциативность, то нейтральный элемент не должен был бы менять фигуру, значит он пуст,
+-- так как содержится в каждой фигуре, Nothing так же не определен.
+
+checkEq :: Shape -> Shape -> Bool
+checkEq a b = (a == b)
+
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
   (<>) = undefined
