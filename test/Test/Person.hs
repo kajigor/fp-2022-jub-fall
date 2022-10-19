@@ -31,7 +31,7 @@ person12child =
          , formerLastNames = []
          , age = 0
          , idNumber = BirthCert ("ao", 123456)
-         , parents = (Just person1, Just person2) }
+         , parents = (Just person2, Just person1) }
 
 childNoParents :: Person
 childNoParents =
@@ -61,29 +61,42 @@ person4 =
          , idNumber = Passport (1234, 567892)
          , parents = (Nothing, Nothing) }
 
+person5 :: Person
+person5 =
+  Person { firstName = "C"
+         , lastName = "C"
+         , formerLastNames = []
+         , age = 14
+         , idNumber = Passport (1234, 567892)
+         , parents = (Nothing, Nothing) }
+
 
 unit_createChild = do
-  let child' = createChild "One" (lastName person1) (Just person1, Just person2)
+  let child' = createChild "One" (lastName person1) (Just person2, Just person1)
   child' @?= person12child
   let childNoParents' = createChild "No" "Parents" (Nothing, Nothing)
   childNoParents' @?= childNoParents
 
 
 person4child = createChild "O" "B" (Just person4, Nothing)
-person4childchild = createChild "P" "B" (Nothing, Just person4child)
+person4childchild = createChild "P" "B" (Just person4child, Just person5)
 person4childchildchild = createChild "G" "B" (Just person4childchild, Nothing)
-finalchild = createChild "Z" "B" (Just person12child, Just person4childchild)
+finalchild = createChild "Z" "B" (Just person12child, Just person4childchildchild)
 
 unit_greatestAncestor = do
   greatestAncestor person1 @?= person1
   greatestAncestor person4child @?= person4
   greatestAncestor finalchild @?=  person4
   greatestAncestor finalchild @?= greatestAncestor person4childchildchild
+  greatestAncestor person3 @?= person1
+  greatestAncestor person12child @?= person2
 
 
 unit_ancestors = do
   ancestors 2 person1 @?= Set.empty
-  ancestors 2 finalchild @?= Set.fromList [person1, person2, person4child]
+  ancestors 2 finalchild @?= Set.fromList [person1, person2, person4childchild]
+  ancestors 3 finalchild @?= Set.fromList [person5, person4child]
+  ancestors 4 finalchild @?= Set.singleton person4
 
 
 people = Set.fromList [person1, person2, person3, person4,
