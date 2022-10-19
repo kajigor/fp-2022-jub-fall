@@ -103,9 +103,8 @@ data Pet = Pet
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
 sortPets :: [Pet] -> [Pet]
 sortPets = sortBy comparison where
-  comparison :: Pet -> Pet -> Ordering
-  comparison p1 p2 | lastName (owner p1) /= lastName (owner p2) = lastName (owner p1) `compare` lastName (owner p2)
-                   | firstName (owner p1) /= firstName (owner p2) = firstName (owner p1) `compare` firstName (owner p2)
-                   | identification (owner p1) /= identification (owner p2) = identification (owner p1) `compare` identification (owner p2)
-                   | species p1 /= species p2 = species p1 `compare` species p2
-                   | otherwise = name p1 `compare` name p2
+  comparison = (compare `on` lastName . owner) <>
+               (compare `on` firstName . owner) <>
+               (compare `on` identification . owner) <>
+               (compare `on` species) <>
+               (compare `on` name)
