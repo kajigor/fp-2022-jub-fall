@@ -25,6 +25,7 @@ instance Semigroup PointT where
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
            | Rectangle PointT PointT -- Прямоугольник со сторонами, параллельными координатным осям, характеризуется координатами двух углов
            | Overlay Shape Shape     -- Фигура, получающаяся наложением друг на друга двух других фигур
+           | Empty
            deriving (Show, Eq)
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
@@ -34,6 +35,7 @@ slideShape shape delta = case shape of
   Circle center radius -> Circle (center <> delta) radius
   Rectangle p1 p2 -> Rectangle (p1 <> delta) (p2 <> delta)
   Overlay s1 s2 -> Overlay (slideShape s1 delta) (slideShape s2 delta)
+  Empty -> Empty
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
@@ -47,12 +49,14 @@ moveShapeAround shape ps = slideShape shape (mconcat ps)
 
 -- Альтернативно, можно просто составить Overlay shape1 shape2, но операция понятно не будет ассоциативной.
 -- Можно было бы ввести Ord Shape и тогда просто хранить Data.Set вместо пары в Overlay. Тогда операция всё же будет ассоциативной.
+-- UPD: Всё-таки решили что Overlay (Overlay a b) c == Overlay a (Overlay b c)
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) = undefined
+  (<>) a b = Overlay a b
 
 -- Если использовать идею про пересечения, то можно использовать [-∞; +∞]^2 как нейтральный элемент.
 -- Если про объединение фигур, то просто пустая фигура будет нейтральным элементом.
 -- Если использовать идею про Overlay, то естесственного нейтрального элемента не придумать (пустое множество будет в семействе множеств).
+-- UPD: C подгруппой можно теперь создать нейтральный элемент: пустую фигуру.
 instance Monoid Shape where
-  mempty = undefined
+  mempty = Empty
