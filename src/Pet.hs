@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs #-}
 module Pet where
 
 import Data.Function (on)
@@ -87,6 +88,10 @@ data Person = Person
   }
   deriving (Show, Eq)
 
+instance Ord Person where
+  compare :: Person -> Person -> Ordering
+  compare (Person f1 l1 i1) (Person f2 l2 i2) = compare l1 l2 <> compare f1 f2 <> compare i1 i2
+
 data Animal = Dog | Cat | Bunny | Tarantula deriving (Show, Eq, Ord)
 
 data Pet = Pet
@@ -102,4 +107,6 @@ data Pet = Pet
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
 sortPets :: [Pet] -> [Pet]
-sortPets = undefined
+sortPets = sortBy comp 
+  where
+    comp (Pet n1 o1 s1) (Pet n2 o2 s2) = compare o1 o2 <> compare s1 s2 <> compare n1 n2
