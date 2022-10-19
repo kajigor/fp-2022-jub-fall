@@ -101,5 +101,12 @@ data Pet = Pet
 -- * В случае, если два человека -- тезки, упорядочиваем по номеру документа.
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
+compOwner :: Person -> Person -> Ordering
+compOwner = (compare `on` lastName) <> (compare `on` firstName) <> (compare `on` identification)
+
+compPet :: Pet -> Pet -> Ordering
+compPet = (compOwner `on` owner) <> (compare `on` species) <> (compare `on` name)
+
 sortPets :: [Pet] -> [Pet]
-sortPets = undefined
+sortPets = sortBy compPet
+
