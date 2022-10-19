@@ -94,6 +94,19 @@ unit_moves = do
   moveShapeAround o4  [p1,p2,p3,p4,p5] `shouldBeShape` Overlay (Circle (PointD 1 1) 0.1) (Rectangle (PointD 14 (-41)) (PointD (-776) 1))
   moveShapeAround o5  [p1,p2,p3,p4,p5] `shouldBeShape` Overlay (Overlay (Circle (PointD 1 1) 0.1) (Circle (PointD 1 1) 1)) (Overlay (Circle (PointD 1 1) 0.1) (Circle (PointD 1 1) 10))
 
+unit_semigroup = do
+  let triples = [(s1, s2, s3) | s1 <- allShapes, s2 <- allShapes, s3 <- allShapes]
+  mapM_ checkTriple triples
+  where
+    checkTriple (s1, s2, s3) = ((s1 <> s2) <> s3) `shouldBeShape` (s1 <> (s2 <> s3))
+
+unit_monoid = do
+    mapM_ checkLeftMonoid allShapes
+    mapM_ checkRightMonoid allShapes
+  where
+    checkLeftMonoid s = (s <> mempty) `shouldBeShape` s 
+    checkRightMonoid s = (mempty <> s) `shouldBeShape` s 
+
 makeCircleAtZero :: Double -> Shape
 makeCircleAtZero = Circle mempty
 
@@ -144,3 +157,6 @@ p4 = PointD (-1) 1
 
 p5 :: PointT
 p5 = PointD 1 (-1)
+
+allShapes :: [Shape]
+allShapes = [c1, c2, c3, r1, r2, r3, o1, o2, o3, o4, o5]

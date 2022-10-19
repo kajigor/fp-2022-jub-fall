@@ -1,5 +1,6 @@
 {-# LANGUAGE InstanceSigs #-}
 module Shape where
+import Data.Function (on)
 
 -- Точка на плоскости
 data PointT = PointD Double Double
@@ -42,7 +43,33 @@ moveShapeAround shape shifts = slideShape shape (mconcat shifts)
 -- Реализовать инстансы, если является. Иначе -- обосновать.
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) _ _ = mempty  -- Операция, которая всегда возвращает mempty, является ассоциативной.
+  (<>) = max
 
 instance Monoid Shape where
   mempty = Circle (PointD 0 0) 0
+
+-- При таком упорядочивании ноль является минимальным числом.
+compareByAbsThenSign :: Double -> Double -> Ordering
+compareByAbsThenSign = (compare `on` abs) <> compare
+
+-- Так как сначала числа сравниваются по абсолютному значению,
+-- минимальная точка существует, и это PointD 0 0.
+instance Ord PointT where
+  compare (PointD x1 y1) (PointD x2 y2) = compareByAbsThenSign x1 x2 <> compareByAbsThenSign y1 y2
+
+-- Сначала сравниваем по номеру конструктора, затем лексикографически сравниваем аргументы.
+-- У Circle (PointD 0 0) 0 номер конструктора минимальный, а также минимальные аргументы
+-- (так как мы сравниваем числа сначала по модулю, затем по знаку). Значит, это минимальный элемент Shape.
+instance Ord Shape where
+  -- Сначала по номеру конструктора
+  compare Circle{} Rectangle{} = LT
+  compare Circle{} Overlay{} = LT
+  compare Rectangle{} Overlay{} = LT
+  compare Overlay{} Rectangle{} = GT
+  compare Overlay{} Circle{} = GT
+  compare Rectangle{} Circle{} = GT
+  -- Затем лексикографически по аргументам, если конструкторы совпали
+  compare (Circle c1 r1) (Circle c2 r2) = compare c1 c2 <> compareByAbsThenSign r1 r2
+  compare (Rectangle lt1 rb1) (Rectangle lt2 rb2) = compare lt1 lt2 <> compare rb1 rb2
+  compare (Overlay first1 second1) (Overlay first2 second2) =
+    compare first1 first2 <> compare second1 second2
