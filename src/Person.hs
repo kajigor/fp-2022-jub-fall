@@ -2,13 +2,7 @@ module Person where
 
 import qualified Data.Set as Set
 
-data Tree a = Tree 
-  { person :: Person
-  , parent1 :: Maybe (Tree Person)
-  , parent2 :: Maybe (Tree Person)
-  , children :: [Person]
-  }
-  deriving (Show, Eq, Ord)
+data Tree a = Node a (Set.Set (Tree a)) deriving(Show, Eq, Ord)
 
 data Document = BirthCertificate (String, Int) | Passport (Int, Int) 
   deriving (Show, Eq, Ord)
@@ -57,14 +51,11 @@ ancestors n person =
   in Set.union f m
 
 -- Возвращает семейное древо данного человека, описывающее его потомков.
-descendants :: Person -> Set.Set Person -> Tree Person
-descendants person list = parentTree person (Set.toList (Set.filter (isChild person) list))
-  where
-    parentTree :: Person -> [Person] -> Tree Person
-    parentTree person list = case parents person of
-      (Just person1, Just person2) -> Tree person (Just ( parentTree person1 [person])) (Just ( parentTree person2 [person])) list
-      (Just person1, Nothing) -> Tree person (Just (parentTree person1 [person])) Nothing list
-      (Nothing, Just person2) -> Tree person Nothing (Just (parentTree person2 [person])) list
-      (Nothing, Nothing) -> Tree person Nothing Nothing list
-
-    isChild parent child = fst (parents child) == Just parent || snd  (parents child) == Just parent
+descendants :: Set.Set Person -> Person -> Tree Person
+descendants people person =
+    let children = Set.filter (isChild person) people in
+        if (null children)
+            then Node person Set.empty
+        else Node person (Set.map (descendants people) children)
+        where 
+          isChild parent child = fst (parents child) == Just parent || snd  (parents child) == Just parent
