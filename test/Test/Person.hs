@@ -50,7 +50,7 @@ person3 =
          , formerLastNames = []
          , age = 14
          , idNumber = Passport (1234, 567892)
-         , parents = (Nothing, Just person1) }
+         , parents = (Nothing, Just person2) }
 
 person4 :: Person
 person4 =
@@ -80,7 +80,7 @@ unit_createChild = do
 
 person4child = createChild "O" "B" (Just person4, Nothing)
 person4childchild = createChild "P" "B" (Just person4child, Just person5)
-person4childchildchild = createChild "G" "B" (Just person4childchild, Nothing)
+person4childchildchild = createChild "G" "B" (Nothing, Just person4childchild)
 finalchild = createChild "Z" "B" (Just person12child, Just person4childchildchild)
 
 unit_greatestAncestor = do
@@ -88,7 +88,7 @@ unit_greatestAncestor = do
   greatestAncestor person4child @?= person4
   greatestAncestor finalchild @?=  person4
   greatestAncestor finalchild @?= greatestAncestor person4childchildchild
-  greatestAncestor person3 @?= person1
+  greatestAncestor person3 @?= person2
   greatestAncestor person12child @?= person2
 
 
@@ -99,8 +99,15 @@ unit_ancestors = do
   ancestors 4 finalchild @?= Set.singleton person4
 
 
-people = Set.fromList [person1, person2, person3, person4,
-                       person12child, childNoParents]
-
 unit_descendants = do
-  descendants people person3 @?= Node person3 Set.empty
+    let people = Set.fromList [person1, person2, person3, person4, person5,
+                               person12child, person4child, person4childchild, person4childchildchild,
+                               childNoParents, finalchild]
+
+    let tree1 = Node finalchild Set.empty
+    let tree2 = Node person12child (Set.fromList [tree1])
+    let tree3 = Node person3 Set.empty
+    let tree4 = Node person2 (Set.fromList [tree2, tree3])
+
+    descendants people finalchild @?= Node finalchild Set.empty
+    descendants people person2 @?= tree4
