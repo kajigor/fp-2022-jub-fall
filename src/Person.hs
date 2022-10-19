@@ -39,6 +39,13 @@ greatestAncestor person = snd $ greatestAncestor' (0, person) where
       [] -> (n, p)
       ps -> foldl1 max $ map (\x -> greatestAncestor' (n + 1, x)) ps
 
+-- Предки на одном уровне иерархии.
+ancestors :: Int -> Person -> Set.Set Person
+ancestors k person = ancestors' k $ Set.singleton person where
+  ancestors' :: Int -> Set.Set Person -> Set.Set Person
+  ancestors' 0 people = people
+  ancestors' n people = ancestors' (n - 1) $ foldl (\set p -> Set.union set (Set.fromList $ parents p)) Set.empty people
+
 -- Возвращает семейное древо данного человека, описывающее его потомков.
 descendants :: Person -> Set.Set Person -> Tree
 descendants pers people = head $ buildTree (map Set.toList $ generations [Set.singleton pers] people) [] where
