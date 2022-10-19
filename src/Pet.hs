@@ -107,4 +107,4 @@ sortPets :: [Pet] -> [Pet]
 sortPets = sortBy cmp
 
 cmp :: Pet -> Pet -> Ordering
-cmp a b = (lastName (owner a) ++ " " ++ firstName (owner a)) `compare` (lastName (owner b) ++ " " ++ firstName (owner b)) <> (identification (owner a) `compare` identification (owner b)) <> (species a `compare` species b <> name a `compare` name b)
+cmp = (compare `on` (lastName . owner)) <> (compare `on` (firstName . owner)) <> (compare `on` (identification . owner)) <> (compare `on` species) <> (compare `on` name)
