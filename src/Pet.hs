@@ -102,4 +102,11 @@ data Pet = Pet
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
 sortPets :: [Pet] -> [Pet]
-sortPets = undefined
+sortPets = sortBy comparePets
+
+comparePets :: Pet -> Pet -> Ordering
+comparePets = (compareOwners `on` owner) <> (compare `on` species) <> (compare `on` name)
+
+compareOwners :: Person -> Person -> Ordering
+compareOwners = (compare `on` lastName) <> (compare `on` firstName) <> (compare `on` identification)
+
