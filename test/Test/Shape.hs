@@ -112,6 +112,14 @@ unit_moves = do
   moveShapeAround o4  [p1,p2,p3,p4,p5] `shouldBeShape` Overlay (Circle (PointD 1 1) 0.1) (Rectangle (PointD 14 (-41)) (PointD (-776) 1))
   moveShapeAround o5  [p1,p2,p3,p4,p5] `shouldBeShape` Overlay (Overlay (Circle (PointD 1 1) 0.1) (Circle (PointD 1 1) 1)) (Overlay (Circle (PointD 1 1) 0.1) (Circle (PointD 1 1) 10))
 
+unit_semigroup = do
+  ((c1 <> c2) <> c3) @?= (c1 <> (c2 <> c3))
+
+  let allShapes = [c2, c3, r1, r2, r3, o1, o2, o3, o4] -- without c1 and o5
+
+  ((foldl) (<>) c1 (allShapes ++ [o5])) @?= ((foldr) (<>) o5 (c1 : allShapes))
+
+
 makeCircleAtZero :: Double -> Shape
 makeCircleAtZero = Circle mempty
 

@@ -24,8 +24,21 @@ instance Semigroup PointT where
 -- Фигуры
 data Shape = Circle PointT Double    -- Круг характеризуется координатой центра и радиусом
            | Rectangle PointT PointT -- Прямоугольник со сторонами, параллельными координатным осям, характеризуется координатами двух углов
-           | Overlay Shape Shape     -- Фигура, получающаяся наложением друг на друга двух других фигур
-           deriving (Show, Eq)
+           | Overlay Shape Shape     -- Фигура, получающаяся наложением друг на друга двух других фигур    
+
+toList :: Shape -> [Shape]
+toList circle@(Circle _ _) = [circle]
+toList rect@(Rectangle _ _) = [rect]
+toList (Overlay s1 s2) = (toList s1) ++ (toList s2)
+
+instance Eq Shape where
+  (==) :: Shape -> Shape -> Bool 
+  (==) s1 s2 = show s1 == show s2
+
+instance Show Shape where
+  show (Circle c1 r1) = show c1 ++ " " ++ show r1
+  show (Rectangle p1 p2) = show p1 ++ " " ++ show p2
+  show overlay@(Overlay _ _) = show $ toList overlay
 
 -- Передвигает фигуру на x по горизонтали и на y по вертикали
 -- Реализовать, используя то, что PointT -- моноид
@@ -36,18 +49,17 @@ slideShape (Overlay s1 s2) p = Overlay (slideShape s1 p) (slideShape s2 p)
 
 -- Второй аргумент задает последовательность сдвигов фигуры.
 moveShapeAround :: Shape -> [PointT] -> Shape
-moveShapeAround shape lst = slideShape shape $ foldr (<>) mempty lst
+moveShapeAround shape lst = slideShape shape $ mconcat lst
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
--- Единственная операция, на которую у меня хватает вображения:
--- (<>) s1 s2 = Overlay s1 s2
--- но она не ассоциативна, так как 
--- (rect1 <> rect2) <> rec3 = Overlay (Overlay rect1 rect2) rect3
--- rect1 <> (rect2 <> rec3) = Overlay rect1 (Overlay rect2 rect3)
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) = undefined
+  (<>) s1 s2 = Overlay s1 s2
+
+-- Моноидом не является, так как неясно, что такое нейтральный элемент.
+-- Шар, вырожденный в точку, не подходит, так как, например, для функции, 
+-- которая проверяет, покрывает ли Shape точку, вырожденный шар может повлиять на результат. 
 
 instance Monoid Shape where
   mempty = undefined
