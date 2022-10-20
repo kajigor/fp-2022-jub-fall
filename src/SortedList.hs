@@ -15,7 +15,6 @@ instance Ord a => Monoid (SortedList a) where
   mempty = SortedList {getSortedList = []}
 
 joinSorted :: Ord a => [a] -> [a] -> [a]
-joinSorted [] [] = []
 joinSorted xs [] = xs
 joinSorted [] ys = ys
 joinSorted (x:xs) (y:ys) =

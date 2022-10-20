@@ -57,7 +57,7 @@ moveShapeAround = foldl slideShape
 
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) = undefined
+  (<>) s1 s2 = Overlay s1 s2
 
 instance Monoid Shape where
   mempty = undefined
