@@ -96,10 +96,16 @@ data Pet = Pet
   }
   deriving (Show, Eq)
 
+comparePerson :: Person -> Person -> Ordering
+comparePerson = (compare `on` lastName) <> (compare `on` firstName) <> (compare `on` identification)
+
+comparePet :: Pet -> Pet -> Ordering
+comparePet = (comparePerson `on` owner) <> (compare `on` species) <> (compare `on` name)
+
 -- Отсортируйте питомцев по их хозяевам:
 -- * Хозяева упорядочиваются сначала по фамилии, затем по имени.
 -- * В случае, если два человека -- тезки, упорядочиваем по номеру документа.
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
 sortPets :: [Pet] -> [Pet]
-sortPets pets = sortBy (compare `on` (\pet -> (lastName (owner pet), firstName (owner pet), identification (owner pet), species pet, name pet))) pets
+sortPets pets = sortBy comparePet pets
