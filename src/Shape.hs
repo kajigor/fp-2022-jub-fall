@@ -40,12 +40,10 @@ moveShapeAround shape slideSequence = slideShape shape (mconcat slideSequence)
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
--- Shape -- представляет с собой множества. У нас уже есть определенная операция -- пересечения, то есть overlay
--- Но тут надо аккуратно со сравнением -- сейчас Overlay a b /= Overlay b a, хотя по факту они равны
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) = undefined
+  (<>) = Overlay
 
 -- В качестве mempty можно было бы использовать Bounding-box (нельзя ибо Double не Bounded) или ввести класс всей плоскости. Но тогда у нас точно равенства не будет, ибо разные конструкторы
 instance Monoid Shape where
-  mempty = undefined
+  mempty = Circle (PointD 0 0) 0
