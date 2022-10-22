@@ -5,6 +5,11 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Dif Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Root Expr Int -- второе - степень корня
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,6 +82,7 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | SqrtOfNegativeNumber
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -200,10 +206,46 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' + y'
+eval (Dif x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' - y'
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' * y'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Root x pow) = do
+  x' <- eval x
+  totalRoot x' pow
+
+totalRoot :: Double -> Int -> Either ArithmeticError Double
+totalRoot x pow | x < 0 && (pow `mod` 2 == 0) = Left SqrtOfNegativeNumber
+                | otherwise = Right $ x ** (1.0 / (fromIntegral pow))
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
--- и генерирует выражения, которые к этому результату вычисляются.
+-- и генерирует выражения, которые к этому результату вычисляются.  
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
-
+generateExprByResult res = case res of
+  Left DivisionByZero ->       [ Div x y | x <- (generateExprByResult $ Right 1), y <- (generateExprByResult $ Right 0) ]
+  Left LogOfZero ->            [ Log x | x <- (generateExprByResult $ Right 0) ]
+  Left LogOfNegativeNumber ->  [ Log x | x <- (generateExprByResult $ Right (-1)) ]
+  Left SqrtOfNegativeNumber -> [ Root x 4 | x <- (generateExprByResult $ Right (-1)) ]  
+  Right x -> withDepth x 4
+  where
+    withDepth :: Double -> Int -> [Expr]
+    withDepth x 1 = [ Val x ]
+    withDepth x 2 = [ Div expr two   | expr <- withDepth (2 * x) 1, two <- withDepth 2 1] ++
+                    [ Log (Exp expr) | expr <- withDepth x 1 ]
+    withDepth x 3 = [ Sum expr five  | expr <- withDepth (x - 5) 2, five <- withDepth 5 2 ] ++
+                    [ Dif expr five  | expr <- withDepth (x + 5) 2, five <- withDepth 5 2 ]
+    withDepth x 4 = [ Mul expr two   | expr <- withDepth (x / 2) 3, two <- withDepth 2 3 ] ++
+                    [ Dif expr five  | expr <- withDepth (x + 5) 3, five <- withDepth 5 3 ]
+    withDepth _ _ = undefined
