@@ -235,5 +235,20 @@ eval (Root d x) = do
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult value = 
+  case value of 
+    Left DivisionByZero -> [Div (Val 1) (Val 0)]
+    Left LogOfZero -> [Log (Val 0)]
+    Left LogOfNegativeNumber -> [Log (Val (-1))]
+    Left RootNegativeNumber -> [Root 2 (Val (-1))]
+    Left RootZeroDegree -> [Root 0 (Val 1)]
+    Right v -> [Sum (Val v) (Val 0)]
 
+
+
+    -- data ArithmeticError = DivisionByZero
+    --                  | LogOfZero
+    --                  | LogOfNegativeNumber
+    --                  | RootNegativeNumber
+    --                  | RootZeroDegree
+    --                  deriving (Show, Eq)
