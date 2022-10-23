@@ -5,6 +5,11 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Sqrt Expr
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,6 +82,7 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | SqrtOfNegativeNumber
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -190,6 +196,10 @@ evalEither'' (Log x) =
     evalEither'' x >>= \x' ->
     totalLogEither x'
 
+totalSqrtEither :: Double -> Either ArithmeticError Double
+totalSqrtEither x | x < 0 = Left SqrtOfNegativeNumber
+                 | otherwise = Right $ sqrt x
+
 -- В Haskell есть do-нотация, которая позволяет выражать то же самое чуть более приятно:
 eval :: Expr -> Either ArithmeticError Double
 eval (Val n) = return n
@@ -200,10 +210,62 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' + y'
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' - y'
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' * y'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Sqrt x) = do
+  x' <- eval x
+  totalSqrtEither x'
+
+generateOneExprByResult :: Either ArithmeticError Double -> [Expr]
+generateOneExprByResult (Left DivisionByZero) = [Div (Val 1) (Val 0)]
+generateOneExprByResult (Left LogOfZero) = [Log (Val 0)]
+generateOneExprByResult (Left LogOfNegativeNumber) = [Log (Val (-1))]
+generateOneExprByResult (Left SqrtOfNegativeNumber) = [Sqrt (Val (-1))]
+generateOneExprByResult (Right x) = [Val x]
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
-
+generateExprByResult result = map (helper result) [0..] where
+  helper :: Either ArithmeticError Double -> Integer -> Expr
+  helper x 0 = case x of
+    (Left DivisionByZero) -> Div (Val 1) (Val 0)
+    (Left LogOfZero) -> Log (Val 0)
+    (Left LogOfNegativeNumber) -> Log (Val (-1))
+    (Left SqrtOfNegativeNumber) -> Sqrt (Val (-1))
+    (Right x) -> Val x
+  helper x@(Left _) n = case (n `mod` 7) of
+    0 -> Sum (helper x (n `div` 7)) (Val (fromIntegral n))
+    1 -> Sub (helper x (n `div` 7)) (Val (fromIntegral n))
+    2 -> Mul (helper x (n `div` 7)) (Val (fromIntegral n))
+    3 -> Div (helper x (n `div` 7)) (Val (fromIntegral n))
+    4 -> Log (helper x (n `div` 7))
+    5 -> Exp (helper x (n `div` 7))
+    6 -> Sqrt (helper x (n `div` 7))
+  helper x@(Right value) n = case (n `mod` 6) of
+    0 -> let other = (fromIntegral (n `mod` 25 + 1)) in Sum (helper (Right (value - other)) (n `div` 6)) (Val other)
+    1 -> let other = (fromIntegral (n `mod` 25 + 1)) in Sub (helper (Right (value + other)) (n `div` 6)) (Val other)
+    2 -> let other = (fromIntegral (n `mod` 25 + 1)) in Mul (helper (Right (value / other)) (n `div` 6)) (Val other)
+    3 -> let other = (fromIntegral (n `mod` 25 + 1)) in Div (helper (Right (value * other)) (n `div` 6)) (Val other)
+    4 -> case (compare value 0.0) of
+      LT -> Mul (Exp (helper (Right (log (-value))) (n `div` 6))) (Val (-1.0))
+      EQ -> Sum (Exp (helper (Right (log (value + 1))) (n `div` 6))) (Val (-1.0))
+      GT -> Exp (helper (Right (log value)) (n `div` 6))
+    5 -> case (compare value 0.0) of
+      LT -> Mul (Sqrt (helper (Right (value * value)) (n `div` 6))) (Val (-1.0))
+      EQ -> Sqrt (helper (Right (value * value)) (n `div` 6))
+      GT -> Sqrt (helper (Right (value * value)) (n `div` 6))
