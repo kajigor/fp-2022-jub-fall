@@ -111,7 +111,7 @@ totalLogEither x | x == 0 = Left LogOfZero
                   | otherwise = Right $ log x
 
 totalRootEither :: Double -> Int -> Either ArithmeticError Double
-totalRootEither x n | (mod n 2 == 0) && x < 0 = Left NegativeNumberSqrt
+totalRootEither x n | x < 0 = Left NegativeNumberSqrt
                     | otherwise = Right $ x ** (1.0 / (fromIntegral n))
 
 expr1 :: Expr
@@ -234,5 +234,11 @@ eval (Root x n) = do
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult res = undefined
+generateExprByResult value = case value of
+  Left DivisionByZero -> [Div f s | f <- [Val 5], s <- [Val 0]]
+  Left LogOfZero -> [Log f | f <- [Val 0]]
+  Left LogOfNegativeNumber -> [Log f | f <- [(Val (-1))]]
+  Left NegativeNumberSqrt -> [Root f 3 | f <- [Val (-1)]]
+  Right v -> [Mult f s | f <- [Val v], s <- [Val 1]]
+
 
