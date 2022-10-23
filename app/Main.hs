@@ -1,5 +1,8 @@
 module Main (main) where
 
+import Text.Read
+import Expr
+
 -- IO -- монада для операций ввода-вывода.
 -- Функция-точка входа в программу Main.main имеет тип IO (),
 -- это означает, что она не возвращает никакого осмысленного результата, но при этом делает некоторые side effects.
@@ -66,20 +69,46 @@ reactToNumber program'sFavoriteNumber = do
     let doubled = person'sFavoriteNumber * 2
     putStrLn $ "Nice! BTW, " ++ show person'sFavoriteNumber ++ " doubled is " ++ show doubled
 
+-- the idea is taken from here:
+-- https://stackoverflow.com/questions/33969601/haskell-keep-adding-user-input-ints-until-a-negative-is-encountered
+askUntil :: String -> (String -> Bool) -> IO String
+askUntil message predicate = do
+  putStrLn message
+  value <- getLine
+  if predicate value
+    then return value
+    else askUntil message predicate
+
+askTargetValue :: IO (Either ArithmeticError Double)
+askTargetValue = do
+  putStrLn "Do you want to enter a floating point number or to select and arithmetic error?"
+  option <- askUntil "Possible options: 'number', 'error'" (\x -> x == "number" || x == "error")
+  case option of
+    "number" -> do
+      number <- askUntil "Please, enter the target number:" (\x -> (readMaybe x :: Maybe Double) /= Nothing)
+      return (Right (read number :: Double))
+    "error" -> do
+      err <- askUntil "Please, enter the target arithmetic error (one of DivisionByZero, LogOfZero, LogOfNegativeNumber, SqrtOfNegativeNumber):" (\x -> x == "DivisionByZero" || x == "LogOfZero" || x == "LogOfNegativeNumber" || x == "SqrtOfNegativeNumber")
+      case err of
+        "DivisionByZero" -> return (Left DivisionByZero)
+        "LogOfZero" -> return (Left DivisionByZero)
+        "LogOfNegativeNumber" -> return (Left DivisionByZero)
+        "SqrtOfNegativeNumber" -> return (Left DivisionByZero)
+
+isStringPositiveInteger :: String -> Bool
+isStringPositiveInteger x = case readMaybe x :: Maybe Int of
+  Nothing -> False
+  Just n -> if n > 0
+    then True
+    else False
+
 -- Лаконичный main.
 main :: IO ()
 main = do
-  introduction
-  greetByName
-  reactToNumber 42
-
-
--- Эта функция просто демонстрирует, во что дешугарится do-нотация
-f :: IO ()
-f = do
-  x <- getLine        -- getLine >>= \x ->
-  let parsed = read x -- let parsed = read x in
-  y <- getLine        -- getLine >>= \y ->
-  putStrLn (y ++ y)   -- putStrLn (y ++ y) >>= \_ ->
-  print (parsed * 2)  -- print (parsed * 2) >>= \r ->
-                      -- return r
+  putStrLn ""
+  target <- askTargetValue
+  let exprAll = generateExprByResult target
+  exprNum <- askUntil "Please, enter how many expressions you want to see. This should be a positive integer" isStringPositiveInteger
+  let parsedExprNum = read exprNum :: Int
+  putStrLn "Here are the expressions that evaluate to the target value you have entered:"
+  mapM_ print (take parsedExprNum $ exprAll)
