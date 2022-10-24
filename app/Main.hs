@@ -1,5 +1,7 @@
 module Main (main) where
 
+import Expr
+
 -- IO -- монада для операций ввода-вывода.
 -- Функция-точка входа в программу Main.main имеет тип IO (),
 -- это означает, что она не возвращает никакого осмысленного результата, но при этом делает некоторые side effects.
@@ -41,7 +43,7 @@ greetByName = do
   putStrLn $ "Hello, " ++ name
 
 -- Спрашиваем у пользователя его любимое число, парсим его, используя стандартный read.
--- Эта функция возвращает полученного число как результат, который мы дальше, в main, сможешь получить и использовать.
+-- Эта функция возвращает полученное число как результат, который мы дальше, в main, сможем получить и использовать.
 -- Вывод и ввод данных тут является эффектом, число -- результатом, что отражается в типе функции :: IO Int
 askFavoriteNumber :: IO Int
 askFavoriteNumber = do
@@ -69,10 +71,19 @@ reactToNumber program'sFavoriteNumber = do
 -- Лаконичный main.
 main :: IO ()
 main = do
-  introduction
-  greetByName
-  reactToNumber 42
-
+  putStrLn "\nInput your desired result (number or error name):"
+  result <- getLine
+  putStrLn "\nInput desired number of expressions:"
+  input <- getLine
+  let count = read input :: Int
+  putStrLn "\nHere they are:\n"
+  case result of
+    "DivisionByZero" -> putStrLn $ show $take count $ generateExprByResult (Left DivisionByZero)
+    "LogOfZero" -> putStrLn $ show $ take count $ generateExprByResult (Left LogOfZero)
+    "LogOfNegativeNumber" -> putStrLn $ show $ take count $ generateExprByResult (Left LogOfNegativeNumber)
+    "RootDegreeIsZero" -> putStrLn $ show $ take count $ generateExprByResult (Left RootDegreeIsZero)
+    "RootFromNegativeNumber" -> putStrLn $ show $ take count $ generateExprByResult (Left RootFromNegativeNumber)
+    _ -> putStrLn $ show $ take count $ generateExprByResult (Right $ (read result :: Double))
 
 -- Эта функция просто демонстрирует, во что дешугарится do-нотация
 f :: IO ()

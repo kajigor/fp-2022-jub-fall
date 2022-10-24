@@ -5,6 +5,11 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Root Int Expr
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -18,11 +23,19 @@ expr = Div (Div (Val 12) (Log (Val 10))) (Val 3)
 exprErr :: Expr
 exprErr = Div (Div (Val 6) (Log (Val (-1)))) (Val 0)
 
+exprRoot :: Expr
+exprRoot = Root 5 (Val 32)
+
 -- Частично определенный интерпретатор выражений.
 partialEval :: Expr -> Double
 partialEval (Val v) = v
 partialEval (Div x y) = partialEval x / partialEval y
 partialEval (Log x) = log (partialEval x)
+partialEval (Sum x y) = partialEval x + partialEval y
+partialEval (Sub x y) = partialEval x - partialEval y
+partialEval (Mul x y) = partialEval x * partialEval y
+partialEval (Exp x) = exp (partialEval x)
+partialEval (Root degree x) = (partialEval x) ** (1.0 / fromIntegral degree)
 
 -- Вычисление корректного выражения с нормальным результатом
 -- *Expr> partialEval expr
@@ -33,6 +46,9 @@ partialEval (Log x) = log (partialEval x)
 -- которую хочется явно отлавливать и цивилизованно сообщать о ней пользователю.
 -- *Expr> partialEval exprErr
 -- NaN
+
+-- *Expr> partialEval exprRoot
+-- 2.0
 
 -- Этот интерпретатор будет возвращать Nothing в случае деления на 0
 -- или вычисления логарифма от неположительного числа
@@ -77,6 +93,8 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | RootDegreeIsZero
+                     | RootFromNegativeNumber
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -103,6 +121,23 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalSumEither :: Double -> Double -> Either ArithmeticError Double
+totalSumEither x y = Right $ x + y
+
+totalSubEither :: Double -> Double -> Either ArithmeticError Double
+totalSubEither x y = Right $ x - y
+
+totalMulEither :: Double -> Double -> Either ArithmeticError Double
+totalMulEither x y = Right $ x * y
+
+totalExpEither :: Double -> Either ArithmeticError Double
+totalExpEither x = Right $ exp x
+
+totalRootEither :: Int -> Double -> Either ArithmeticError Double
+totalRootEither degree x | degree == 0 = Left RootDegreeIsZero
+                         | x < 0 = Left RootFromNegativeNumber
+                         | otherwise = Right $ x ** (1.0 / fromIntegral degree)
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -146,7 +181,6 @@ evalMaybe' (Div x y) =
 evalMaybe' (Log x) =
     evalMaybe' x `bindMaybe` \x' ->
     totalLogMaybe x'
-
 
 bindEither :: Either e a -> (a -> Either e b) -> Either e b
 bindEither value f =
@@ -200,10 +234,45 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalSumEither x' y'
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalSubEither x' y'
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalMulEither x' y'
+eval (Exp x) = do
+  x' <- eval x
+  totalExpEither x'
+eval (Root degree x) = do
+  x' <- eval x
+  totalRootEither degree x'
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
-
+generateExprByResult (Left DivisionByZero) =
+  [ Div (Mul (Val x) (Sum (Log (Val x)) (Val y))) (Val 0) | x <- [1..],
+                                                            y <- [1..] ]
+generateExprByResult (Left LogOfZero) =
+  [ Log (Mul (Sub (Val x) (Val y)) (Val 0)) | x <- [1..],
+                                              y <- [1..] ]
+generateExprByResult (Left LogOfNegativeNumber) =
+  [ Log (Sub (Val x) (Mul (Val y) (Div (Val y) (Val x)))) | x <- [1..],
+                                                            y <- [2..] ]
+generateExprByResult (Left RootDegreeIsZero) =
+  [ Root 0 (Exp (Div (Mul (Val y) (Val x)) (Log (Val z)))) | x <- [1..],
+                                                            y <- [2..],
+                                                            z <- [3..] ]
+generateExprByResult (Left RootFromNegativeNumber) =
+  [ Root y (Sub (Val x) (Mul (Val z) (Exp (Div (Mul (Val (fromIntegral y)) (Val x)) (Log (Val z)))))) | x <- [1..],
+                                                                                         y <- [2..],
+                                                                                         z <- [3..] ]
+generateExprByResult (Right result) =
+  [ Div (Mul (Log (Exp (Val x))) (Val result)) (Val x) | x <- [1..] ]
