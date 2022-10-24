@@ -26,4 +26,4 @@ unit_genExpr = do
   where
     check :: Either ArithmeticError Double -> IO ()
     check result =
-      mapM_ (uncurry shouldBeResult) [ (eval e, result) | e <- take 10000 $ generateExprByResult result]
+      mapM_ (uncurry shouldBeResult) [ (eval e, result) | e <- take 100 $ generateExprByResult result]
