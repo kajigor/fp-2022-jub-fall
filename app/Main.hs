@@ -1,85 +1,65 @@
 module Main (main) where
+import Expr
 
--- IO -- монада для операций ввода-вывода.
--- Функция-точка входа в программу Main.main имеет тип IO (),
--- это означает, что она не возвращает никакого осмысленного результата, но при этом делает некоторые side effects.
--- Примерами эффектов может быть считывание строки со стандартного входа, печать в стандартный выход,
--- чтение и запись файлов.
--- Текущая программа взаимодействует с пользователем, спрашивая его имя и любимое число.
--- При работе с IO удобно пользоваться do-нотацией.
--- main :: IO ()
--- main = do
---   putStrLn "\nWhat's your name?"
---   x <- getLine
---   putStrLn $ "Hello, " ++ x
---
---   putStrLn "What's your favorite number?"
---   num <- getLine
---   let favNum = read num :: Int
---
---   let program'sFavoriteNumber = 42
---
---   if favNum == program'sFavoriteNumber
---   then
---     putStrLn "Wow! I have the same favorite number!" :: IO ()
---   else do
---     let doubled = favNum * 2
---     putStrLn $ "Nice! BTW, " ++ show favNum ++ " doubled is " ++ show doubled :: IO ()
+getAmountOfExpr :: IO Int
+getAmountOfExpr = do
+  putStr "Please, enter the amount of expressions you want to see: "
+  answer <- getLine
+  let amount = read answer :: Int
+  if amount <= 0
+    then do
+      putStrLn "The amount must be a positive integer."
+      getAmountOfExpr
+  else return amount
 
--- Этот же код можно переписать чуть более аккуратно, заведя функции для запросов.
+getCommand :: IO ()
+getCommand = do
+  putStrLn "Choose a type of an expression you want to see:"
+  putStrLn "1) expression with an error"
+  putStrLn "2) expression with an number"
+  answer <- getLine
+  case answer of
+    "1" -> getError
+    "2" -> getNumber
+    _ -> do
+      putStrLn "Your answer should be 1 or 2."
+      getCommand
 
--- Просто выводим строку на выход.
-introduction :: IO ()
-introduction = do
-  putStrLn "\nHi! I'm a sample application"
+getError :: IO ()
+getError = do
+  putStrLn "Please, choose which error you would like to see:"
+  putStrLn "1) Divison by zero"
+  putStrLn "2) Logarithm of zero"
+  putStrLn "3) Logarithm of a negative number"
+  putStrLn "4) Root of a negative number"
+  putStrLn "5) Root with a zero degree"
 
--- Спрашиваем имя у пользователя и приветствуем его
-greetByName :: IO ()
-greetByName = do
-  putStrLn "\nWhat's your name?"
-  name <- getLine
-  putStrLn $ "Hello, " ++ name
+  answer <- getLine
+  case answer of 
+    "1" -> print $ generateExprByResult $ Left DivisionByZero
+    "2" -> print $ generateExprByResult $ Left LogOfZero
+    "3" -> print $ generateExprByResult $ Left LogOfNegativeNumber
+    "4" -> print $ generateExprByResult $ Left RootNegativeNumber
+    "5" -> print $ generateExprByResult $ Left RootZeroDegree
+    _ -> do
+      putStrLn "Your answer should be between 1 and 5."
+      getError
 
--- Спрашиваем у пользователя его любимое число, парсим его, используя стандартный read.
--- Эта функция возвращает полученного число как результат, который мы дальше, в main, сможешь получить и использовать.
--- Вывод и ввод данных тут является эффектом, число -- результатом, что отражается в типе функции :: IO Int
-askFavoriteNumber :: IO Int
-askFavoriteNumber = do
-  putStrLn "What's your favorite number?"
-  num <- getLine
-  -- read может завершиться ошибкой, которую мы не будем обрабатывать.
-  let parsedNum = read num :: Int
-  -- Возвращаем результат
-  return parsedNum
+getNumber :: IO ()
+getNumber = do
+  putStr "Please, enter a number: "
+  answer <- getLine
+  let number = read answer :: Double
+  print $ generateExprByResult $ Right number
 
--- Функции с IO -- полноценные функции.
--- У них могут быть не только возвращаемые значения, но и аргументы.
--- Например, тут мы реагируем на любимое число пользователя.
--- Функция принимает любимое число программы, и дальше использует его в своей реакции.
-reactToNumber :: Int -> IO ()
-reactToNumber program'sFavoriteNumber = do
-  person'sFavoriteNumber <- askFavoriteNumber
-  if person'sFavoriteNumber == program'sFavoriteNumber
-  then
-    putStrLn "Wow! I have the same favorite number!"
-  else do
-    let doubled = person'sFavoriteNumber * 2
-    putStrLn $ "Nice! BTW, " ++ show person'sFavoriteNumber ++ " doubled is " ++ show doubled
+run_getCommand :: Int -> IO ()
+run_getCommand 0 = return ()
+run_getCommand n = do
+  getCommand
+  run_getCommand (n-1)
 
--- Лаконичный main.
 main :: IO ()
 main = do
-  introduction
-  greetByName
-  reactToNumber 42
+  amountOfExpr <- getAmountOfExpr
+  run_getCommand amountOfExpr
 
-
--- Эта функция просто демонстрирует, во что дешугарится do-нотация
-f :: IO ()
-f = do
-  x <- getLine        -- getLine >>= \x ->
-  let parsed = read x -- let parsed = read x in
-  y <- getLine        -- getLine >>= \y ->
-  putStrLn (y ++ y)   -- putStrLn (y ++ y) >>= \_ ->
-  print (parsed * 2)  -- print (parsed * 2) >>= \r ->
-                      -- return r
