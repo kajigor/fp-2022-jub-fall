@@ -96,4 +96,50 @@ expr4 = Sum (Val 1) (Root (Val 2) (Val 4))
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult result =
+  case result of
+    Left DivisionByZero ->
+      [ Div (Val const) (Mult (Val 0) (Sum (Val const) (Val (-42))))
+      | const <- [1,4 ..]
+      ]
+    Left LogOfZero ->
+      [ Log
+        (Diff
+           (Mult (Val const) (Val 10))
+           (Mult (Val 5) (Sum (Val const) (Val const))))
+      | const <- [2,12 ..]
+      ]
+    Left LogOfNegativeNumber ->
+      [ Log (Diff (Val 0) (Mult (Val 5) (Sum (Val const) (Val const))))
+      | const <- [4,9 ..]
+      ]
+    Left NegativeRadicand ->
+      [ Root (Val const) (Log (Exp (Mult (Val (-1)) (Val const))))
+      | const <- [1 ..]
+      ]
+    Left ZeroDegreeRoot ->
+      [ Root
+        (Mult (Val 0) (Sum (Val const) (Val (-42))))
+        (Mult (Val 5) (Sum (Val const) (Val const)))
+      | const <- [4,15 ..]
+      ]
+    Right val ->
+      [ (Log
+           (Exp
+              (Diff
+                 (Sum
+                    (Div (Mult (Val 4) (Val val)) (Val 2))
+                    (Sum
+                       (Val 8)
+                       (Mult
+                          (Root (Val 2) (Val const))
+                          (Root (Val 2) (Val const)))))
+                 (Sum (Sum (Val val) (Val const)) (Mult (Val 4) (Val 2))))))
+      | const <- [1,4 ..]
+      ]
+-- data ArithmeticError
+--   = DivisionByZero
+--   | LogOfZero
+--   | LogOfNegativeNumber
+--   | NegativeRadicand
+--   | ZeroDegreeRoot
