@@ -137,9 +137,3 @@ generateExprByResult result =
                  (Sum (Sum (Val val) (Val const)) (Mult (Val 4) (Val 2))))))
       | const <- [1,4 ..]
       ]
--- data ArithmeticError
---   = DivisionByZero
---   | LogOfZero
---   | LogOfNegativeNumber
---   | NegativeRadicand
---   | ZeroDegreeRoot

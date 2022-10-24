@@ -1,85 +1,70 @@
-module Main (main) where
+module Main
+  ( main
+  ) where
 
--- IO -- монада для операций ввода-вывода.
--- Функция-точка входа в программу Main.main имеет тип IO (),
--- это означает, что она не возвращает никакого осмысленного результата, но при этом делает некоторые side effects.
--- Примерами эффектов может быть считывание строки со стандартного входа, печать в стандартный выход,
--- чтение и запись файлов.
--- Текущая программа взаимодействует с пользователем, спрашивая его имя и любимое число.
--- При работе с IO удобно пользоваться do-нотацией.
--- main :: IO ()
--- main = do
---   putStrLn "\nWhat's your name?"
---   x <- getLine
---   putStrLn $ "Hello, " ++ x
---
---   putStrLn "What's your favorite number?"
---   num <- getLine
---   let favNum = read num :: Int
---
---   let program'sFavoriteNumber = 42
---
---   if favNum == program'sFavoriteNumber
---   then
---     putStrLn "Wow! I have the same favorite number!" :: IO ()
---   else do
---     let doubled = favNum * 2
---     putStrLn $ "Nice! BTW, " ++ show favNum ++ " doubled is " ++ show doubled :: IO ()
-
--- Этот же код можно переписать чуть более аккуратно, заведя функции для запросов.
+import           Expr
 
 -- Просто выводим строку на выход.
 introduction :: IO ()
 introduction = do
-  putStrLn "\nHi! I'm a sample application"
+  putStrLn
+    "\nHi! Input what kind of error you want to get\n0 — None\n1 — LogOfZero\n2 — LogOfNegativeNumber\n3 — NegativeRadicand\n4 — ZeroDegreeRoot"
 
 -- Спрашиваем имя у пользователя и приветствуем его
-greetByName :: IO ()
-greetByName = do
-  putStrLn "\nWhat's your name?"
-  name <- getLine
-  putStrLn $ "Hello, " ++ name
+parseErrorType :: IO Int
+parseErrorType = do
+  inp <- getLine
+  let e_type = read inp :: Int
+  return e_type
 
--- Спрашиваем у пользователя его любимое число, парсим его, используя стандартный read.
--- Эта функция возвращает полученного число как результат, который мы дальше, в main, сможешь получить и использовать.
--- Вывод и ввод данных тут является эффектом, число -- результатом, что отражается в типе функции :: IO Int
-askFavoriteNumber :: IO Int
-askFavoriteNumber = do
-  putStrLn "What's your favorite number?"
-  num <- getLine
-  -- read может завершиться ошибкой, которую мы не будем обрабатывать.
-  let parsedNum = read num :: Int
-  -- Возвращаем результат
-  return parsedNum
+parseResult :: IO Double
+parseResult = do
+  putStrLn "\nInput result you want to get"
+  inp <- getLine
+  let res = read inp :: Double
+  return res
 
--- Функции с IO -- полноценные функции.
--- У них могут быть не только возвращаемые значения, но и аргументы.
--- Например, тут мы реагируем на любимое число пользователя.
--- Функция принимает любимое число программы, и дальше использует его в своей реакции.
-reactToNumber :: Int -> IO ()
-reactToNumber program'sFavoriteNumber = do
-  person'sFavoriteNumber <- askFavoriteNumber
-  if person'sFavoriteNumber == program'sFavoriteNumber
-  then
-    putStrLn "Wow! I have the same favorite number!"
-  else do
-    let doubled = person'sFavoriteNumber * 2
-    putStrLn $ "Nice! BTW, " ++ show person'sFavoriteNumber ++ " doubled is " ++ show doubled
+parseNumTests :: IO Int
+parseNumTests = do
+  putStrLn "\nInput number of tests"
+  inp <- getLine
+  let res = read inp :: Int
+  return res
 
--- Лаконичный main.
+errorFromId :: Int -> IO ArithmeticError
+errorFromId id = do
+  case id of
+    1 -> return DivisionByZero
+    2 -> return LogOfZero
+    3 -> return LogOfNegativeNumber
+    4 -> return NegativeRadicand
+    5 -> return ZeroDegreeRoot
+    _ -> undefined
+
+generateTests :: Int -> Either ArithmeticError Double -> IO ()
+generateTests n res = do
+  mapM_ print (take n $ generateExprByResult res)
+
 main :: IO ()
 main = do
   introduction
-  greetByName
-  reactToNumber 42
-
+  e_type <- parseErrorType
+  if e_type == 0
+    then do
+      d_res <- parseResult
+      n_tests <- parseNumTests
+      generateTests n_tests (Right d_res)
+    else do
+      n_tests <- parseNumTests
+      error <- errorFromId e_type
+      generateTests n_tests (Left error)
 
 -- Эта функция просто демонстрирует, во что дешугарится do-нотация
 f :: IO ()
 f = do
-  x <- getLine        -- getLine >>= \x ->
+  x <- getLine -- getLine >>= \x ->
   let parsed = read x -- let parsed = read x in
-  y <- getLine        -- getLine >>= \y ->
-  putStrLn (y ++ y)   -- putStrLn (y ++ y) >>= \_ ->
-  print (parsed * 2)  -- print (parsed * 2) >>= \r ->
+  y <- getLine -- getLine >>= \y ->
+  putStrLn (y ++ y) -- putStrLn (y ++ y) >>= \_ ->
+  print (parsed * 2) -- print (parsed * 2) >>= \r ->
                       -- return r
