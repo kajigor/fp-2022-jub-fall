@@ -1,5 +1,7 @@
 module Main (main) where
 
+import Expr
+
 -- IO -- монада для операций ввода-вывода.
 -- Функция-точка входа в программу Main.main имеет тип IO (),
 -- это означает, что она не возвращает никакого осмысленного результата, но при этом делает некоторые side effects.
@@ -29,10 +31,6 @@ module Main (main) where
 -- Этот же код можно переписать чуть более аккуратно, заведя функции для запросов.
 
 -- Просто выводим строку на выход.
-introduction :: IO ()
-introduction = do
-  putStrLn "\nHi! I'm a sample application"
-
 -- Спрашиваем имя у пользователя и приветствуем его
 greetByName :: IO ()
 greetByName = do
@@ -66,20 +64,31 @@ reactToNumber program'sFavoriteNumber = do
     let doubled = person'sFavoriteNumber * 2
     putStrLn $ "Nice! BTW, " ++ show person'sFavoriteNumber ++ " doubled is " ++ show doubled
 
+
+introduction :: IO (Either ArithmeticError Double)
+introduction = do
+  putStrLn "\nHi! Enter type of error 'DivisionByZero', 'LogOfZero', 'LogOfNegativeNumber', 'EvenRootOfNegativeNumber' or 'NonErrors' if calculating expression should terminate without erros"
+  result <- getLine
+  if result == "NonErrors"
+    then do
+      putStrLn "Enter result of the expression"
+      resultNumber <- getLine
+      let parsedNum = read resultNumber :: Double
+      return $ Right parsedNum
+    else
+      return $ Left DivisionByZero
+
+getNumberOfExpressions :: IO Int 
+getNumberOfExpressions = do
+  putStrLn "What number of expressions should be printed?"
+  num <- getLine
+  let parsedNum = read num :: Int
+  return parsedNum
+
 -- Лаконичный main.
 main :: IO ()
 main = do
-  introduction
-  greetByName
-  reactToNumber 42
+  argument <- introduction
+  number <- getNumberOfExpressions
+  mapM_ print (take number $ generateExprByResult argument)
 
-
--- Эта функция просто демонстрирует, во что дешугарится do-нотация
-f :: IO ()
-f = do
-  x <- getLine        -- getLine >>= \x ->
-  let parsed = read x -- let parsed = read x in
-  y <- getLine        -- getLine >>= \y ->
-  putStrLn (y ++ y)   -- putStrLn (y ++ y) >>= \_ ->
-  print (parsed * 2)  -- print (parsed * 2) >>= \r ->
-                      -- return r

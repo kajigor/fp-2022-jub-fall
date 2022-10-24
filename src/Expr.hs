@@ -5,6 +5,11 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Root Expr Int
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,7 +82,8 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
-                     deriving (Show, Eq)
+                     | EvenRootOfNegativeNumber
+                     deriving (Show, Eq, Read)
 
 evalEither :: Expr -> Either ArithmeticError Double
 -- Этот интерпретатор будет возвращать Nothing в случае деления на 0
@@ -103,6 +109,23 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalSumEither :: Double -> Double -> Either ArithmeticError Double
+totalSumEither x y = Right $ x + y
+
+totalSubEither :: Double -> Double -> Either ArithmeticError Double
+totalSubEither x y = Right $ x - y
+
+totalMulEither :: Double -> Double -> Either ArithmeticError Double
+totalMulEither x y = Right $ x * y
+
+totalExpEither :: Double -> Either ArithmeticError Double
+totalExpEither x = Right $ exp x
+
+totalRootEither :: Double -> Int -> Either ArithmeticError Double
+totalRootEither x y | (x < 0) && ((y `mod` 2) == 0) = Left EvenRootOfNegativeNumber
+                    | otherwise = Right $ x ** (1.0 / (fromIntegral y))
+
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -199,11 +222,42 @@ eval (Div x y) = do
   totalDivEither x' y' -- totalDivEither x' y'
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
-  totalLogEither x'    -- totalLogEither x'
+  totalLogEither x'    -- totalLogEither x' 
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalSumEither x' y' 
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalMulEither x' y'
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalSubEither x' y'
+eval (Exp x) = do
+  x' <- eval x
+  totalExpEither x'
+eval (Root x y) = do
+  x' <- eval x
+  totalRootEither x' y
 
+
+generateConcreteResult :: Double -> [Expr]
+generateConcreteResult res = ([(Val res)] ++ [(Sub x y) | x <- (generateConcreteResult (1.5 * res)), y <- (generateConcreteResult (0.5 * res))] ++ 
+                            [(Sum x y) | x <- (generateConcreteResult (0.75 * res)), y <- (generateConcreteResult (0.25 * res))] ++
+                            [(Mul x y) | x <- (generateConcreteResult (res ** 0.60)), y <- (generateConcreteResult (res ** 0.4))] ++
+                            [(Log x) | x <- (generateConcreteResult (exp res))] ++
+                            [(Exp x) | res > 0, x <- (generateConcreteResult (log res))] ++ 
+                            [(Div x y) | res /= 0, x <- (generateConcreteResult (res ** 1.40)), y <- (generateConcreteResult (res ** 0.4))])
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
-
+generateExprByResult value = case value of
+  Left DivisionByZero -> [(Div x y) | x <- (generateConcreteResult 10), y <- (generateConcreteResult 0)]
+  Left LogOfZero -> [(Log x) | x <- (generateConcreteResult 0)]
+  Left LogOfNegativeNumber -> (concat [[(Log x) | x <- (generateConcreteResult y)] | y <- [-10.. -5]])
+  Left EvenRootOfNegativeNumber -> (concat [[(Root x z) | x <- (generateConcreteResult y)] |  y <- [-10.. -5], z <- [2, 4.. 8]])
+  Right x -> generateConcreteResult x
+  
