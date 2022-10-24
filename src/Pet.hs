@@ -102,5 +102,12 @@ data Pet = Pet
 -- * В случае, если два человека -- тезки, упорядочиваем по номеру документа.
 -- * Если у одного хозяина больше одного питомца, сортируйте их сначала по типу, потом по имени.
 -- Сортировку стоит делать при помощи функции sortBy из Data.List
+
+instance Ord Person where
+  compare = (compare `on` lastName) <> (compare `on` firstName) <> (compare `on` identification)
+
+instance Ord Pet where
+  compare = (compare `on` owner) <> (compare `on` species) <> (compare `on` name)
+
 sortPets :: [Pet] -> [Pet]
-sortPets = sortBy (on compare (\Pet{..} -> (lastName owner, firstName owner, identification owner, species, name)))
+sortPets pets = sortBy compare pets

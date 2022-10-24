@@ -40,16 +40,9 @@ moveShapeAround shape moves = slideShape shape (mconcat moves)
 
 -- Является ли Shape полугруппой? А моноидом?
 -- Реализовать инстансы, если является. Иначе -- обосновать.
-
--- Если Shape является полугруппой (=> моноидом),
--- то должна быть ассоциативная операция (пусть это будет абстрактная операция OP),
--- но можно придумать такой пример, что
--- (Overlay shape1 shape2) OP ((Overlay shape2 shape3) OP (Overlay shape1 shape3))
--- !=
--- ((Overlay shape1 shape2) OP (Overlay shape2 shape3)) OP (Overlay shape1 shape3)
 instance Semigroup Shape where
   (<>) :: Shape -> Shape -> Shape
-  (<>) = undefined
+  (<>) shape1 shape2 = Overlay shape1 shape2
 
 instance Monoid Shape where
-  mempty = undefined
+  mempty = Circle (PointD 0 0) 0
