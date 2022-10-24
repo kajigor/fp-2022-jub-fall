@@ -3,7 +3,12 @@ module Expr where
 -- Тип данных для выражений.
 -- Каждое выражение это либо целое число, либо деление двух выражений, либо логарифм другого выражения.
 data Expr = Val Double
+          | Sum Expr Expr
+          | Sub Expr Expr
+          | Prod Expr Expr
           | Div Expr Expr
+          | Exp Expr
+          | Root Expr Int
           | Log Expr
           deriving (Show, Eq)
 
@@ -77,6 +82,8 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | EvenRootOfNegativeNumber
+                     | ZeroRoot
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -90,6 +97,35 @@ evalEither (Div x y) =
           Right y' -> totalDivEither x' y'
           Left err -> Left err
       Left err  -> Left err
+evalEither (Sum x y) =
+    case evalEither x of
+      Right x' ->
+        case evalEither y of
+          Right y' -> Right $ x' + y'
+          Left err -> Left err
+      Left err  -> Left err
+evalEither (Sub x y) =
+    case evalEither x of
+      Right x' ->
+        case evalEither y of
+          Right y' -> Right $ x' - y'
+          Left err -> Left err
+      Left err  -> Left err
+evalEither (Prod x y) =
+    case evalEither x of
+      Right x' ->
+        case evalEither y of
+          Right y' -> Right $ x' * y'
+          Left err -> Left err
+      Left err  -> Left err
+evalEither (Exp x) =
+    case evalEither x of
+      Right x' -> Right $ exp x'
+      Left err  -> Left err
+evalEither (Root x y) =
+    case evalEither x of
+      Right x' -> totalRootEither x' y
+      Left err  -> Left err
 evalEither (Log x) =
     case evalEither x of
       Right x' -> totalLogEither x'
@@ -98,6 +134,11 @@ evalEither (Log x) =
 totalDivEither :: Double -> Double -> Either ArithmeticError Double
 totalDivEither x y | y == 0 = Left DivisionByZero
                    | otherwise = Right $ x / y
+
+totalRootEither :: Double -> Int -> Either ArithmeticError Double
+totalRootEither x y | even y && x < 0 = Left EvenRootOfNegativeNumber
+                    | y == 0 = Left ZeroRoot
+                    | otherwise = Right $ x ** (1 / (fromIntegral y))
 
 totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
@@ -200,10 +241,34 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' + y'
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' - y'
+eval (Prod x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' * y'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Root x y) = do
+  x' <- eval x
+  totalRootEither x' y
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult inp = case inp of
+  Left DivisionByZero -> [ Div (Sum (Prod (Exp (Val x)) (Log (Val y))) (Div (Val x) (Root (Val y) 21))) (Val 0) | x <- [1..], y <- [1000..] ]
+  Left LogOfZero -> [ Log (Prod (Sum (Prod (Exp (Val y)) (Log (Val x))) (Div (Val y) (Root (Val x) 3))) (Val 0)) | x <- [1..], y <- [1..] ]
+  Left LogOfNegativeNumber -> [ Log (Prod (Sum (Exp (Prod (Val x) (Val y))) (Exp (Val x))) (Val (-1))) | x <- [1..], y <- [100..] ]
+  Left EvenRootOfNegativeNumber -> [ Root (Div (Sub (Exp (Sum (Val x) (Val y))) (Log (Val x))) (Val (-1))) 2 | x <- [1..], y <- [100..] ]
+  Left ZeroRoot -> [ Root (Div (Exp (Sum (Val x) (Val y))) (Exp (Val x))) 0 | x <- [1..], y <- [100..] ]
+  Right val -> [ Log (Div (Exp (Sum (Val x) (Val val))) (Exp (Val x))) | x <- [1..] ]
 
