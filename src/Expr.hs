@@ -5,6 +5,11 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Add Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Root Int Expr
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,118 +82,23 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | EvenRootOfNegativeNumber
                      deriving (Show, Eq)
 
-evalEither :: Expr -> Either ArithmeticError Double
--- Этот интерпретатор будет возвращать Nothing в случае деления на 0
--- или вычисления логарифма от неположительного числа
-evalEither (Val v) = Right v
-evalEither (Div x y) =
-    case evalEither x of
-      Right x' ->
-        case evalEither y of
-          Right y' -> totalDivEither x' y'
-          Left err -> Left err
-      Left err  -> Left err
-evalEither (Log x) =
-    case evalEither x of
-      Right x' -> totalLogEither x'
-      Left err -> Left err
-
 totalDivEither :: Double -> Double -> Either ArithmeticError Double
-totalDivEither x y | y == 0 = Left DivisionByZero
+totalDivEither x y | abs y < 1e-6 = Left DivisionByZero
                    | otherwise = Right $ x / y
 
 totalLogEither :: Double -> Either ArithmeticError Double
-totalLogEither x | x == 0 = Left LogOfZero
+totalLogEither x | abs x < 1e-6 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
-
-expr1 :: Expr
-expr1 = Log (Val 0)
-
-expr2 :: Expr
-expr2 = Log (Val (-1))
-
-expr3 :: Expr
-expr3 = Div (Val 1) (Val 0)
-
--- *Expr> evalEither expr
--- Right 1.737177927613007
--- *Expr> evalEither expr1
--- Left LogOfZero
--- *Expr> evalEither expr2
--- Left LogOfNegativeNumber
--- *Expr> evalEither expr3
--- Left DivisionByZero
-
--- В коде evalMaybe и evalEither очень много повторяющейся логики: мы проверяем, что какое-то подвыражение
--- вычисляется без ошибок, и если это так, то продолжаем вычисление выражения.
--- Если происходит ошибка, мы о ней сообщаем.
--- Эту повторяющуюся логику было бы неплохо абстрагировать, что мы можем сделать,
--- используя bindMaybe, returnMaybe, bindEither и returnEither.
-
-bindMaybe :: Maybe a -> (a -> Maybe b) -> Maybe b
-bindMaybe value f =
-  case value of
-    Just x -> f x
-    Nothing -> Nothing
-
-returnMaybe :: a -> Maybe a
-returnMaybe x = Just x
-
-evalMaybe' :: Expr -> Maybe Double
-evalMaybe' (Val v) = returnMaybe v
-evalMaybe' (Div x y) =
-    evalMaybe' x `bindMaybe` \x' ->
-    evalMaybe' y `bindMaybe` \y' ->
-    totalDivMaybe x' y'
-evalMaybe' (Log x) =
-    evalMaybe' x `bindMaybe` \x' ->
-    totalLogMaybe x'
-
-
-bindEither :: Either e a -> (a -> Either e b) -> Either e b
-bindEither value f =
-  case value of
-    Right x -> f x
-    Left err -> Left err
-
-returnEither :: a -> Either e a
-returnEither x = Right x
-
-evalEither' :: Expr -> Either ArithmeticError Double
-evalEither' (Val v) = returnEither v
-evalEither' (Div x y) =
-    evalEither' x `bindEither` \x' ->
-    evalEither' y `bindEither` \y' ->
-    totalDivEither x' y'
-evalEither' (Log x) =
-    evalEither' x `bindEither` \x' ->
-    totalLogEither x'
-
--- Класс типов Monad предоставляет функции >>= (bind) и return ровно с тем функционалом, который нам необходим.
--- Monad и Either e являются инстансами класса Monad, поэтому мы можем использовать функции из него:
-
-evalMaybe'' :: Expr -> Maybe Double
-evalMaybe'' (Val v) = return v
-evalMaybe'' (Div x y) =
-    evalMaybe'' x >>= \x' ->
-    evalMaybe'' y >>= \y' ->
-    totalDivMaybe x' y'
-evalMaybe'' (Log x) =
-    evalMaybe'' x `bindMaybe` \x' ->
-    totalLogMaybe x'
-
-evalEither'' :: Expr -> Either ArithmeticError Double
-evalEither'' (Val v) = return v
-evalEither'' (Div x y) =
-    evalEither'' x >>= \x' ->
-    evalEither'' y >>= \y' ->
-    totalDivEither x' y'
-evalEither'' (Log x) =
-    evalEither'' x >>= \x' ->
-    totalLogEither x'
+totalRootEither :: Int -> Double -> Either ArithmeticError Double
+totalRootEither n x | even n && x < 0 =  Left EvenRootOfNegativeNumber
+                    | otherwise = Right $ x ** powerOfRoot
+                    where
+                      powerOfRoot :: Double
+                      powerOfRoot = 1 / fromIntegral n
 
 -- В Haskell есть do-нотация, которая позволяет выражать то же самое чуть более приятно:
 eval :: Expr -> Either ArithmeticError Double
@@ -200,10 +110,74 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Add x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' + y'
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' - y'
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' * y'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Root n x) = do
+  x' <- eval x
+  totalRootEither n x'
+
+
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult (Left DivisionByZero) = [Div lhs rhs | depth <- [1..], numerator <- [minBound :: Int ..],
+                                                            lhs <- generateExprByResultWithDepth depth (fromIntegral numerator),
+                                                            rhs <- generateExprByResultWithDepth depth 0.0]
+generateExprByResult (Left LogOfZero) = [Log lhs | depth <- [1..], lhs <- generateExprByResultWithDepth depth 0.0]
+generateExprByResult (Left LogOfNegativeNumber) = [Log lhs | depth <- [1..], value <- [-1.0, -2.0..],
+                                                             lhs <- generateExprByResultWithDepth depth value]
+generateExprByResult (Left EvenRootOfNegativeNumber) = [Root n lhs | n <- [2,4..], depth <- [1..], value <- [-1.0, -2.0],
+                                                                     lhs <- generateExprByResultWithDepth depth value]
+generateExprByResult (Right x) = concat [generateExprByResultWithDepth n x | n <- [1..]]
+
+generateExprByResultWithDepth :: Int -> Double -> [Expr] -- Я ограничился +, -, *, - потому что решил, что я не смогу расписать так много вариантов :(
+generateExprByResultWithDepth 1 x = [Val x]
+generateExprByResultWithDepth n x = generatePlus ++ generateMinus ++ generateDiv ++ generateMul
+  where
+    depthRange :: [Int]
+    depthRange = [1..n-1]
+
+    possibleDepthsSub :: [(Int, Int, Double)]
+    possibleDepthsSub = [(i, j, value) | i <- depthRange, j <- depthRange, value <-[x - 100, x - 99..x + 100]] ++
+                     [(j, i, value) | i <- depthRange, j <- depthRange, value <-[x - 100, x - 99..x + 100]]
+    possibleDepthsMulDiv :: [(Int, Int, Double)]
+    possibleDepthsMulDiv = [(i, j, value) | i <- depthRange, j <- depthRange, value <-[0.01, 0.02..100]] ++
+                     [(j, i, value) | i <- depthRange, j <- depthRange, value <-[0.01, 0.02..100]]
+    justNumbers :: [(Int, Int, Double)]
+    justNumbers = [(i, j, value) | i <- depthRange, j <- depthRange, value <-[1, 2..100]] ++
+                  [(j, i, value) | i <- depthRange, j <- depthRange, value <-[1, 2..100]]
+
+
+    genericHelper :: (Expr -> Expr -> Expr) -> (Double -> Double) -> ((Int, Int, Double) -> [Expr])
+    genericHelper constructor rightValue = \(a, b, c) -> [constructor lhs rhs |
+                                                          lhs <- generateExprByResultWithDepth a c,
+                                                          rhs <- generateExprByResultWithDepth b (rightValue c)]
+
+    generatePlus :: [Expr]
+    generatePlus = concatMap (genericHelper Add (x-))  possibleDepthsSub
+
+    generateMinus :: [Expr]
+    generateMinus = concatMap (genericHelper Sub (\a -> a - x)) possibleDepthsSub
+
+    generateMul :: [Expr]
+    generateMul | x == 0 = concatMap (genericHelper Mul $ const 0) justNumbers
+                | otherwise = concatMap (genericHelper Mul (x/)) possibleDepthsMulDiv
+    generateDiv :: [Expr]
+    generateDiv | x == 0 = concatMap (genericHelper (flip Div) $ const 0) justNumbers
+                | otherwise = concatMap (genericHelper Div (/x)) possibleDepthsMulDiv
 
