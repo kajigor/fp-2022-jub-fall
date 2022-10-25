@@ -6,6 +6,7 @@ import Test.Tasty.HUnit (Assertion, (@?=))
 import Test.HUnit.Approx ((@?~))
 
 import Expr
+import Expr (ArithmeticError(RootOfNonpositiveNumber, RootOfDegreeZero))
 
 shouldBeResult :: Either ArithmeticError Double
                -> Either ArithmeticError Double
@@ -20,7 +21,7 @@ shouldBeResult result exp =
 unit_genExpr :: IO ()
 unit_genExpr = do
     let results = [Right 13, Right (-42), Right 0.5
-                  , Left DivisionByZero, Left LogOfZero, Left LogOfNegativeNumber]
+                  , Left DivisionByZero, Left LogOfZero, Left LogOfNegativeNumber, Left RootOfNonpositiveNumber, Left RootOfDegreeZero]
     mapM_ check results
   where
     check :: Either ArithmeticError Double -> IO ()
