@@ -1,4 +1,6 @@
 module Main (main) where
+import Expr
+import Expr (toString)
 
 -- IO -- монада для операций ввода-вывода.
 -- Функция-точка входа в программу Main.main имеет тип IO (),
@@ -66,12 +68,37 @@ reactToNumber program'sFavoriteNumber = do
     let doubled = person'sFavoriteNumber * 2
     putStrLn $ "Nice! BTW, " ++ show person'sFavoriteNumber ++ " doubled is " ++ show doubled
 
+
+getAndPrintResults :: Either ArithmeticError Double -> Int -> IO ()
+getAndPrintResults x num = do
+  let results = take num $ generateExprByResult x
+  mapM_ (print . toString) results
+
 -- Лаконичный main.
 main :: IO ()
 main = do
-  introduction
-  greetByName
-  reactToNumber 42
+  putStrLn "Hi! What is your target value?\nExample:\n  42\n  3\nExample:\n  LogOfZero\n  5\n-------------\n"
+  targetRaw <- getLine
+  numRaw <- getLine
+  let parsedNum = read numRaw :: Int
+  if targetRaw == "DivisionByZero"
+  then
+    getAndPrintResults (Left DivisionByZero) parsedNum
+  else if targetRaw == "LogOfZero"
+  then
+    getAndPrintResults (Left LogOfZero) parsedNum
+  else if targetRaw == "LogOfNegativeNumber"
+  then
+    getAndPrintResults (Left LogOfNegativeNumber) parsedNum
+  else if targetRaw == "RootOfInvalidDegree"
+  then
+    getAndPrintResults (Left RootOfInvalidDegree) parsedNum
+  else if targetRaw == "EvenRootOfNegativeNumber"
+  then
+    getAndPrintResults (Left EvenRootOfNegativeNumber) parsedNum
+  else do
+    let parsedTarget = read targetRaw :: Double
+    getAndPrintResults (Right parsedTarget) parsedNum
 
 
 -- Эта функция просто демонстрирует, во что дешугарится do-нотация

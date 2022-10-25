@@ -1,10 +1,17 @@
 module Expr where
+import Data.Bits (Bits(xor))
+import Control.Concurrent (yield)
 
 -- Тип данных для выражений.
 -- Каждое выражение это либо целое число, либо деление двух выражений, либо логарифм другого выражения.
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Root Expr Int
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,6 +84,8 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | RootOfInvalidDegree
+                     | EvenRootOfNegativeNumber
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -103,6 +112,11 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalRootEither :: Double -> Int -> Either ArithmeticError Double
+totalRootEither x deg | deg < 0 = Left RootOfInvalidDegree
+                      | x < 0 && even deg = Left EvenRootOfNegativeNumber
+                      | otherwise = Right $ x ** (1 / fromIntegral deg)
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -200,10 +214,62 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right (x' + y')
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right (x' - y')
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right (x' * y')
+eval (Root x deg) = do
+  x' <- eval x
+  totalRootEither x' deg
+
+toString :: Expr -> String
+toString (Val n) = show n
+toString (Div x y) = "(" ++ (toString x) ++ "/" ++ (toString y) ++ ")"
+toString (Log x) = "log(" ++ (toString x) ++ ")"
+toString (Exp x) = "exp(" ++ (toString x) ++ ")"
+toString (Sum x y) = "(" ++ (toString x) ++ "+" ++ (toString y) ++ ")"
+toString (Sub x y) = "(" ++ (toString x) ++ "-" ++ (toString y) ++ ")"
+toString (Mul x y) = "(" ++ (toString x) ++ "*" ++ (toString y) ++ ")"
+toString (Root x deg) = "root(" ++ (toString x) ++ ", " ++ (show deg) ++ ")"
+
+diagMixHelper :: [[a]] -> Int -> [a]
+diagMixHelper a depth = [a!!i!!(depth - i) | i <- [0..depth]]
+-- Проход по диагональнкам бесконечного двумерного массива
+-- 0 1 3 6 ... 
+-- 2 4 7 ...
+-- 5 8 ...
+-- 9 ...
+-- ...
+diagMix :: [[a]] -> [a]
+diagMix a = concat [diagMixHelper a t | t <- [0..]]
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
-
+generateExprByResult e = case e of
+  Left DivisionByZero -> diagMix [[ Div x y | x <- genNumber t 0, y <- genNumber 0 0 ] | t <- [1..]]
+  Left LogOfZero -> [Log x | x <- genNumber 0 0]
+  Left LogOfNegativeNumber -> diagMix [[Log x | x <- genNumber (-t) 0] | t <- [1,2..]]
+  Left RootOfInvalidDegree -> diagMix [[Root x (-y) | x <- genNumber t 0, y <- [1..]] | t <- [2..]]
+  Left EvenRootOfNegativeNumber -> diagMix [[Root x y | x <- genNumber (-t) 0, y <- [2, 4..]] | t <- [1..]]
+  Right val -> genNumber val 0
+  where
+    genNumber :: Double -> Int -> [Expr]
+    genNumber x 0 = diagMix [[Div a b | a <- genNumber (x * t) 1, b <- genNumber t 1] | t <- [1..]]
+    genNumber x 1 = diagMix [[Mul a b | a <- genNumber (x / t) 2, b <- genNumber t 2] | t <- [1..]]
+    genNumber x 2 = diagMix [[Sum a b | a <- genNumber (x - t) 3, b <- genNumber t 3] | t <- [1..]]
+    genNumber x 3 = concat [[Sub a b | a <- genNumber (x + t) 4, b <- genNumber t 4] | t <- [1..]]
+    genNumber x 4 = [Val x]
+    genNumber _ _ = undefined
