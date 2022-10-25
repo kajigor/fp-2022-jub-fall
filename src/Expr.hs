@@ -5,6 +5,11 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Dif Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Sqr Int Expr
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,6 +82,8 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | EvenDegreeRootOfNegativeNumber
+                     | RootDegreeNotNatural
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -103,6 +110,12 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+                
+totalSqrEither :: Int -> Double -> Either ArithmeticError Double
+totalSqrEither d x | d <= 0 = Left RootDegreeNotNatural
+                   | d `mod` 2 == 0 && x < 0 = Left EvenDegreeRootOfNegativeNumber
+                   | x < 0 = Right $ -((-x) ** (1.0 / (fromIntegral d)))
+                   | otherwise = Right $ x ** (1.0 / (fromIntegral d))
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -200,10 +213,34 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' + y'
+eval (Dif x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' - y'
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' * y'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Sqr d x) = do
+  x' <- eval x
+  totalSqrEither d x'
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult result = case result of
+  Left DivisionByZero -> [Div (Sum (Val x) (Div (Val x) (Val 5))) (Val 0) | x <- [5,10 ..]]
+  Left LogOfZero -> [Log (Mul (Dif (Val x) (Mul (Val x) (Val 1))) (Sum (Val x) (Val x))) | x <- [2 ..]]
+  Left LogOfNegativeNumber -> [Log (Dif (Val x) (Exp (Val x))) | x <- [1,3 ..]]
+  Left EvenDegreeRootOfNegativeNumber -> [Sqr x (Sum (Div (Val 5) (Val 7)) (Dif (Val 1) (Val 90))) | x <- [2,2 ..]]
+  Left RootDegreeNotNatural -> [Sqr x (Dif (Exp (Val 6)) (Mul (Val 3) (Val 5))) | x <- [-3,-6 ..]]
+  Right result -> [Mul (Sum (Val result) (Val result)) (Div (Log (Exp (Val x))) (Mul (Val 2) (Val x))) | x <- [7 ..]]
 

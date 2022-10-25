@@ -1,5 +1,7 @@
 module Main (main) where
 
+import Expr
+
 -- IO -- монада для операций ввода-вывода.
 -- Функция-точка входа в программу Main.main имеет тип IO (),
 -- это означает, что она не возвращает никакого осмысленного результата, но при этом делает некоторые side effects.
@@ -70,8 +72,18 @@ reactToNumber program'sFavoriteNumber = do
 main :: IO ()
 main = do
   introduction
-  greetByName
-  reactToNumber 42
+  putStrLn "Input the error or the result of the expression you want to get:"
+  result <- getLine
+  putStrLn "Input the number of expressions you want to see:"
+  numberExpr <- getLine
+  let parsedNumExpr = read numberExpr :: Int
+  case result of
+    "DivisionByZero" -> putStrLn $ show (take parsedNumExpr (generateExprByResult (Left DivisionByZero)))
+    "LogOfZero" -> putStrLn $ show (take parsedNumExpr (generateExprByResult (Left LogOfZero)))
+    "LogOfNegativeNumber" -> putStrLn $ show (take parsedNumExpr (generateExprByResult (Left LogOfNegativeNumber)))
+    "EvenDegreeRootOfNegativeNumber" -> putStrLn $ show (take parsedNumExpr (generateExprByResult (Left EvenDegreeRootOfNegativeNumber)))
+    "RootDegreeNotNatural" -> putStrLn $ show (take parsedNumExpr (generateExprByResult (Left RootDegreeNotNatural)))
+    otherwise -> putStrLn $ show (take parsedNumExpr (generateExprByResult (Right (read result :: Double))))
 
 
 -- Эта функция просто демонстрирует, во что дешугарится do-нотация
