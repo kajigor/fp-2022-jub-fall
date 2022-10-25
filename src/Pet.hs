@@ -88,14 +88,11 @@ data Person = Person
   deriving (Show, Eq)
 
 instance Ord Person where
-  -- (<=) p1 p2 = (lastName p1, firstName p1, identification p1) <= (lastName p2, firstName p2, identification p2)
-  (<=) p1 p2 =  if lastName p1 == lastName p2 then
-                  if firstName p1 == firstName p2 then
-                    identification p1 <= identification p2
-                  else
-                    firstName p1 <= firstName p2
-                else 
-                  lastName p1 <= lastName p2 
+  compare p1 p2 = mconcat [
+                            compare (lastName p1) (lastName p2), 
+                            compare (firstName p1) (firstName p2), 
+                            compare (identification p1) (identification p2)
+                          ]
 
 data Animal = Dog | Cat | Bunny | Tarantula deriving (Show, Eq, Ord)
 
@@ -107,14 +104,11 @@ data Pet = Pet
   deriving (Show, Eq)
 
 instance Ord Pet where
-  --(<=) p1 p2 = (owner p1, species p1, name p1) <= (owner p2, species p2, name p2)
-  (<=) p1 p2 = if owner p1 == owner p2 then 
-                  if species p1 == species p2 then
-                    name p1 <= name p2
-                  else
-                    species p1 <= species p2
-                else 
-                  owner p1 <= owner p2
+  compare p1 p2 = mconcat [
+                            compare (owner p1) (owner p2),
+                            compare (species p1) (species p2),
+                            compare (name p1) (name p2)
+                          ]
 
 -- Отсортируйте питомцев по их хозяевам:
 -- * Хозяева упорядочиваются сначала по фамилии, затем по имени.
