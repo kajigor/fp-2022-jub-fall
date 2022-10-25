@@ -19,10 +19,12 @@ shouldBeResult result exp =
 
 unit_genExpr :: IO ()
 unit_genExpr = do
-    let results = [Right 13, Right (-42), Right 0.5
-                  , Left DivisionByZero, Left LogOfZero, Left LogOfNegativeNumber]
+    let results = [Right 13, Right (-42), Right 0.5,
+                  Left DivisionByZero, Left LogOfZero, Left LogOfNegativeNumber, 
+                  Left RootOfNonpositiveNumber, Left RootOfZeroDegree] 
     mapM_ check results
   where
     check :: Either ArithmeticError Double -> IO ()
     check result =
       mapM_ (uncurry shouldBeResult) [ (eval e, result) | e <- take 100 $ generateExprByResult result]
+      
