@@ -1,10 +1,14 @@
 module Expr where
 
 -- Тип данных для выражений.
--- Каждое выражение это либо целое число, либо деление двух выражений, либо логарифм другого выражения.
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Sub Expr Expr 
+          | Mul Expr Expr
+          | Exp Expr
+          | Root Expr Int
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,6 +81,8 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | RootOfIncorrectDegree
+                     | EvenDegreeRootOfNegativeNumber
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -103,6 +109,11 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalRootEither :: Double -> Int -> Either ArithmeticError Double
+totalRootEither x y | y <= 0 = Left RootOfIncorrectDegree
+                    | x < 0 && even y = Left EvenDegreeRootOfNegativeNumber
+                    | otherwise = Right $ x ** (1.0 / (fromIntegral y))
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -200,10 +211,33 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ (x' + y')  
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ (x' - y')
+eval (Mul x y) = do
+  x' <- eval x 
+  y' <- eval y
+  Right $ (x' * y')
+eval (Root x y) = do
+  x' <- eval x
+  totalRootEither x' y     
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
-
+generateExprByResult x = case x of
+  Left DivisionByZero -> [ Div (Val t) (Val 0) | t <- [1..]]
+  Left LogOfZero -> [ Log (Mul (Val 0) (Sum (Val t) (Val t))) | t <- [3..]]
+  Left LogOfNegativeNumber -> [ Log (Sub (Root (Val t) 18) (Val t)) | t <- [2,3..]]
+  Left RootOfIncorrectDegree -> [Root (Exp (Val t)) (-30) | t <- [6,10..]] 
+  Left EvenDegreeRootOfNegativeNumber -> [Root (Sub (Val 0) (Log (Val t))) 2 | t <- [2..]]
+  Right val -> [ Div(Mul (Log (Exp (Mul (Div (Val val) (Val t)) (Val t)))) (Val event)) (Mul (Div (Val event) (Val 2)) (Val 2)) | t <- [1..], event <- [2,4..]]
