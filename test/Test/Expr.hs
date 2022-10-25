@@ -6,6 +6,7 @@ import Test.Tasty.HUnit (Assertion, (@?=))
 import Test.HUnit.Approx ((@?~))
 
 import Expr
+import Prelude hiding (exp)
 
 shouldBeResult :: Either ArithmeticError Double
                -> Either ArithmeticError Double

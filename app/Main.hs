@@ -1,4 +1,6 @@
-module Main (main) where
+{-# OPTIONS_GHC -Wno-type-defaults #-}
+module Main (main, introduction, greetByName, askFavoriteNumber, reactToNumber, f) where
+import Expr
 
 -- IO -- монада для операций ввода-вывода.
 -- Функция-точка входа в программу Main.main имеет тип IO (),
@@ -69,9 +71,17 @@ reactToNumber program'sFavoriteNumber = do
 -- Лаконичный main.
 main :: IO ()
 main = do
-  introduction
-  greetByName
-  reactToNumber 42
+  putStrLn "\nInput your desired result (number or error name):"
+  result <- getLine
+  putStrLn "\nInput desired number of expressions:"
+  input <- getLine
+  let count = read input :: Int
+  putStrLn "\nHere they are:\n"
+  case result of
+    "DivisionByZero" -> print (take count $ generateExprByResult (Left DivisionByZero))
+    "LogOfZero" -> print (take count $ generateExprByResult (Left LogOfZero))
+    "LogOfNegativeNumber" -> print (take count $ generateExprByResult (Left LogOfNegativeNumber))
+    _ -> print (take count $ generateExprByResult (Right (read result :: Double)))
 
 
 -- Эта функция просто демонстрирует, во что дешугарится do-нотация

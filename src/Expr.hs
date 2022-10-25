@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 module Expr where
 
 -- Тип данных для выражений.
@@ -5,6 +6,11 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Sub Expr Expr
+          | Mult Expr Expr
+          | Exp Expr
+          | Root Expr Int
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,6 +83,7 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | NegativeNumberSqrt
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -103,6 +110,10 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalRootEither :: Double -> Int -> Either ArithmeticError Double
+totalRootEither x n | x < 0 = Left NegativeNumberSqrt
+                    | otherwise = Right $ x ** (1 / (fromIntegral n))
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -200,10 +211,37 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Mult x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' * y'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' + y'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Root x n) = do
+  x' <- eval x
+  totalRootEither x' n
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' - y'
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
-
+generateExprByResult (Left DivisionByZero) =
+  [ Div (Mult (Val x) (Sum (Log (Val x)) (Val y))) (Val 0) | x <- [1..],
+                                                            y <- [1..] ]
+generateExprByResult (Left LogOfZero) =
+  [ Log (Mult (Sub (Val x) (Val y)) (Val 0)) | x <- [1..],
+                                              y <- [1..] ]
+generateExprByResult (Left LogOfNegativeNumber) =
+  [ Log (Sub (Val x) (Mult (Val y) (Div (Val y) (Val x)))) | x <- [1..],
+                                                            y <- [2..] ]
+generateExprByResult (Right result) =
+  [ Div (Mult (Log (Exp (Val x))) (Val result)) (Val x) | x <- [1..] ]
