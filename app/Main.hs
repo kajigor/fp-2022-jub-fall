@@ -1,5 +1,7 @@
 module Main (main) where
 
+import Expr
+
 -- IO -- монада для операций ввода-вывода.
 -- Функция-точка входа в программу Main.main имеет тип IO (),
 -- это означает, что она не возвращает никакого осмысленного результата, но при этом делает некоторые side effects.
@@ -66,12 +68,35 @@ reactToNumber program'sFavoriteNumber = do
     let doubled = person'sFavoriteNumber * 2
     putStrLn $ "Nice! BTW, " ++ show person'sFavoriteNumber ++ " doubled is " ++ show doubled
 
+askResult :: IO (Either ArithmeticError Double)
+askResult = do
+  putStrLn "What result do you want?"
+  res <- getLine
+  case res of 
+    "Division By Zero" -> return $ Left DivisionByZero
+    "Log Of Zero" -> return $ Left LogOfZero
+    "Log Of Negative Number" -> return $ Left LogOfNegativeNumber
+    "Even Root Of Negative Number" -> return $ Left EvenRootOfNegativeNumber
+    "Root Power Zero" -> return $ Left RootPowerZero
+    _ -> return $ Right parsedRes where parsedRes = read res :: Double
+
+askHowMany :: IO Int
+askHowMany = do
+  putStrLn "How many expressions do you want?"
+  cnt <- getLine
+  let parsedCnt = read cnt :: Int
+  return parsedCnt
+
+printExpr :: Either ArithmeticError Double -> Int -> IO()
+printExpr res cnt = do
+  print (take cnt (generateExprByResult res))
+
 -- Лаконичный main.
 main :: IO ()
 main = do
-  introduction
-  greetByName
-  reactToNumber 42
+  res <- askResult
+  cnt <- askHowMany
+  printExpr res cnt
 
 
 -- Эта функция просто демонстрирует, во что дешугарится do-нотация

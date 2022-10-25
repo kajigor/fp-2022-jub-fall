@@ -1,10 +1,18 @@
 module Expr where
+import GHC.Event (Event)
+import Data.Bits (Bits(xor))
+import Control.Concurrent (yield)
 
 -- Тип данных для выражений.
 -- Каждое выражение это либо целое число, либо деление двух выражений, либо логарифм другого выражения.
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Root Expr Int
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,6 +85,8 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | EvenRootOfNegativeNumber
+                     | RootPowerZero
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -103,6 +113,11 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalRootEither :: Double -> Int -> Either ArithmeticError Double
+totalRootEither x n | n == 0 = Left RootPowerZero
+                    | even n && x < 0 = Left EvenRootOfNegativeNumber
+                    | otherwise = Right $ x ** (1 / fromIntegral n)
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -200,10 +215,43 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  return (x' + y')
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  return (x' - y')
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  return (x' * y')
+eval (Exp x) = do
+  x' <- eval x
+  return (exp x')
+eval (Root x n) = do
+  x' <- eval x
+  totalRootEither x' n
+
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult value = generateExprByResultRec value 3
 
+generateExprByResultRec :: Either ArithmeticError Double -> Int -> [Expr]
+generateExprByResultRec value 0 = case value of
+  Left DivisionByZero -> [Div x y | x <- generateExprByResult $ Right 1, y <- generateExprByResult $ Right 0]
+  Left LogOfZero -> [Log x | x <- generateExprByResult $ Right 0]
+  Left LogOfNegativeNumber -> [Log x | x <- generateExprByResult $ Right (-1)]
+  Left EvenRootOfNegativeNumber -> [Root x 2 | x <- generateExprByResult $ Right (-1)]
+  Left RootPowerZero -> [Root x 0 | x <- generateExprByResult $ Right 1]
+  Right x -> [Val x]
+generateExprByResultRec value depth =
+  a ++ [Div x y | x <- a, y <- one] ++ [Sum x y | x <- a, y <- zero] ++ [Sub x y | x <- a, y <- zero]
+   ++ [Mul x y | x <- a, y <- one] ++ [Root x 1 | x <- a] ++ if either (const True) (> 0) value then [Exp (Log x) | x <- a] else []
+  where a = generateExprByResultRec value (depth - 1)
+        zero = generateExprByResultRec (Right 0) (depth - 1)
+        one = generateExprByResultRec (Right 1) (depth - 1)
