@@ -5,6 +5,11 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Sum Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Root Expr Int
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,7 +82,10 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | RootOfInvalidDegree
+                     | RootOfNegativeNumber
                      deriving (Show, Eq)
+
 
 evalEither :: Expr -> Either ArithmeticError Double
 -- Этот интерпретатор будет возвращать Nothing в случае деления на 0
@@ -103,6 +111,11 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalRootEither :: Double -> Int -> Either ArithmeticError Double
+totalRootEither x deg | deg <= 0 = Left RootOfInvalidDegree
+                      | x < 0 && even deg = Left RootOfNegativeNumber
+                      | otherwise = Right $ x **  (1.0 / fromIntegral deg)
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -200,6 +213,24 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Sub x y) = do
+   x' <- eval x
+   y' <- eval y
+   Right $ x' - y'
+eval (Sum x y) = do
+   x' <- eval x
+   y' <- eval y
+   Right $ x' + y'
+eval (Mul x y) = do
+   x' <- eval x
+   y' <- eval y
+   Right $ x' * y'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Root x deg) = do
+  x' <- eval x
+  totalRootEither x' deg
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
