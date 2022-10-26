@@ -4,7 +4,12 @@ module Expr where
 -- Каждое выражение это либо целое число, либо деление двух выражений, либо логарифм другого выражения.
 data Expr = Val Double
           | Div Expr Expr
+          | Add Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
           | Log Expr
+          | Exp Expr
+          | Root Expr Integer -- power is a constant
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,6 +82,8 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | EvenRootOfNegativeNumber
+                     | NonPositiveRoot
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -99,10 +106,27 @@ totalDivEither :: Double -> Double -> Either ArithmeticError Double
 totalDivEither x y | y == 0 = Left DivisionByZero
                    | otherwise = Right $ x / y
 
+totalAddEither :: Double -> Double -> Either ArithmeticError Double
+totalAddEither x y  = Right (x + y) -- we assume that addition always works correctly
+
+totalSubEither :: Double -> Double -> Either ArithmeticError Double
+totalSubEither x y  = Right (x - y) -- we assume that subtraction always works correctly
+
+totalMulEither :: Double -> Double -> Either ArithmeticError Double
+totalMulEither x y  = Right (x * y) -- we assume that multiplication always works correctly
+
 totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalRootEither :: Double -> Integer -> Either ArithmeticError Double
+totalRootEither x p | p <= 0 = Left NonPositiveRoot
+                    | even p && x < 0 = Left EvenRootOfNegativeNumber
+                    | otherwise = Right (x ** (1 / fromIntegral p))
+
+totalExpEither :: Double -> Either ArithmeticError Double
+totalExpEither x = Right (exp x) -- we assume that exponent always works correctly
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -200,10 +224,38 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalMulEither x' y'
+eval (Add x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalAddEither x' y'
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalSubEither x' y'
+eval (Exp x) = do
+  x' <- eval x
+  totalExpEither x'
+eval (Root x p) = do
+  x' <- eval x
+  totalRootEither x' p
+
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
-
+generateExprByResult (Right val) = map gen [1..]
+  where gen :: Integer -> Expr
+        gen 0 = Val val
+        gen x | even x = Div (Mul (gen (x - 1)) (Val 5)) (Val 5)
+        gen x | x `mod` 3 == 0 = Sub (Add (gen (x - 1)) (Val 0.5)) (Val 0.5)
+        gen x = Log (Exp (gen (x - 1)))
+generateExprByResult (Left DivisionByZero) = map (\n -> Div (Val n) (Val 0)) [1 ..]
+generateExprByResult (Left LogOfZero) = map (\n -> Log (Sub (Val n) (Val n))) [1 ..]
+generateExprByResult (Left LogOfNegativeNumber) = map (Log . Sub (Val 0) . Val) [1 ..]
+generateExprByResult (Left NonPositiveRoot) = map (\n -> Root (Val n) (round (negate n))) [1 ..]
+generateExprByResult (Left EvenRootOfNegativeNumber) = map (\n -> Root (Val (negate n)) (round (2*n))) [1 ..]
