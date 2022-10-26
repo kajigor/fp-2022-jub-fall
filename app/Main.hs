@@ -1,5 +1,7 @@
 module Main (main) where
 
+import Expr
+{-
 -- IO -- монада для операций ввода-вывода.
 -- Функция-точка входа в программу Main.main имеет тип IO (),
 -- это означает, что она не возвращает никакого осмысленного результата, но при этом делает некоторые side effects.
@@ -66,20 +68,60 @@ reactToNumber program'sFavoriteNumber = do
     let doubled = person'sFavoriteNumber * 2
     putStrLn $ "Nice! BTW, " ++ show person'sFavoriteNumber ++ " doubled is " ++ show doubled
 
--- Лаконичный main.
+-}
+
+
+is_error :: IO Bool 
+is_error = do
+  putStrLn "\nEnter error if you want to terminate with a error or number in other case"
+  ans <- getLine
+  if ans == "error" then return True else return False
+
+readError :: IO ArithmeticError
+readError = do
+  putStrLn "\nEnter error type"
+  errorType <- getLine
+  case errorType of
+    "Division by zero" -> return DivisionByZero
+    "Log of zero" -> return LogOfZero
+    "Log of negative number" -> return LogOfNegativeNumber
+    _ -> return SqrtOfNegativeNumber
+
+
 main :: IO ()
 main = do
-  introduction
-  greetByName
-  reactToNumber 42
+  type_input <- is_error
+  result <- if type_input 
+  then do
+    error_name <- readError
+    return $ Left error_name
+  else do
+    result_num <- readDouble
+    return $ Right result_num
+  expr_num <- readInt
+  mapM_ print $ take expr_num $  generateExprByResult result
+
+readDouble :: IO Double
+readDouble = do
+  putStrLn "\nEnter result number"
+  num <- getLine
+  let parse = read num :: Double
+  return parse 
+
+readInt :: IO Int
+readInt = do
+  putStrLn "\nEnter amount of expression"
+  num <- getLine
+  let parse = read num :: Int
+  return parse
 
 
 -- Эта функция просто демонстрирует, во что дешугарится do-нотация
-f :: IO ()
+{-f :: IO ()
 f = do
   x <- getLine        -- getLine >>= \x ->
   let parsed = read x -- let parsed = read x in
   y <- getLine        -- getLine >>= \y ->
   putStrLn (y ++ y)   -- putStrLn (y ++ y) >>= \_ ->
   print (parsed * 2)  -- print (parsed * 2) >>= \r ->
-                      -- return r
+ -}                     -- return r

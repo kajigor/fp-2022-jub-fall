@@ -5,6 +5,11 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Add Expr Expr
+          | Sub Expr Expr
+          | Product Expr Expr
+          | Exp Expr
+          | Sqrt Expr Int
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,6 +82,7 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | SqrtOfNegativeNumber
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -201,9 +207,41 @@ eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
 
+eval (Add x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' + y'
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' - y'
+eval (Product x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right $ x' * y'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Sqrt x pow) = do
+  x' <- eval x
+  check_sqrt x' pow
+
+  
+check_sqrt :: Double -> Int -> Either ArithmeticError Double
+check_sqrt x pow | x < 0 && (pow `mod` 2 == 0) = Left SqrtOfNegativeNumber
+                 | otherwise = Right $ x ** (1.0 / (fromIntegral pow))
+  
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult res = case res of
+  Left DivisionByZero ->           [ Div (Val t) (Val 0) | t <- [1..] ]
+  Left LogOfZero ->                [ Log (Val 0) ]
+  Left LogOfNegativeNumber ->      [ Log (Val t) | t <- [-1,-2..]] 
+  Left SqrtOfNegativeNumber ->     [ Sqrt (Product (Val t) (Val t1)) 2 | t <- [1..], t1 <- [-1,-2..]] 
+  Right ans ->                     [Add (Val ans) (Val 0)]
+
+  
+  
 
