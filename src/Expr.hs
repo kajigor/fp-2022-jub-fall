@@ -3,8 +3,13 @@ module Expr where
 -- Тип данных для выражений.
 -- Каждое выражение это либо целое число, либо деление двух выражений, либо логарифм другого выражения.
 data Expr = Val Double
+          | Sum Expr Expr
+          | Sub Expr Expr
+          | Product Expr Expr
           | Div Expr Expr
+          | Exp Expr
           | Log Expr
+          | Root Expr Double
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,7 +82,9 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
-                     deriving (Show, Eq)
+                     | RootOfNegativeNumber
+                     | NegativeRoot
+                     deriving (Show, Eq, Read)
 
 evalEither :: Expr -> Either ArithmeticError Double
 -- Этот интерпретатор будет возвращать Nothing в случае деления на 0
@@ -95,14 +102,31 @@ evalEither (Log x) =
       Right x' -> totalLogEither x'
       Left err -> Left err
 
+totalSumEither :: Double -> Double -> Either ArithmeticError Double
+totalSumEither x y = Right $ x + y
+
+totalSubEither :: Double -> Double -> Either ArithmeticError Double
+totalSubEither x y = Right $ x - y
+
+totalProductEither :: Double -> Double -> Either ArithmeticError Double
+totalProductEither x y = Right $ x * y
+
 totalDivEither :: Double -> Double -> Either ArithmeticError Double
 totalDivEither x y | y == 0 = Left DivisionByZero
                    | otherwise = Right $ x / y
+
+totalExpEither :: Double -> Either ArithmeticError Double
+totalExpEither x = Right $ exp x
 
 totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalRootEither :: Double -> Double -> Either ArithmeticError Double
+totalRootEither x n | x < 0 = Left RootOfNegativeNumber
+                   | n <= 0 = Left NegativeRoot
+                   | otherwise = Right $ exp (log x / n)
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -193,17 +217,43 @@ evalEither'' (Log x) =
 -- В Haskell есть do-нотация, которая позволяет выражать то же самое чуть более приятно:
 eval :: Expr -> Either ArithmeticError Double
 eval (Val n) = return n
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalSumEither x' y'
+eval (Sub x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalSubEither x' y'
+eval (Product x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalProductEither x' y'
 eval (Div x y) = do
-  x' <- eval x         -- eval x >>= \x' ->
-  y' <- eval y         -- eval y >>= \y' ->
-  totalDivEither x' y' -- totalDivEither x' y'
+  x' <- eval x
+  y' <- eval y
+  totalDivEither x' y'
+eval (Exp x) = do
+  x' <- eval x
+  totalExpEither x'
 eval (Log x) = do
-  x' <- eval x         -- eval x >>= \x' ->
-  totalLogEither x'    -- totalLogEither x'
+  x' <- eval x
+  totalLogEither x'
+eval (Root x n) = do
+  x' <- eval x
+  totalRootEither x' n
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult (Left DivisionByZero) = zipWith (\x y -> Div x y) (generateExprByResult (Right 1.0)) (generateExprByResult (Right 0.0))
+generateExprByResult (Left LogOfNegativeNumber) = map (\x -> Log x) (generateExprByResult (Right (-1.0)))
+generateExprByResult (Left LogOfZero) = map (\x -> Log x) (generateExprByResult (Right (0.0)))
+generateExprByResult (Left RootOfNegativeNumber) = zipWith (\x y -> Root x y) (generateExprByResult (Right (-1.0))) (repeat 2)
+generateExprByResult (Left NegativeRoot) = zipWith (\x y -> Root x y) (generateExprByResult (Right 100)) (repeat (-1.0))
+generateExprByResult (Right 0.0) = zipWith (\x y -> Sub (Val x) (Val y)) [1..] [1..]
+generateExprByResult (Right 1.0) = zipWith (\x y -> Div (Val x) (Val y)) [1..] [1..]
+generateExprByResult (Right (-1.0)) = zipWith (\x y -> Sub (Val x) (Val y)) [1..] (drop 1 [1..])
+generateExprByResult (Right x) = map (\y -> Product y (Val x)) (generateExprByResult (Right 1.0))
 
