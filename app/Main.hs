@@ -1,4 +1,5 @@
 module Main (main) where
+import Expr
 
 -- IO -- монада для операций ввода-вывода.
 -- Функция-точка входа в программу Main.main имеет тип IO (),
@@ -67,11 +68,16 @@ reactToNumber program'sFavoriteNumber = do
     putStrLn $ "Nice! BTW, " ++ show person'sFavoriteNumber ++ " doubled is " ++ show doubled
 
 -- Лаконичный main.
+
 main :: IO ()
 main = do
-  introduction
-  greetByName
-  reactToNumber 42
+  putStrLn "Enter the expected result, e.g. Right 4 or Left LogOfZero: "
+  resultStr <- getLine
+  let result = read resultStr :: Either ArithmeticError Double
+  putStrLn "Enter the expressions number: "
+  nExprStr <- getLine
+  let nExpr = read nExprStr :: Int
+  mapM_ print (take nExpr $ generateExprByResult result)
 
 
 -- Эта функция просто демонстрирует, во что дешугарится do-нотация

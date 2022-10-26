@@ -5,6 +5,8 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
+          | Exp Expr
+          | NthRoot Int Expr
           deriving (Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
@@ -77,7 +79,9 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
-                     deriving (Show, Eq)
+                     | RootOfNonpositivePower
+                     | RootOfNegativeNumber
+                     deriving (Show, Read, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
 -- Этот интерпретатор будет возвращать Nothing в случае деления на 0
@@ -103,6 +107,11 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalNthRootEither :: Int -> Double -> Either ArithmeticError Double
+totalNthRootEither n x | n <= 0 = Left RootOfNonpositivePower
+                       | x < 0 = Left RootOfNegativeNumber
+                       | otherwise = Right $ x ** (1 / fromIntegral n)
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -200,10 +209,28 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Exp x) = do
+  x' <- eval x
+  return $ exp x'
+eval (NthRoot n x) = do
+  x' <- eval x
+  totalNthRootEither n x'
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
-
+generateExprByResult x = concatMap (generateExprByResultForN x) [2..]
+  where
+    generateExprByResultForN :: Either ArithmeticError Double -> Int -> [Expr]
+    generateExprByResultForN (Right x) n | x > 0 = [
+      Div (Val (fromIntegral n * x)) (Val $ fromIntegral n)
+      , Div (Log (Val (exp (log(fromIntegral n) * x)))) (Val $ log(fromIntegral n))
+      , NthRoot n (Val $ x ** fromIntegral n)]
+    generateExprByResultForN (Right x) n =
+      map (\e -> Div e (Val (-1))) (generateExprByResultForN (Right (-x)) n)
+    generateExprByResultForN (Left DivisionByZero) n = [Div (Val $ fromIntegral n) (Val 0)]
+    generateExprByResultForN (Left LogOfZero) n = [Log (Div (Val 0) (Val $ fromIntegral n))]
+    generateExprByResultForN (Left LogOfNegativeNumber) n = [Log (Div (Val (-1)) (Val $ fromIntegral n))]
+    generateExprByResultForN (Left RootOfNonpositivePower) n = [NthRoot (-n) (Val $ fromIntegral n)]
+    generateExprByResultForN (Left RootOfNegativeNumber) n = [NthRoot n (Val $ fromIntegral (-n))]
