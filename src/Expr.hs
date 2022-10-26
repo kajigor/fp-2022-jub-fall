@@ -5,7 +5,9 @@ module Expr where
 data Expr = Val Double
           | Div Expr Expr
           | Log Expr
-          deriving (Show, Eq)
+          | Exp Expr
+          | Root Expr Integer
+          deriving (Read, Show, Eq)
 
 -- Пример выражения в нашем абстрактном синтаксисе
 -- (12 / log 10) / 3
@@ -22,7 +24,11 @@ exprErr = Div (Div (Val 6) (Log (Val (-1)))) (Val 0)
 partialEval :: Expr -> Double
 partialEval (Val v) = v
 partialEval (Div x y) = partialEval x / partialEval y
-partialEval (Log x) = log (partialEval x)
+partialEval (Log (Exp x)) = partialEval x
+partialEval (Exp (Log x)) | arg > 0 = arg where arg = partialEval x
+partialEval (Exp x) = exp $ partialEval x
+partialEval (Log x) = log $ partialEval x
+partialEval (Root x y) = partialEval x ** (1 / fromIntegral y)
 
 -- Вычисление корректного выражения с нормальным результатом
 -- *Expr> partialEval expr
@@ -38,20 +44,16 @@ partialEval (Log x) = log (partialEval x)
 -- или вычисления логарифма от неположительного числа
 evalMaybe :: Expr -> Maybe Double
 evalMaybe (Val v) = Just v
-evalMaybe (Div x y) =
-  case evalMaybe x of
-    -- Проверяем, не произошло ли ошибки при вычислении левого подвыражения
-    Just x' ->
-      case evalMaybe y of
-        -- Проверяем, не произошло ли ошибки при вычислении правого подвыражения
-        Just y' -> totalDivMaybe x' y'
-        -- В случае ошибки можем только сообщать об ошибке
-        Nothing -> Nothing
-    Nothing -> Nothing
-evalMaybe (Log x) =
-  case evalMaybe x of
-    Just x' -> totalLogMaybe x'
-    Nothing -> Nothing
+evalMaybe (Div x y) = case (evalMaybe x, evalMaybe y) of
+    (Just x', Just y') -> totalDivMaybe x' y'
+    _ -> Nothing
+evalMaybe (Log (Exp x)) = evalMaybe x
+evalMaybe (Exp (Log x)) | arg > 0 = Just arg where Just arg = evalMaybe x
+evalMaybe (Log x) = maybe Nothing totalLogMaybe (evalMaybe x)
+evalMaybe (Exp x) = maybe Nothing totalExpMaybe (evalMaybe x)
+evalMaybe (Root x y) = case evalMaybe x of
+    Just x' -> if x' >= 0 && y /= 0 || odd y then Just $ x' ** (1 / fromIntegral y) else Nothing
+    _ -> Nothing
 
 totalDivMaybe :: Double -> Double -> Maybe Double
 totalDivMaybe x y | y == 0 = Nothing
@@ -60,6 +62,9 @@ totalDivMaybe x y | y == 0 = Nothing
 totalLogMaybe :: Double -> Maybe Double
 totalLogMaybe x | x <= 0 = Nothing
                 | otherwise = Just $ log x
+
+totalExpMaybe :: Double -> Maybe Double
+totalExpMaybe x = Just $ log x
 
 -- В случае ошибки теперь мы явно возвращаем Nothing,
 -- а в случае успеха результат вычисления выражения заворачивается в конструктор Just
@@ -77,27 +82,38 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
-                     deriving (Show, Eq)
+                     | EvenRootOfNegBase
+                     | ZeroRoot
+                     deriving (Read, Show, Eq)
 
-evalEither :: Expr -> Either ArithmeticError Double
+eval :: Expr -> Either ArithmeticError Double
 -- Этот интерпретатор будет возвращать Nothing в случае деления на 0
 -- или вычисления логарифма от неположительного числа
-evalEither (Val v) = Right v
-evalEither (Div x y) =
-    case evalEither x of
-      Right x' ->
-        case evalEither y of
-          Right y' -> totalDivEither x' y'
-          Left err -> Left err
-      Left err  -> Left err
-evalEither (Log x) =
-    case evalEither x of
-      Right x' -> totalLogEither x'
-      Left err -> Left err
+eval (Val v) = Right v
+eval (Div x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalDivEither x' y'
+eval (Log (Exp x)) = eval x
+eval (Exp (Log x)) | arg > 0 = Right arg where Right arg = eval x
+eval (Log x) = do
+  x' <- eval x
+  totalLogEither x'
+eval (Exp x) = do
+  x' <- eval x
+  Right $ exp x'
+eval (Root x y) = do
+  x' <- eval x
+  totalRootEither x' y
 
 totalDivEither :: Double -> Double -> Either ArithmeticError Double
 totalDivEither x y | y == 0 = Left DivisionByZero
                    | otherwise = Right $ x / y
+
+totalRootEither :: Double -> Integer -> Either ArithmeticError Double
+totalRootEither x y | y == 0 = Left ZeroRoot
+                    | even y && x < 0 = Left EvenRootOfNegBase
+                    | otherwise = Right $ x ** (1 / fromIntegral y)
 
 totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
@@ -122,88 +138,30 @@ expr3 = Div (Val 1) (Val 0)
 -- *Expr> evalEither expr3
 -- Left DivisionByZero
 
--- В коде evalMaybe и evalEither очень много повторяющейся логики: мы проверяем, что какое-то подвыражение
--- вычисляется без ошибок, и если это так, то продолжаем вычисление выражения.
--- Если происходит ошибка, мы о ней сообщаем.
--- Эту повторяющуюся логику было бы неплохо абстрагировать, что мы можем сделать,
--- используя bindMaybe, returnMaybe, bindEither и returnEither.
-
-bindMaybe :: Maybe a -> (a -> Maybe b) -> Maybe b
-bindMaybe value f =
-  case value of
-    Just x -> f x
-    Nothing -> Nothing
-
-returnMaybe :: a -> Maybe a
-returnMaybe x = Just x
-
-evalMaybe' :: Expr -> Maybe Double
-evalMaybe' (Val v) = returnMaybe v
-evalMaybe' (Div x y) =
-    evalMaybe' x `bindMaybe` \x' ->
-    evalMaybe' y `bindMaybe` \y' ->
-    totalDivMaybe x' y'
-evalMaybe' (Log x) =
-    evalMaybe' x `bindMaybe` \x' ->
-    totalLogMaybe x'
-
-
-bindEither :: Either e a -> (a -> Either e b) -> Either e b
-bindEither value f =
-  case value of
-    Right x -> f x
-    Left err -> Left err
-
-returnEither :: a -> Either e a
-returnEither x = Right x
-
-evalEither' :: Expr -> Either ArithmeticError Double
-evalEither' (Val v) = returnEither v
-evalEither' (Div x y) =
-    evalEither' x `bindEither` \x' ->
-    evalEither' y `bindEither` \y' ->
-    totalDivEither x' y'
-evalEither' (Log x) =
-    evalEither' x `bindEither` \x' ->
-    totalLogEither x'
-
--- Класс типов Monad предоставляет функции >>= (bind) и return ровно с тем функционалом, который нам необходим.
--- Monad и Either e являются инстансами класса Monad, поэтому мы можем использовать функции из него:
-
-evalMaybe'' :: Expr -> Maybe Double
-evalMaybe'' (Val v) = return v
-evalMaybe'' (Div x y) =
-    evalMaybe'' x >>= \x' ->
-    evalMaybe'' y >>= \y' ->
-    totalDivMaybe x' y'
-evalMaybe'' (Log x) =
-    evalMaybe'' x `bindMaybe` \x' ->
-    totalLogMaybe x'
-
-evalEither'' :: Expr -> Either ArithmeticError Double
-evalEither'' (Val v) = return v
-evalEither'' (Div x y) =
-    evalEither'' x >>= \x' ->
-    evalEither'' y >>= \y' ->
-    totalDivEither x' y'
-evalEither'' (Log x) =
-    evalEither'' x >>= \x' ->
-    totalLogEither x'
-
--- В Haskell есть do-нотация, которая позволяет выражать то же самое чуть более приятно:
-eval :: Expr -> Either ArithmeticError Double
-eval (Val n) = return n
-eval (Div x y) = do
-  x' <- eval x         -- eval x >>= \x' ->
-  y' <- eval y         -- eval y >>= \y' ->
-  totalDivEither x' y' -- totalDivEither x' y'
-eval (Log x) = do
-  x' <- eval x         -- eval x >>= \x' ->
-  totalLogEither x'    -- totalLogEither x'
-
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
+
+nat :: [Double]
+nat = [1..]
+
+id1 :: Double -> Expr
+id1 = Val
+
+id2 :: Expr -> Expr
+id2 x = Log (Exp x)
+
+id3 :: Expr -> Expr
+id3 x = Root (Div (Val 1) x) (-1)
+
+idList :: [Expr -> Expr]
+idList = id2 : id3 : [x . y | x <- idList, y <- idList]
+
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult (Right v) = Val v : map f idList where f n = n (Val v)
+generateExprByResult (Left DivisionByZero) = map f nat where f n = Div (Val n) (Val 0)
+generateExprByResult (Left LogOfZero) = repeat $ Log (Val 0)
+generateExprByResult (Left LogOfNegativeNumber) = map f nat where f n = Log (Val $ -n)
+generateExprByResult (Left EvenRootOfNegBase) = map f nat where f n = Root (Val $ -n) 2
+generateExprByResult (Left ZeroRoot) = map f nat where f n = Root (Val n) 0
 
