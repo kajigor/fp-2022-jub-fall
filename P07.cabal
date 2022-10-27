@@ -33,6 +33,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , random
   default-language: Haskell2010
 
 executable exe
@@ -45,6 +46,7 @@ executable exe
   build-depends:
       P07
     , base >=4.7 && <5
+    , random
   default-language: Haskell2010
 
 test-suite P07-test
@@ -62,6 +64,7 @@ test-suite P07-test
     , P07
     , base >=4.7 && <5
     , hedgehog
+    , random
     , tasty
     , tasty-discover
     , tasty-hedgehog
