@@ -20,7 +20,7 @@ shouldBeResult result exp =
 unit_genExpr :: IO ()
 unit_genExpr = do
     let results = [Right 13, Right (-42), Right 0.5
-                  , Left DivisionByZero, Left LogOfZero, Left LogOfNegativeNumber]
+                  , Left DivisionByZero, Left LogOfZero, Left LogOfNegativeNumber, Left RootOfNonPositiveBase]
     mapM_ check results
   where
     check :: Either ArithmeticError Double -> IO ()

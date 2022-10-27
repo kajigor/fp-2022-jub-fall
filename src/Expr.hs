@@ -4,6 +4,11 @@ module Expr where
 -- Каждое выражение это либо целое число, либо деление двух выражений, либо логарифм другого выражения.
 data Expr = Val Double
           | Div Expr Expr
+          | Sum Expr Expr
+          | Minus Expr Expr
+          | Mul Expr Expr
+          | Exp Expr
+          | Root Expr Expr
           | Log Expr
           deriving (Show, Eq)
 
@@ -77,6 +82,7 @@ totalLogMaybe x | x <= 0 = Nothing
 data ArithmeticError = DivisionByZero
                      | LogOfZero
                      | LogOfNegativeNumber
+                     | RootOfNonPositiveBase
                      deriving (Show, Eq)
 
 evalEither :: Expr -> Either ArithmeticError Double
@@ -103,6 +109,10 @@ totalLogEither :: Double -> Either ArithmeticError Double
 totalLogEither x | x == 0 = Left LogOfZero
                  | x < 0 = Left LogOfNegativeNumber
                  | otherwise = Right $ log x
+
+totalRootEither :: Double -> Double -> Either ArithmeticError Double
+totalRootEither x y | x <= 0 = Left RootOfNonPositiveBase
+                    | otherwise = Right $ x ** (1/y)
 
 expr1 :: Expr
 expr1 = Log (Val 0)
@@ -200,10 +210,30 @@ eval (Div x y) = do
 eval (Log x) = do
   x' <- eval x         -- eval x >>= \x' ->
   totalLogEither x'    -- totalLogEither x'
+eval (Sum x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right (x' + y')
+eval (Minus x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right (x' - y')
+eval (Mul x y) = do
+  x' <- eval x
+  y' <- eval y
+  Right (x' * y')
+eval (Root x y) = do
+  x' <- eval x
+  y' <- eval y
+  totalRootEither x' y'
 
 -- Функция принимает на вход результат вычисления арифметического выражения с учетом потенциальных ошибок
 -- и генерирует выражения, которые к этому результату вычисляются.
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
-generateExprByResult = undefined
+generateExprByResult (Left DivisionByZero) = zipWith (\x y -> Div x y) (generateExprByResult (Right 1)) (generateExprByResult (Right 0))
+generateExprByResult (Left LogOfZero) = map (\x -> Log x) (generateExprByResult (Right 0))
+generateExprByResult (Left LogOfNegativeNumber) = map (\x -> Log x) (generateExprByResult (Right (-1)))
+generateExprByResult (Left RootOfNonPositiveBase) = zipWith (\x y -> Root x y) (generateExprByResult (Right 0)) (generateExprByResult (Right 3))
+generateExprByResult (Right x) = [Sum (Val (x - i)) (Val i) | i <- [1..] ]
 
