@@ -2,7 +2,6 @@ module Expr where
 
 import Control.Concurrent (yield)
 import Data.Bits (Bits (xor))
-import System.Random
 
 -- Тип данных для выражений.
 -- Каждое выражение это либо целое число, либо деление двух выражений, либо логарифм другого выражения.
