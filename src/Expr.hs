@@ -234,9 +234,9 @@ eval (Root x p) = do
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
 generateExprByResult res = case res of
-  Left DivisionByZero -> [Div (Val 1) (Val 0)]
-  Left LogOfZero -> [Log (Val 0)]
-  Left LogOfNegativeNumber -> [Log (Val (-2))]
-  Left SqrtOfNegativeNumber -> [Root (Val (-3)) 4]
-  Left ZeroRoot -> [Root (Val 5) 0]
-  Right ans -> [Sum (Val ans) (Val 0)]
+  Left DivisionByZero -> [Div (Val x) (Val 0) | x <- [1..]]
+  Left LogOfZero -> [Log x | x <- generateExprByResult (Right 0)]
+  Left LogOfNegativeNumber -> [Log (Val (-x)) | x <- [1..]]
+  Left SqrtOfNegativeNumber -> [Root (Val (-x)) y | x <- [1..], y <- [1..]]
+  Left ZeroRoot -> [Root (Val x) 0 | x <- [1..]]
+  Right ans -> [Sum (Val x) (Val (ans - x)) | x <- [1..]]
