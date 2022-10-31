@@ -1,15 +1,21 @@
 {-# LANGUAGE InstanceSigs #-}
 module SortedList where
-import Data.List
 
 -- Тип данных, представляющий собой отсортированный список
 data SortedList a = SortedList { getSortedList :: [a] }
                   deriving (Show, Eq)
 
+merge :: Ord a => [a] -> [a] -> [a]
+merge [] x = x
+merge x [] = x
+merge (x:xs) (y:ys)
+  | x < y = x : merge xs (y:ys)
+  | otherwise = y : merge (x:xs) ys
+
 -- <> должен сохранять отсортированность списка
 instance Ord a => Semigroup (SortedList a) where
   (<>) :: SortedList a -> SortedList a -> SortedList a
-  (<>) a b = SortedList{ getSortedList = sort (getSortedList a ++ getSortedList b) }
+  (<>) a b = SortedList{ getSortedList = merge (getSortedList a) (getSortedList b) }
 
 instance Ord a => Monoid (SortedList a) where
   mempty :: SortedList a
