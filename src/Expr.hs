@@ -213,18 +213,18 @@ eval (Log x) = do
 eval (Sum x y) = do
   x' <- eval x
   y' <- eval y
-  Right $ x' + y'
+  return $ x' + y'
 eval (Sub x y) = do
   x' <- eval x
   y' <- eval y
-  Right $ x' - y'
+  return $ x' - y'
 eval (Mult x y) = do
   x' <- eval x
   y' <- eval y
-  Right $ x' * y'
+  return $ x' * y'
 eval (Exp x) = do
   x' <- eval x
-  Right $ exp x'
+  return $ exp x'
 eval (Root x n) = do
   x' <- eval x
   totalRootEither x' n
@@ -235,10 +235,10 @@ eval (Root x n) = do
 -- Постарайтесь использовать разные конструкторы выражений.
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
 generateExprByResult value = case value of
-  Left DivisionByZero -> [Div f s | f <- [Val 5], s <- [Val 0]]
-  Left LogOfZero -> [Log f | f <- [Val 0]]
-  Left LogOfNegativeNumber -> [Log f | f <- [(Val (-1))]]
-  Left NegativeNumberSqrt -> [Root f 3 | f <- [Val (-1)]]
-  Right v -> [Mult f s | f <- [Val v], s <- [Val 1]]
+  Left DivisionByZero -> [Div (Val f) (Val 0) | f <- [1..]]
+  Left LogOfZero -> [Log f | f <- generateExprByResult (Right 0)]
+  Left LogOfNegativeNumber -> [Log (Val (-f)) | f <- [1..]]
+  Left NegativeNumberSqrt -> [Root (Val (-f)) s | f <- [1..], s <-[1..]]
+  Right v -> [Sum (Val s) (Val f) | s <- [1..], f <- [v - s]]
 
 

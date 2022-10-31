@@ -2,16 +2,18 @@ module Main (main) where
 
 import Expr
 
-getCommand :: IO Bool
+data Command = GenerateError | DisplayExpression
+
+getCommand :: IO Command
 getCommand = do
   putStrLn "Please choose what you want to do:\n1)generate an error\n2)display expression"
   answer <- getLine
   if answer == "1"
     then
-      return True
+      return GenerateError
     else if answer == "2"
         then
-          return False
+          return DisplayExpression
         else do
             putStrLn "Your input isn't correct."
             ans <- getCommand
@@ -50,12 +52,12 @@ getQuantity = do
 main :: IO ()
 main = do
   command <- getCommand
-  answer <- if command
-    then do
+  answer <- case command of
+    GenerateError -> do
         error_ <- getError
         return $ Left error_
-    else do
+    DisplayExpression -> do
         number <- getNumber
         return $ Right number
   exprNumber <- getQuantity
-  mapM_ print (take exprNumber (cycle (generateExprByResult answer)))
+  mapM_ print (take exprNumber (generateExprByResult answer))
