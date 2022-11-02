@@ -91,12 +91,11 @@ getError :: Int -> Int -> IO ()
 getError _ 0 = return ()
 getError err amount = do
   case err of
-    2 -> print $ generateExprByResult $ Left DivisionByZero
-    3 -> print $ generateExprByResult $ Left LogOfZero
-    4 -> print $ generateExprByResult $ Left LogOfNegativeNumber
-    5 -> print $ generateExprByResult $ Left SqrtOfNegativeNumber
-    6 -> print $ generateExprByResult $ Left ZeroRoot
-  getError err (amount - 1)
+    2 -> mapM_ print (take amount $ generateExprByResult $ Left DivisionByZero)
+    3 -> mapM_ print (take amount $ generateExprByResult $ Left LogOfZero)
+    4 -> mapM_ print (take amount $ generateExprByResult $ Left LogOfNegativeNumber)
+    5 -> mapM_ print (take amount $ generateExprByResult $ Left SqrtOfNegativeNumber)
+    6 -> mapM_ print (take amount $ generateExprByResult $ Left ZeroRoot)
 
 getResType :: IO Int
 getResType = do
