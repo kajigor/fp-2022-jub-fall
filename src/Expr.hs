@@ -237,6 +237,6 @@ generateExprByResult res = case res of
   Left DivisionByZero -> [Div (Val x) (Val 0) | x <- [1..]]
   Left LogOfZero -> [Log x | x <- generateExprByResult (Right 0)]
   Left LogOfNegativeNumber -> [Log (Val (-x)) | x <- [1..]]
-  Left SqrtOfNegativeNumber -> [Root (Val (-x)) y | x <- [1..], y <- [1..]]
+  Left SqrtOfNegativeNumber -> [Root (Val (-x)) 2 | x <- [1..]]
   Left ZeroRoot -> [Root (Val x) 0 | x <- [1..]]
   Right ans -> [Sum (Val x) (Val (ans - x)) | x <- [1..]]
