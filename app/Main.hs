@@ -1,5 +1,7 @@
 module Main (main) where
 import Expr
+import Data.Maybe
+import Text.Read
 
 askExpr :: IO (Either ArithmeticError Double, Int)
 askExpr = do
@@ -7,7 +9,11 @@ askExpr = do
   result <- getLine
   putStrLn "\nHow many expressions do you want?"
   number <- getLine
-  return (read result, read number)
+  return (read (parseResult result), read number)
+  where
+    parseResult :: String -> String
+    parseResult result | isNothing (readMaybe result :: Maybe Double) = "Left " ++ result
+                       | otherwise = "Right " ++ result
 
 -- Лаконичный main.
 main :: IO ()
