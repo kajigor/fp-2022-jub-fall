@@ -80,55 +80,31 @@ f = do
 
 
 
-
-getNum :: Double -> Int -> IO ()
-getNum _ 0 = return ()
-getNum result amount = do
-  print $ generateExprByResult $ Right result
-  getNum result (amount - 1)
-
-getError :: Int -> Int -> IO ()
-getError _ 0 = return ()
-getError err amount = do
-  case err of
-    2 -> mapM_ print (take amount $ generateExprByResult $ Left DivisionByZero)
-    3 -> mapM_ print (take amount $ generateExprByResult $ Left LogOfZero)
-    4 -> mapM_ print (take amount $ generateExprByResult $ Left LogOfNegativeNumber)
-    5 -> mapM_ print (take amount $ generateExprByResult $ Left SqrtOfNegativeNumber)
-    6 -> mapM_ print (take amount $ generateExprByResult $ Left ZeroRoot)
-
-getResType :: IO Int
-getResType = do
-  putStrLn "Please, select the value to which the expression should be evaluated:"
-  putStrLn "  1. Number"
-  putStrLn "  2. DivisionByZero"
-  putStrLn "  3. LogOfZero"
-  putStrLn "  4. LogOfNegativeNumber"
-  putStrLn "  5. SqrtOfNegativeNumber"
-  putStrLn "  6. ZeroRoot"
-  resType <- getLine
-  let num = read resType :: Int
-  if num < 1 || num > 6
+getAmount :: IO Int
+getAmount = do
+  putStrLn "Please, enter the number of expressions"
+  amountStr <- getLine
+  let amountInt = read amountStr :: Int
+  if amountInt <= 0
   then do
-    putStrLn "You should input the number from 1 to 6"
-    getResType
+    putStrLn "Amount has to be a positive number"
+    getAmount
   else
-    return num
+    return amountInt
+
+generate :: String -> Int -> IO ()
+generate res amount = do
+  case res of
+    "DivisionByZero" -> mapM_ print (take amount $ generateExprByResult $ Left DivisionByZero)
+    "LogOfZero" -> mapM_ print (take amount $ generateExprByResult $ Left LogOfZero)
+    "LogOfNegativeNumber" -> mapM_ print (take amount $ generateExprByResult $ Left LogOfNegativeNumber)
+    "SqrtOfNegativeNumber" -> mapM_ print (take amount $ generateExprByResult $ Left SqrtOfNegativeNumber)
+    "ZeroRoot" -> mapM_ print (take amount $ generateExprByResult $ Left ZeroRoot)
+    otherwise -> mapM_ print (take amount $ generateExprByResult $ Right (read res :: Double))
 
 main :: IO ()
 main = do
-  resType <- getResType
-  if resType == 1
-  then do
-    putStrLn "Enter the value"
-    answer <- getLine
-    let value = read answer :: Double
-    putStrLn "Please, enter the number of expressions"
-    amount <- getLine
-    let num = read amount :: Int
-    getNum value num
-  else do
-    putStrLn "Please, enter the number of expressions"
-    amount <- getLine
-    let num = read amount :: Int
-    getError resType num
+  putStrLn "Please, select the value to which the expression should be evaluated: DivisionByZero, LogOfZero, LogOfNegativeNumber, SqrtOfNegativeNumber, ZeroRoot or enter a number"
+  res <- getLine
+  amount <- getAmount
+  generate res amount
