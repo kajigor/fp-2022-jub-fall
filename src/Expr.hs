@@ -65,9 +65,9 @@ eval (Root d x) = do
 generateExprByResult :: Either ArithmeticError Double -> [Expr]
 generateExprByResult value = 
   case value of 
-    Left DivisionByZero -> [Div (Val 1) (Val 0)]
-    Left LogOfZero -> [Log (Val 0)]
-    Left LogOfNegativeNumber -> [Log (Val (-1))]
-    Left RootNegativeNumber -> [Root 2 (Val (-1))]
-    Left RootZeroDegree -> [Root 0 (Val 1)]
-    Right v -> [Sum (Val v) (Val 0)]
+    Left DivisionByZero -> [Div (Val x) (Val 0) | x <- [1..]]
+    Left LogOfZero -> [Sum (Val x) (Log (Val 0)) | x <- [1..]]
+    Left LogOfNegativeNumber -> [Log (Val (x)) | x <- [-1, -2..]]
+    Left RootNegativeNumber -> [Root x (Val (-1)) | x <- [2, 4..]]
+    Left RootZeroDegree -> [Root 0 (Val x) | x <- [1..]]
+    Right v -> [Sum (Val x) (Val 0) | x <- [1..]]
