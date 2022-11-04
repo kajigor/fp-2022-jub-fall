@@ -1,65 +1,55 @@
 module Main (main) where
 import Expr
+import Text.Read
 
 getAmountOfExpr :: IO Int
 getAmountOfExpr = do
-  putStr "Please, enter the amount of expressions you want to see: "
-  answer <- getLine
-  let amount = read answer :: Int
-  if amount <= 0
-    then do
-      putStrLn "The amount must be a positive integer."
-      getAmountOfExpr
-  else return amount
+    putStrLn "Please, enter the amount of expressions you want to see: "
+    answer <- getLine
+    let amount = readMaybe answer
+    case amount of
+        Just val -> do
+            if val <= 0
+            then do
+                putStrLn "The amount must be a positive integer."
+                getAmountOfExpr
+            else return val
+        Nothing -> do
+            putStrLn "The amount must be a positive integer."
+            getAmountOfExpr
 
-getCommand :: IO ()
+getCommand :: IO String
 getCommand = do
-  putStrLn "Choose a type of an expression you want to see:"
-  putStrLn "1) expression with an error"
-  putStrLn "2) expression with an number"
-  answer <- getLine
-  case answer of
-    "1" -> getError
-    "2" -> getNumber
-    _ -> do
-      putStrLn "Your answer should be 1 or 2."
-      getCommand
+    putStrLn "Choose a type of an expression you want to see:"
+    putStrLn "    DivisionByZero"
+    putStrLn "    LogOfZero"
+    putStrLn "    LogOfNegativeNumber"
+    putStrLn "    RootNegativeNumber"
+    putStrLn "    RootZeroDegree"
+    putStrLn "    Number (enter an Integer or a Double)"
+    answer <- getLine
+    return answer
 
-getError :: IO ()
-getError = do
-  putStrLn "Please, choose which error you would like to see:"
-  putStrLn "1) Divison by zero"
-  putStrLn "2) Logarithm of zero"
-  putStrLn "3) Logarithm of a negative number"
-  putStrLn "4) Root of a negative number"
-  putStrLn "5) Root with a zero degree"
+start :: Int -> IO ()
+start amount = do
+    input <- getCommand
+    case input of
+        "DivisionByZero" -> putStrLn $ show (take amount (generateExprByResult (Left DivisionByZero)))
+        "LogOfZero" -> putStrLn $ show (take amount (generateExprByResult (Left LogOfZero)))
+        "LogOfNegativeNumber" -> putStrLn $ show (take amount (generateExprByResult (Left LogOfNegativeNumber)))
+        "RootNegativeNumber" -> putStrLn $ show (take amount (generateExprByResult (Left RootNegativeNumber)))
+        "RootZeroDegree" -> putStrLn $ show (take amount (generateExprByResult (Left RootZeroDegree)))
+        otherwise -> do
+            let number = readMaybe input
+            case number of
+                Just val -> putStrLn $ show (take amount (generateExprByResult (Right val)))
+                Nothing -> do
+                    putStrLn "Your input is incorrect."
+                    start amount
 
-  answer <- getLine
-  case answer of 
-    "1" -> print $ generateExprByResult $ Left DivisionByZero
-    "2" -> print $ generateExprByResult $ Left LogOfZero
-    "3" -> print $ generateExprByResult $ Left LogOfNegativeNumber
-    "4" -> print $ generateExprByResult $ Left RootNegativeNumber
-    "5" -> print $ generateExprByResult $ Left RootZeroDegree
-    _ -> do
-      putStrLn "Your answer should be between 1 and 5."
-      getError
-
-getNumber :: IO ()
-getNumber = do
-  putStr "Please, enter a number: "
-  answer <- getLine
-  let number = read answer :: Double
-  print $ generateExprByResult $ Right number
-
-run_getCommand :: Int -> IO ()
-run_getCommand 0 = return ()
-run_getCommand n = do
-  getCommand
-  run_getCommand (n-1)
 
 main :: IO ()
 main = do
-  amountOfExpr <- getAmountOfExpr
-  run_getCommand amountOfExpr
+    amount <- getAmountOfExpr
+    start amount
 
