@@ -1,6 +1,9 @@
-{-# LANGUAGE FlexibleInstances #-}
+  {-# LANGUAGE FlexibleInstances #-}
+  {-# LANGUAGE UndecidableInstances #-}
 module Lambda where
-
+import Data.Maybe
+import Data.List
+import Data.Function
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
 data Lambda a = Var a
@@ -55,19 +58,43 @@ mult = Abs "m" (Abs "n" (App (Var "m") (App (Var "n") (Var "f"))))
 -- mult' ≡ λm.λn.m (add n) 0
 mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
--- Красивая печать без лишних скобок.
-instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+class ShowProperly a where
+  repr :: a -> String
 
-instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+instance {-# OVERLAPPABLE #-} Show a => ShowProperly a where
+  repr = show
+
+instance {-# OVERLAPS #-} ShowProperly String where
+  repr = id
+
+condWrap :: Bool -> String -> String
+condWrap True s = "(" ++ s ++ ")"
+condWrap False s = s
+
+isApp :: Lambda a -> Bool
+isApp e = case e of
+  App _ _ -> True
+  _         -> False
+
+isAbs :: Lambda a -> Bool
+isAbs e = case e of
+  Abs _ _ -> True
+  _       -> False
+
+-- Красивая печать без лишних скобок.
+instance ShowProperly a => Show (Lambda a) where
+  show expr = case expr of
+      Var s -> repr s
+      App x y ->  condWrap (isAbs x) (show x) ++ " " ++
+                  condWrap (isApp y || isAbs y) (show y)
+      Abs x y -> "\\" ++ repr x ++ "." ++ show y
 
 -- Выберите подходящий тип для подстановок.
 data Subst a
 
 -- Проверка термов на альфа-эквивалентность.
 alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq = undefined
+alphaEq = (==) `on` (show . toDeBruijn)
 
 -- Capture-avoiding substitution.
 cas :: Lambda a -> Subst a -> Lambda a
@@ -80,22 +107,50 @@ data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
 eval :: Strategy -> Lambda a -> Lambda a
 eval = undefined
 
+isAppDB :: DeBruijn -> Bool
+isAppDB e = case e of
+  AppDB _ _ -> True
+  _         -> False
+
+isAbsDB :: DeBruijn -> Bool
+isAbsDB e = case e of
+  AbsDB _ -> True
+  _       -> False
+
 -- ДеБрауновское представление лямбда-термов
 data DeBruijn = VarDB Int
-              | AbsDB DeBruijn
               | AppDB DeBruijn DeBruijn
+              | AbsDB DeBruijn
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
-  show = undefined
+   show expr = case expr of
+      VarDB s -> show s
+      AppDB x y ->  condWrap (isAbsDB x) (show x) ++ " " ++
+                    condWrap (isAppDB y || isAbsDB y) (show y)
+      AbsDB y -> "\\ " ++ show y
 
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Lambda a -> DeBruijn
-toDeBruijn = undefined
+toDeBruijn :: Eq a => Lambda a -> DeBruijn
+toDeBruijn = fromJust . f []
+  where
+    f s (Var x) = do
+      i <- elemIndex x s
+      return $ VarDB (i + 1)
+    
+    f s (App x y) = do
+      x' <- f s x
+      y' <- f s y
+      return $ AppDB x' y'
+    
+    f s (Abs x y) = do
+      y' <- f (x:s) y
+      return $ AbsDB y'
+    
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda a
