@@ -2,13 +2,15 @@ module Main (main) where
 import Expr
 
 
-getCommand :: IO Int
+data Command = FromError | FromNumber
+
+getCommand :: IO Command
 getCommand = do
   putStrLn "Do you want me to generate a specific error or to generate an expression with a given answer? \n 1. Generate a specific error \n 2. Generate an expression"
   input <- getLine
   case input of
-    "1" -> return 1
-    "2" -> return 2
+    "1" -> return FromError
+    "2" -> return FromNumber
     _ -> do
       putStrLn "Invalid input\n"
       result <- getCommand
@@ -54,12 +56,10 @@ main = do
   command <- getCommand
   expr_num <- getNumberOfExpr
   case command of
-    1 -> do
+    FromError -> do
       wanted_error <- getError
       putStrLn $ show $ take expr_num $ generateExprByResult (Left wanted_error)
-    2 -> do
+    FromNumber -> do
       answer <- getAnswer
       putStrLn $ show $ take expr_num $ generateExprByResult (Right answer)
-    _ -> do
-      error "Something went wrong"
 
