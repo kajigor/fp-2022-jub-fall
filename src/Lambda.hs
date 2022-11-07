@@ -3,6 +3,8 @@
 -- {-# LANGUAGE InstanceSigs #-}
 module Lambda where
 
+import qualified Data.Map as Map
+
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
 data Lambda a = Var a
@@ -93,22 +95,33 @@ data Subst a
 -- eval :: Strategy -> Lambda a -> Lambda a
 -- eval = undefined
 
--- -- ДеБрауновское представление лямбда-термов
--- data DeBruijn = VarDB Int
---               | AbsDB DeBruijn
---               | AppDB DeBruijn DeBruijn
+-- ДеБрауновское представление лямбда-термов
+data DeBruijn = VarDB Int
+              | AbsDB DeBruijn
+              | AppDB DeBruijn DeBruijn
+              deriving(Eq)
 
--- -- Красивая печать без лишних скобок.
--- instance Show DeBruijn where
---   show = undefined
+-- Красивая печать без лишних скобок.
+instance Show DeBruijn where
+  show (VarDB x) = show x
+  show (AppDB x@(AbsDB _) y@(AppDB _ _)) = "(" ++ show x ++ ") (" ++ show y ++ ")"
+  show (AppDB x@(AbsDB _) y) = "(" ++ show x ++ ") " ++ show y
+  show (AppDB x y@(AppDB _ _)) = show x ++ " (" ++ show y ++ ")"
+  show (AppDB x y) = show x ++ " " ++ show y
+  show (AbsDB d) = "λ " ++ show d
 
--- -- λx. λy. x ≡ λ λ 2
--- -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
--- -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
+-- λx. λy. x ≡ λ λ 2
+-- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
+-- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- -- Преобразовать обычные лямбда-термы в деБрауновские
--- toDeBruijn :: Lambda a -> DeBruijn
--- toDeBruijn = undefined
+toDeBruijn :: Ord a => Lambda a -> DeBruijn
+toDeBruijn l = internal (Map.empty, l) where
+  internal :: Ord a => (Map.Map a Int, Lambda a) -> DeBruijn
+  internal (m, Var v) = let size = Map.size m in VarDB $ size - Map.findWithDefault size v m
+  internal (m, App x y) = AppDB (internal (m, x)) (internal (m, y))
+  internal (m, Abs x y) = AbsDB (internal (Map.insert x (Map.size m) m, y))
+
 
 -- -- Преобразовать деБрауновские лямбда-термы в обычные.
 -- fromDeBruijn :: DeBruijn -> Lambda a
