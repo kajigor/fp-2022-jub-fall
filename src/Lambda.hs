@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
+-- {-# LANGUAGE InstanceSigs #-}
 module Lambda where
 
 -- Тип для лямбда-термов.
@@ -57,46 +59,57 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+  show (Var x) = x
+  show (App x@(Abs _ _) y@(App _ _)) = "(" ++ show x ++ ") (" ++ show y ++ ")"
+  show (App x@(Abs _ _) y) = "(" ++ show x ++ ") " ++ show y
+  show (App x y@(App _ _)) = show x ++ " (" ++ show y ++ ")"
+  show (App x y) = show x ++ " " ++ show y
+  show (Abs x y) = "\\" ++ x ++ "." ++ show y
+
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+  show (Var x) = show x
+  show (App x@(Abs _ _) y@(App _ _)) = "(" ++ show x ++ ") (" ++ show y ++ ")"
+  show (App x@(Abs _ _) y) = "(" ++ show x ++ ") " ++ show y
+  show (App x y@(App _ _)) = show x ++ " (" ++ show y ++ ")"
+  show (App x y) = show x ++ " " ++ show y
+  show (Abs x y) = "\\" ++ show x ++ "." ++ show y
 
 -- Выберите подходящий тип для подстановок.
 data Subst a
 
--- Проверка термов на альфа-эквивалентность.
-alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq = undefined
+-- -- Проверка термов на альфа-эквивалентность.
+-- alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
+-- alphaEq = undefined
 
--- Capture-avoiding substitution.
-cas :: Lambda a -> Subst a -> Lambda a
-cas = undefined
+-- -- Capture-avoiding substitution.
+-- cas :: Lambda a -> Subst a -> Lambda a
+-- cas = undefined
 
--- Возможные стратегии редукции (о них расскажут 7 ноября).
-data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
+-- -- Возможные стратегии редукции (о них расскажут 7 ноября).
+-- data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
 
--- Интерпретатор лямбда термов, учитывающий стратегию.
-eval :: Strategy -> Lambda a -> Lambda a
-eval = undefined
+-- -- Интерпретатор лямбда термов, учитывающий стратегию.
+-- eval :: Strategy -> Lambda a -> Lambda a
+-- eval = undefined
 
--- ДеБрауновское представление лямбда-термов
-data DeBruijn = VarDB Int
-              | AbsDB DeBruijn
-              | AppDB DeBruijn DeBruijn
+-- -- ДеБрауновское представление лямбда-термов
+-- data DeBruijn = VarDB Int
+--               | AbsDB DeBruijn
+--               | AppDB DeBruijn DeBruijn
 
--- Красивая печать без лишних скобок.
-instance Show DeBruijn where
-  show = undefined
+-- -- Красивая печать без лишних скобок.
+-- instance Show DeBruijn where
+--   show = undefined
 
--- λx. λy. x ≡ λ λ 2
--- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
--- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
+-- -- λx. λy. x ≡ λ λ 2
+-- -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
+-- -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
--- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Lambda a -> DeBruijn
-toDeBruijn = undefined
+-- -- Преобразовать обычные лямбда-термы в деБрауновские
+-- toDeBruijn :: Lambda a -> DeBruijn
+-- toDeBruijn = undefined
 
--- Преобразовать деБрауновские лямбда-термы в обычные.
-fromDeBruijn :: DeBruijn -> Lambda a
-fromDeBruijn = undefined
+-- -- Преобразовать деБрауновские лямбда-термы в обычные.
+-- fromDeBruijn :: DeBruijn -> Lambda a
+-- fromDeBruijn = undefined

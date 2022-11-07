@@ -23,4 +23,7 @@ unit_show = do
     -- x (y z) /= x y z
     assertBool "app: save () 2" (show (App (Var "x") (App (Var "y") (Var "z"))) == "x (y z)")
 
+    -- (\x.x) (y z) /= \x.x y z /= (\x.x) y z /= \x.x (y z)
+    assertBool "app: save () 3" (show (App (Abs "x" (Var "x")) (App (Var "y") (Var "z"))) == "(\\x.x) (y z)")
+
 
