@@ -57,10 +57,28 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+--  show (Var x) = x
+--  show (Abs x l) = "\\" ++ x ++ "." ++ show l
+--  show (App l1 l2@(App _ _)) = show l1 ++ " (" ++ show l2 ++ ")"
+--  show (App l1 l2@(Abs _ _)) = show l1 ++ " (" ++ show l2 ++ ")"
+--  show (App l1 l2) = show l1 ++ " " ++ show l2
+  show db = case db of
+    (Var x) -> x
+    (Abs x l) -> "\\" ++ x ++ "." ++ show l
+    (App l1@(Abs _ _) l2) -> "(" ++ show l1 ++ ")" ++ helper l2
+    (App l1 l2) -> show l1 ++ helper l2
+    where
+      helper :: Lambda String -> String
+      helper l2@(App _ _) = " (" ++ show l2 ++ ")"
+      helper l2@(Abs _ _) = " (" ++ show l2 ++ ")"
+      helper l2 = " " ++ show l2
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+  show lam = show (helper lam) where
+    helper (Var x) = Var (show x)
+    helper (Abs x l) = Abs (show x) (helper l)
+    helper (App l1 l2) = App (helper l1) (helper l2)
+
 
 -- Выберите подходящий тип для подстановок.
 data Subst a
@@ -87,7 +105,15 @@ data DeBruijn = VarDB Int
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
-  show = undefined
+  show db = case db of
+    (VarDB x) -> show x
+    (AbsDB l) -> "\\ " ++ show l
+    (AppDB l1@(AbsDB _) l2) -> "(" ++ show l1 ++ ")" ++ helper l2
+    (AppDB l1 l2) -> show l1 ++ helper l2
+    where
+      helper l2@(AppDB _ _) = " (" ++ show l2 ++ ")"
+      helper l2@(AbsDB _) = " (" ++ show l2 ++ ")"
+      helper l2 = " " ++ show l2
 
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
