@@ -82,4 +82,3 @@ instance MyApplicative Maybe where
 instance MyApplicative [] where
   myPure x = [x]
   gs <*> xs = [ g x | g <- gs, x <- xs ]
-
