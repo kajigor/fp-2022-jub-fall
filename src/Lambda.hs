@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+
 module Lambda where
 
 -- Тип для лямбда-термов.
@@ -6,6 +8,10 @@ module Lambda where
 data Lambda a = Var a
               | App (Lambda a) (Lambda a)
               | Abs a (Lambda a)
+
+data DeBruijn = VarDB Int
+              | AbsDB DeBruijn
+              | AppDB DeBruijn DeBruijn
 
 -- true ≡ λx.λy.x
 true = Abs "x" (Abs "y" (Var "x"))
@@ -56,11 +62,23 @@ mult = Abs "m" (Abs "n" (App (Var "m") (App (Var "n") (Var "f"))))
 mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
-instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+instance {-# OVERLAPPABLE #-} Show a => MyShow a where
+  showM = show
 
-instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+class MyShow a where
+  showM :: a -> String
+
+instance {-# OVERLAPS #-} MyShow String where
+  showM a = a
+
+instance MyShow a => Show (Lambda a) where
+  show l = case l of
+    Var s -> showM s
+    Abs x y -> "\\" ++ (showM x) ++ "." ++ (showM y)  -- λ does not work on linux
+    App (Abs x y) end -> "(" ++ (showM(Abs x y)) ++ ") " ++ (showM end)
+    App beg (App x y) -> (showM beg) ++ "(" ++ (showM(App x y)) ++ ") "
+    App x y -> showM x ++ " " ++ showM y
+
 
 -- Выберите подходящий тип для подстановок.
 data Subst a
@@ -81,21 +99,30 @@ eval :: Strategy -> Lambda a -> Lambda a
 eval = undefined
 
 -- ДеБрауновское представление лямбда-термов
-data DeBruijn = VarDB Int
-              | AbsDB DeBruijn
-              | AppDB DeBruijn DeBruijn
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
   show = undefined
-
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
+isMember :: Eq a => a -> [a] -> Bool
+isMember e [] = False
+isMember e (x:xs)
+    | e == x = True
+    | otherwise = isMember e xs
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Lambda a -> DeBruijn
-toDeBruijn = undefined
+toDeBruijn :: Eq a => Lambda a -> DeBruijn
+toDeBruijn a = step a 1 []
+    where
+        step :: Eq a => Lambda a -> Int -> [a]-> DeBruijn
+        step (Var x) d arr
+            | (isMember x arr) = VarDB d
+            | otherwise = undefined
+        step (Abs x l) d arr = AbsDB (step l (d + 1) (x : arr))
+        step (App l1 l2) d arr = AppDB (step l1 d arr) (step l1 d arr)
+
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda a
