@@ -57,10 +57,27 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+  show (Var v) = v
+  show (Abs v body) = "\\" ++ v ++ "." ++ show body
+  show (App lam1 lam2) = left ++ " " ++ right where
+    left = case lam1 of
+      (Abs v2 body2) -> "(" ++ show lam1 ++ ")"
+      _ -> show lam1
+    right = case lam2 of
+      (Var v2) -> show lam2
+      _ -> "(" ++ show lam2 ++ ")"
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+  show (Var v) = show v
+  show (Abs v body) = "\\" ++ show v ++ "." ++ show body
+  show (App lam1 lam2) = left ++ " " ++ right where
+    left = case lam1 of
+      (Abs v2 body2) -> "(" ++ show lam1 ++ ")"
+      _ -> show lam1
+    right = case lam2 of
+      (Var v2) -> show lam2
+      _ -> "(" ++ show lam2 ++ ")"
+
 
 -- Выберите подходящий тип для подстановок.
 data Subst a
