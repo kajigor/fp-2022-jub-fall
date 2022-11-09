@@ -1,11 +1,14 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
+
 module Lambda where
 
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
-data Lambda a = Var a
-              | App (Lambda a) (Lambda a)
-              | Abs a (Lambda a)
+data Lambda a
+  = Var a
+  | App (Lambda a) (Lambda a)
+  | Abs a (Lambda a)
 
 -- true ≡ λx.λy.x
 true = Abs "x" (Abs "y" (Var "x"))
@@ -35,10 +38,10 @@ one = Abs "f" (Abs "x" (App (Var "f") (Var "x")))
 two = Abs "f" (Abs "x" (App (Var "f") (App (Var "f") (Var "x"))))
 
 -- three ≡ λf.λx.f (f (f x))
-three =  Abs "f" (Abs "x" (App (Var "f") (App (Var "f") (App (Var "f") (Var "x")))))
+three = Abs "f" (Abs "x" (App (Var "f") (App (Var "f") (App (Var "f") (Var "x")))))
 
 --  four ≡ λf.λx.f (f (f (f x)))
-four =  Abs "f" (Abs "x" (App (Var "f") (App (Var "f") (App (Var "f") (App (Var "f") (Var "x"))))))
+four = Abs "f" (Abs "x" (App (Var "f") (App (Var "f") (App (Var "f") (App (Var "f") (Var "x"))))))
 
 -- add ≡ λm.λn.λf.λx.m f (n f x)
 add = Abs "m" (Abs "n" (Abs "f" (Abs "x" (App (App (Var "m") (Var "f")) (App (App (Var "n") (Var "f")) (Var "x"))))))
@@ -57,10 +60,24 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+  show :: Lambda String -> String
+  show (Var v) = show v
+  show (App x y) = showWrapped x ++ " " ++ showWrapped y
+    where
+      showWrapped :: Lambda String -> String
+      showWrapped (Var x) = show x
+      showWrapped term = "(" ++ show term ++ ")"
+  show (Abs x term) = "λ" ++ show x ++ "." ++ " "
 
-instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+-- instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
+--   show :: Show a => Lambda a -> String
+--   show (Var v) = show v
+--   show (App x y) = showWrapped x ++ " " ++ showWrapped y
+--     where
+--       showWrapped :: Show a => Lambda a -> String
+--       showWrapped (Var x) = show  x
+--       showWrapped term = "(" ++ show term ++ ")"
+--   show (Abs x term) = "λ" ++ show x ++ "." ++ " "
 
 -- Выберите подходящий тип для подстановок.
 data Subst a
@@ -81,9 +98,10 @@ eval :: Strategy -> Lambda a -> Lambda a
 eval = undefined
 
 -- ДеБрауновское представление лямбда-термов
-data DeBruijn = VarDB Int
-              | AbsDB DeBruijn
-              | AppDB DeBruijn DeBruijn
+data DeBruijn
+  = VarDB Int
+  | AbsDB DeBruijn
+  | AppDB DeBruijn DeBruijn
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
