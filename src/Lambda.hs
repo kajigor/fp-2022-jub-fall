@@ -1,6 +1,10 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Lambda where
 
+import qualified Data.HashMap.Strict as Map
+import Data.Hashable (Hashable)
+import Data.Function (on)
+
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
 data Lambda a = Var a
@@ -57,46 +61,139 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+  show (Var name) = name
+  show (App a b) = show a ++ " " ++ showWithBraces b
+    where
+      foldIntoBraces :: String -> String
+      foldIntoBraces a = "(" ++ a ++ ")"
+
+      showWithBraces :: Lambda String -> String
+      showWithBraces (Var a) = a
+      showWithBraces a = foldIntoBraces $ show a
+  show (Abs var a) = "λ" ++ var ++ "." ++ show a
+
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+  show (Var name) = show name
+  show (App a b) = show a ++ " " ++
+    case b of -- не очень понимаю, ghc отказлся принимать showWithBraces здесь по причине overlapping'а show
+      Var x -> show x
+      x -> "(" ++ show x ++ ")"
+  show (Abs var a) = "λ" ++ show var ++ "." ++ show a
 
 -- Выберите подходящий тип для подстановок.
-data Subst a
+data Subst a = Subst {from :: a, to :: Lambda a}
 
 -- Проверка термов на альфа-эквивалентность.
-alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq = undefined
+alphaEq :: (Eq a, Hashable a, Eq b, Hashable b) => Lambda a -> Lambda b -> Bool
+alphaEq a b = toDeBruijn a == toDeBruijn b
+
+freeVariables :: Eq a => Lambda a -> [a]
+freeVariables (Var x) = [x]
+freeVariables (App a b) = ((++) `on` freeVariables) a b
+freeVariables (Abs x e) = filter (/=x) $ freeVariables e
+
+allVariables ::  Eq a => Lambda a -> [a]
+allVariables (Var x) = [x]
+allVariables (App e1 e2) = ((++) `on` allVariables) e1 e2
+allVariables (Abs x e) = x : allVariables e
+
+
+class Freshable a where
+  getNext :: a -> [a] -> a
+
+instance Freshable String where
+  getNext var variables | var `elem` variables = getNext (var ++ "'") variables
+                        | otherwise = var
+
+
 
 -- Capture-avoiding substitution.
-cas :: Lambda a -> Subst a -> Lambda a
-cas = undefined
+cas :: (Eq a, Freshable a) => Lambda a -> Subst a -> Lambda a
+cas (Var x) subst | x == from subst = to subst
+                  | otherwise = Var x
+cas (App a b) subst = App (cas a subst) (cas b subst)
+cas (Abs x e) subst | x == from subst = Abs x e
+                    | x `notElem` freeVariables (to subst) = Abs x (cas e subst)
+                    | otherwise = Abs next $ cas (cas e Subst {from = x, to = Var next} ) subst
+                      where
+                        next = getNext x (allVariables e ++ allVariables (to subst))
+
+
 
 -- Возможные стратегии редукции (о них расскажут 7 ноября).
 data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
 
 -- Интерпретатор лямбда термов, учитывающий стратегию.
-eval :: Strategy -> Lambda a -> Lambda a
-eval = undefined
+eval :: Eq a => Freshable a => Strategy -> Lambda a -> Lambda a
+eval _ (Var x) = Var x
+
+eval CallByValue (Abs x e) = Abs x e
+eval CallByValue (App e1 e2) = let e1' = eval CallByValue e1 in
+  let e2' = eval CallByValue e2 in
+    case e1' of
+      Abs x e -> eval CallByValue $ cas e Subst {from = x, to = e2'}
+      _ -> App e1' e2'
+
+eval CallByName (Abs x e) = Abs x e
+eval CallByName (App e1 e2) = let evaluated = eval CallByName e1 in
+  case evaluated of
+    Abs x e1' -> eval CallByName $ cas e1' Subst {from = x, to = e2}
+    _ -> App evaluated e2
+
+eval NormalOrder (Abs x e) = Abs x $ eval NormalOrder e
+eval NormalOrder (App e1 e2) = let e1' = eval CallByName e1 in
+  case e1' of
+    Abs x e -> eval NormalOrder $ cas e Subst {from = x, to = e2}
+    _ -> let e1'' = eval NormalOrder e1' in
+      let e2' = eval NormalOrder e2 in 
+        App e1'' e2'
+
+eval ApplicativeOrder (Abs x e) = Abs x $ eval ApplicativeOrder e
+eval ApplicativeOrder (App e1 e2) = let e1' = eval ApplicativeOrder e1 in
+  let e2' = eval ApplicativeOrder e2 in
+    case e1' of
+      Abs x e -> eval ApplicativeOrder $ cas e Subst {from = x, to = e2'}
+      _ -> App e1' e2'
 
 -- ДеБрауновское представление лямбда-термов
 data DeBruijn = VarDB Int
               | AbsDB DeBruijn
-              | AppDB DeBruijn DeBruijn
+              | AppDB DeBruijn DeBruijn deriving Eq
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
-  show = undefined
+  show (VarDB x) = show x
+  show (AbsDB x) = "λ." ++ show x
+  show (AppDB a b) = show a ++ " " ++ showWithBraces b
+    where
+      foldIntoBraces :: String -> String
+      foldIntoBraces a = "(" ++ a ++ ")"
+
+      showWithBraces :: DeBruijn -> String
+      showWithBraces (VarDB a) = show a
+      showWithBraces a = foldIntoBraces $ show a
 
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Lambda a -> DeBruijn
-toDeBruijn = undefined
+toDeBruijn :: (Eq a, Hashable a) => Lambda a -> DeBruijn
+toDeBruijn expr = computeDeBruijn expr Map.empty 0
+  where
+    computeDeBruijn :: (Eq a, Hashable a) => Lambda a -> Map.HashMap a Int -> Int -> DeBruijn
+    computeDeBruijn (Var a) indexes depth = let index = Map.findWithDefault 0 a indexes in
+      VarDB (depth - index - 1)
+    computeDeBruijn (Abs a b) indexes depth = let indexes' = Map.insert a depth indexes in
+      AbsDB $ computeDeBruijn b indexes' (depth + 1)
+    computeDeBruijn (App a b) index depth = AppDB (computeDeBruijn a index depth) (computeDeBruijn b index depth)
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
-fromDeBruijn :: DeBruijn -> Lambda a
-fromDeBruijn = undefined
+fromDeBruijn :: DeBruijn -> Lambda Int
+fromDeBruijn = fromDeBruijnDepthed 0
+  where
+    fromDeBruijnDepthed :: Int -> DeBruijn -> Lambda Int
+    fromDeBruijnDepthed depth (VarDB a) = Var $ depth - a - 1
+    fromDeBruijnDepthed depth (AppDB a b) = App (fromDeBruijnDepthed depth a) (fromDeBruijnDepthed depth b)
+    fromDeBruijnDepthed depth (AbsDB a) = Abs depth (fromDeBruijnDepthed (depth + 1) a)
