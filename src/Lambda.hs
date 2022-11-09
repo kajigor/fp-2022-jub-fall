@@ -11,7 +11,7 @@ data Lambda a = Var a
 
 data DeBruijn = VarDB Int
               | AbsDB DeBruijn
-              | AppDB DeBruijn DeBruijn
+              | AppDB DeBruijn DeBruijn deriving Eq
 
 -- true ≡ λx.λy.x
 true = Abs "x" (Abs "y" (Var "x"))
@@ -84,8 +84,8 @@ instance MyShow a => Show (Lambda a) where
 data Subst a
 
 -- Проверка термов на альфа-эквивалентность.
-alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq = undefined
+alphaEq :: (Eq a, Eq b) => Lambda a -> Lambda b -> Bool
+alphaEq a b = (toDeBruijn a) == (toDeBruijn b)
 
 -- Capture-avoiding substitution.
 cas :: Lambda a -> Subst a -> Lambda a
@@ -126,7 +126,7 @@ toDeBruijn a = step a []
         step :: Eq a => Lambda a -> [a]-> DeBruijn
         step (Var x) arr
             | ((isMember x arr 0) /= -1) = VarDB (isMember x arr 0)
-            | otherwise = undefined
+            | otherwise = VarDB 239
         step (Abs x l) arr = AbsDB (step l (arr ++ [x]))
         step (App l1 l2) arr = AppDB (step l1 arr) (step l2 arr)
 
