@@ -125,6 +125,11 @@ freeVariables (Var x) = Set.singleton x
 freeVariables (App x y) = freeVariables x `Set.union` freeVariables y
 freeVariables (Abs x y) = freeVariables y `Set.difference` Set.singleton x
 
+getVariables :: Ord a => Lambda a -> Set.Set a
+getVariables (Var x) = Set.singleton x
+getVariables (App x y) = freeVariables x `Set.union` freeVariables y
+getVariables (Abs x y) = freeVariables y `Set.union` Set.singleton x
+
 -- Capture-avoiding substitution.
 cas :: Fresh a => Lambda a -> Subst a -> Lambda a
 cas (Var y) (Subst x m) =
@@ -138,7 +143,7 @@ cas (Abs y expr) (Subst x m)
   | otherwise = Abs z (expr `cas` (Subst y (Var z)) `cas` (Subst x m))
   where
     fvm = freeVariables m
-    z = fresh (x `Set.insert` fvm)
+    z = fresh (x `Set.insert` (getVariables expr `Set.union` getVariables m))
 
 -- Возможные стратегии редукции (о них расскажут 7 ноября).
 data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
