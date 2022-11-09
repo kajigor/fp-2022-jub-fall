@@ -1,15 +1,19 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE GADTs #-}
 -- {-# LANGUAGE InstanceSigs #-}
 module Lambda where
 
 import qualified Data.Map as Map
+import qualified Data.Set as Set
+import qualified Data.Array as Arr
 
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
 data Lambda a = Var a
               | App (Lambda a) (Lambda a)
               | Abs a (Lambda a)
+              deriving(Eq)
 
 -- true ≡ λx.λy.x
 true = Abs "x" (Abs "y" (Var "x"))
@@ -66,7 +70,7 @@ instance {-# OVERLAPS #-} Show (Lambda String) where
   show (App x@(Abs _ _) y) = "(" ++ show x ++ ") " ++ show y
   show (App x y@(App _ _)) = show x ++ " (" ++ show y ++ ")"
   show (App x y) = show x ++ " " ++ show y
-  show (Abs x y) = "\\" ++ x ++ "." ++ show y
+  show (Abs x y) = "λ" ++ x ++ "." ++ show y
 
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
@@ -78,20 +82,28 @@ instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
   show (Abs x y) = "\\" ++ show x ++ "." ++ show y
 
 -- Выберите подходящий тип для подстановок.
-data Subst a
+-- data Subst a
 
--- -- Проверка термов на альфа-эквивалентность.
--- alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
--- alphaEq = undefined
+-- Проверка термов на альфа-эквивалентность.
+alphaEq :: Ord a => Lambda a -> Lambda a -> Bool
+alphaEq l1 l2 = alphaEqInternal l1 l2 m_def where
+  m_def = zip (Set.toList $ getArgs l1 `Set.union` getArgs l2) [-1,-2..]
+  alphaEqInternal l1' l2' m = toDeBruijn l1' m == toDeBruijn l2' m
 
--- -- Capture-avoiding substitution.
+getArgs :: Ord a => Lambda a -> Set.Set a
+getArgs (Var v) = Set.singleton v
+getArgs (App l1 l2) = Set.union (getArgs l1) (getArgs l2)
+getArgs (Abs v l) = Set.insert v (getArgs l)
+
+
+-- Capture-avoiding substitution.
 -- cas :: Lambda a -> Subst a -> Lambda a
 -- cas = undefined
 
--- -- Возможные стратегии редукции (о них расскажут 7 ноября).
+-- Возможные стратегии редукции (о них расскажут 7 ноября).
 -- data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
 
--- -- Интерпретатор лямбда термов, учитывающий стратегию.
+-- Интерпретатор лямбда термов, учитывающий стратегию.
 -- eval :: Strategy -> Lambda a -> Lambda a
 -- eval = undefined
 
@@ -114,15 +126,26 @@ instance Show DeBruijn where
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
--- -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Ord a => Lambda a -> DeBruijn
-toDeBruijn l = internal (Map.empty, l) where
-  internal :: Ord a => (Map.Map a Int, Lambda a) -> DeBruijn
-  internal (m, Var v) = let size = Map.size m in VarDB $ size - Map.findWithDefault size v m
+
+-- Преобразовать обычные лямбда-термы в деБрауновские
+toDeBruijn :: Ord a => Lambda a -> [(a, Int)] -> DeBruijn
+toDeBruijn l l_def = internal (Map.empty, l) where
+  m_def = Map.fromList l_def
+  internal (m, Var v) | elm == 0 = VarDB $ m_def Map.! v
+                      | otherwise = VarDB elm
+    where
+      size = Map.size m
+      elm = size - Map.findWithDefault size v m
   internal (m, App x y) = AppDB (internal (m, x)) (internal (m, y))
   internal (m, Abs x y) = AbsDB (internal (Map.insert x (Map.size m) m, y))
 
 
--- -- Преобразовать деБрауновские лямбда-термы в обычные.
--- fromDeBruijn :: DeBruijn -> Lambda a
--- fromDeBruijn = undefined
+-- Преобразовать деБрауновские лямбда-термы в обычные.
+fromDeBruijn :: DeBruijn -> [(Int, a)] -> [a] -> Lambda a
+fromDeBruijn l l_def names = internal (0, l) where
+  m_def = Map.fromList l_def
+  arr_names = Arr.array (1, length names) $ zip [1..] names
+  internal (n, VarDB v) = Var elm where
+    elm = if v <= n then arr_names Arr.! (n - v + 1) else m_def Map.! v
+  internal (n, AppDB l1 l2) = App (internal (n, l1)) (internal (n, l2))
+  internal (n, AbsDB l') = Abs (arr_names Arr.! (n + 1)) (internal (n + 1, l'))

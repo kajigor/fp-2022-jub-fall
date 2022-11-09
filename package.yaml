@@ -38,6 +38,7 @@ library:
   source-dirs: src
   dependencies:
   - containers
+  - array
 
 executables:
   P08-exe:
