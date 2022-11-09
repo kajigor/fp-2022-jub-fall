@@ -21,6 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/kaji
 
 dependencies:
 - base >= 4.7 && < 5
+- containers
 - mtl
 
 ghc-options:
@@ -46,6 +47,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - containers
     - P08
 
 tests:
@@ -57,6 +59,7 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - containers
     - hedgehog
     - HUnit
     - HUnit-approx
