@@ -102,26 +102,33 @@ eval = undefined
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
-  show = undefined
+  show (VarDB x) = showM x
+  show (AbsDB x) = "\\" ++ "." ++ (showM x)
+  show (AppDB (AbsDB x) end) = "(" ++ (showM(AbsDB x)) ++ ") " ++ (showM end)
+  show (AppDB beg (AppDB x y)) = (showM beg) ++ "(" ++ (showM(AppDB x y)) ++ ") "
+  show (AppDB x y) = showM x ++ " " ++ showM y
+
+-- show (toDeBruijn Lambda.true)
+-- show (toDeBruijn  (Abs "x" (Abs "y" (App (Var "x") (Var "y")))))
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
-isMember :: Eq a => a -> [a] -> Bool
-isMember e [] = False
-isMember e (x:xs)
-    | e == x = True
-    | otherwise = isMember e xs
+isMember :: Eq a => a -> [a] -> Int -> Int
+isMember e [] d = -1
+isMember e (x:xs) d
+    | e == x = d
+    | otherwise = isMember e xs (d + 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
 toDeBruijn :: Eq a => Lambda a -> DeBruijn
-toDeBruijn a = step a 1 []
+toDeBruijn a = step a []
     where
-        step :: Eq a => Lambda a -> Int -> [a]-> DeBruijn
-        step (Var x) d arr
-            | (isMember x arr) = VarDB d
+        step :: Eq a => Lambda a -> [a]-> DeBruijn
+        step (Var x) arr
+            | ((isMember x arr 0) /= -1) = VarDB (isMember x arr 0)
             | otherwise = undefined
-        step (Abs x l) d arr = AbsDB (step l (d + 1) (x : arr))
-        step (App l1 l2) d arr = AppDB (step l1 d arr) (step l1 d arr)
+        step (Abs x l) arr = AbsDB (step l (arr ++ [x]))
+        step (App l1 l2) arr = AppDB (step l1 arr) (step l2 arr)
 
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
