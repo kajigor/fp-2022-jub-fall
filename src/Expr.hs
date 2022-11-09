@@ -71,18 +71,23 @@ generateExprByResult result = generateExprByResultAndNumber result 10
 generateExprByResultAndNumber :: Either ArithmeticError Double -> Int -> [Expr]
 generateExprByResultAndNumber result number 
   | number <= 0 = []
-  | otherwise = (generateOneExprByResult result number) ++ (generateExprByResultAndNumber result (number - 1))
+  | otherwise = [generateOneExprByResult result number] ++ (generateExprByResultAndNumber result (number - 1))
   where 
-    generateOneExprByResult :: Either ArithmeticError Double -> Int -> [Expr]
+    generateOneExprByResult :: Either ArithmeticError Double -> Int -> Expr
     generateOneExprByResult result seed = case result of
-      Left DivisionByZero -> [Div (generate seed) (generateZero seed)]
-      Left LogOfZero -> [Log $ generateZero seed]
-      Left LogOfNegativeNumber -> [Log $ generate (-1)]
-      Left RootOfNonpositiveNumber -> [Root (generate (-seed)) (generate seed), Root (generateZero seed) (generate $ seed * 2)]
-      Left RootOfZeroDegree -> [Root (generate seed) (generateZero seed)]
-      Right x -> [Mul (generate 1) (Val x),
-                  Add (Val $ x - 1) (generate 1), 
-                  Mul (generate (-1)) (Sub (generateZero seed) (Val x))]
+      Left DivisionByZero -> Div (generate seed) (generateZero seed)
+      Left LogOfZero -> Log $ generateZero seed
+      Left LogOfNegativeNumber -> Log $ generate (-1)
+      Left RootOfNonpositiveNumber -> 
+        case seed `mod` 2 of 
+        0 -> Root (generate (-seed)) (generate seed)
+        1 -> Root (generateZero seed) (generate $ seed * 2)
+      Left RootOfZeroDegree -> Root (generate seed) (generateZero seed)
+      Right x -> 
+        case seed `mod` 3 of
+          0 -> Mul (generate 1) (Val x)
+          1 -> Add (Val $ x - 1) (generate 1)
+          2 -> Mul (generate (-1)) (Sub (generateZero seed) (Val x))
 
     generate :: Int -> Expr
     generate x 
