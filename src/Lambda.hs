@@ -57,14 +57,30 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+  show (Var v) = v
+  show (Abs l r) = "\\" ++ l ++ "." ++ show r
+  show (App lambda1 lambda2) = l ++ " " ++ r where
+    l = case lambda1 of
+      (Abs l r) -> "(" ++ show lambda1 ++ ")"
+      _ -> show lambda1
+    r = case lambda2 of
+      (Var v) -> show lambda2
+      _ -> "(" ++ show lambda2 ++ ")"
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+  show (Var v) = show v
+  show (Abs l r) = "\\" ++ show l ++ "." ++ show r
+  show (App lambda1 lambda2) = l ++ " " ++ r where
+    l = case lambda1 of
+      (Abs l r) -> "(" ++ show lambda1 ++ ")"
+      _ -> show lambda1
+    r = case lambda2 of
+      (Var v) -> show lambda2
+      _ -> "(" ++ show lambda2 ++ ")"
 
 -- Выберите подходящий тип для подстановок.
 data Subst a
-
+{-
 -- Проверка термов на альфа-эквивалентность.
 alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
 alphaEq = undefined
@@ -79,7 +95,7 @@ data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
 -- Интерпретатор лямбда термов, учитывающий стратегию.
 eval :: Strategy -> Lambda a -> Lambda a
 eval = undefined
-
+-}
 -- ДеБрауновское представление лямбда-термов
 data DeBruijn = VarDB Int
               | AbsDB DeBruijn
@@ -87,12 +103,24 @@ data DeBruijn = VarDB Int
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
-  show = undefined
+  show (VarDB v) = show v
+  show (AbsDB l) = "\\." ++ (show l)
+  show (AppDB lambda1 lambda2) = l ++ " " ++ r
+    where
+      l = case lambda1 of
+        (AbsDB _) -> "(" ++ (show lambda1) ++ ")"
+        _ -> show lambda1
+
+      r = case lambda2 of 
+        (VarDB _) -> show lambda2
+        _ -> "(" ++ (show lambda2) ++ ")"
+
+      
 
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
-
+{-
 -- Преобразовать обычные лямбда-термы в деБрауновские
 toDeBruijn :: Lambda a -> DeBruijn
 toDeBruijn = undefined
@@ -100,3 +128,4 @@ toDeBruijn = undefined
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda a
 fromDeBruijn = undefined
+-}
