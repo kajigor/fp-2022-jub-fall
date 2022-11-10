@@ -1,5 +1,8 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
 module Lambda where
+import Data.List
+
 
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
@@ -57,10 +60,37 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+  show :: Lambda String -> String
+  show (Var a) = a
+
+  show (App termA termB) =
+    left ++ " " ++ right where
+      left = case termA of
+        (Abs _ _) -> "(" ++ show termA ++ ")"
+        _ -> show termA
+      right = case termB of
+        (Var b) -> b
+        _ -> "(" ++ show termB ++ ")"
+  
+  show (Abs a termA) = "\\" ++ a ++ "." ++ show termA
+
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+  show :: Lambda a -> String
+  show (Var a) = show a
+
+  show (App termA termB) =
+    left ++ " " ++ right where
+      left = case termA of
+        (Abs _ _) -> "(" ++ show termA ++ ")"
+        _ -> show termA
+      right = case termB of
+        (Var b) -> show b
+        _ -> "(" ++ show termB ++ ")"
+  
+  show (Abs a termA) = "\\" ++ show a ++ "." ++ show termA
+  
+  -- show term = show (fmap show' term)
 
 -- Выберите подходящий тип для подстановок.
 data Subst a
@@ -95,7 +125,17 @@ instance Show DeBruijn where
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
 toDeBruijn :: Lambda a -> DeBruijn
-toDeBruijn = undefined
+toDeBruijn term = 
+  go term [] where
+    go :: Lambda a -> [Int] -> DeBruijn
+    go t vars = 
+      case t of 
+        Var a -> 
+          case elemIndex a vars of 
+            Nothing -> VarDB (length vars + 1)
+            Just i -> VarDB i
+        Abs _ termB -> AbsDB (go termB (n + 1))
+        App termA termB -> AppDB (go termA n) (go termB n)
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda a
