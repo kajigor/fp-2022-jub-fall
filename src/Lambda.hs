@@ -86,7 +86,7 @@ data Subst a
 
 -- Проверка термов на альфа-эквивалентность.
 alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq = undefined
+alphaEq a b = show (toDeBruijn a) == show (toDeBruijn b)
 
 -- Capture-avoiding substitution.
 cas :: Lambda a -> Subst a -> Lambda a
@@ -106,11 +106,11 @@ data DeBruijn = VarDB Int
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
-  show (VarDB a) = show a
-  show (AbsDB a) = "\\" ++ show a
+  show (VarDB a)   = show a
+  show (AbsDB a)   = "\\" ++ show a
   show (AppDB a b) = show a ++ " " ++ b' where
     b' = case b of
-      (VarDB _)   -> show b
+      (VarDB _) -> show b
       otherwise -> "(" ++ show b ++ ")"
 
 -- λx. λy. x ≡ λ λ 2
@@ -121,7 +121,7 @@ instance Show DeBruijn where
 toDeBruijn :: Eq a => Lambda a -> DeBruijn
 toDeBruijn a = go [] a
   where
-    go x (Var a) = VarDB n where
+    go x (Var a)   = VarDB n where
       n = fromMaybe (Data.List.length x) (Data.List.elemIndex a x) + 1
     go x (Abs a b) = AbsDB (go (a : x) b)
     go x (App a b) = AppDB (go x a) (go x b)
