@@ -49,3 +49,11 @@ unit_funcToDeBrujn = do
   toDeBruijn ifThenElse @?= ifThenElseDB
   toDeBruijn one @?= oneDB
   toDeBruijn four @?= fourDB
+
+unit_funcFromDeBrujn = do
+  show (fromDeBruijn trueDB) @?= "\\a.\\b.a"
+  show (fromDeBruijn falseDB) @?= "\\a.\\b.b"
+  show (fromDeBruijn ifThenElseDB) @?= "\\a.\\b.\\c.a b c"
+  show (fromDeBruijn oneDB) @?= "\\a.\\b.a b"
+  show (fromDeBruijn fourDB) @?= "\\a.\\b.a (a (a (a b)))"
+

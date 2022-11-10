@@ -3,6 +3,7 @@ module Lambda where
 
 import Data.List as List
 import Data.Maybe
+import Data.Char (chr)
 
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
@@ -133,5 +134,11 @@ toDeBruijn = process []
     process list (App x y) = AppDB (process list x) (process list y)
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
-fromDeBruijn :: DeBruijn -> Lambda a
-fromDeBruijn = undefined
+fromDeBruijn :: DeBruijn -> Lambda String
+fromDeBruijn = process []
+  where
+    process list (VarDB x) = Var (list List.!! (x - 1))
+    process list (AbsDB x) =
+      let newChar = [chr $ List.length list + 97] in
+        Abs newChar (process (newChar : list) x)
+    process list (AppDB x y) = App (process list x) (process list y)
