@@ -30,3 +30,22 @@ unit_beautifulShow = do
   show app1 @?= "x 1"
   show lam1 @?= "\\x.x 1"
 
+trueDB = AbsDB (AbsDB (VarDB 2))
+falseDB = AbsDB (AbsDB (VarDB 1))
+ifThenElseDB = AbsDB (AbsDB (AbsDB (AppDB (AppDB (VarDB 3) (VarDB 2)) (VarDB 1))))
+oneDB = AbsDB (AbsDB (AppDB (VarDB 2) (VarDB 1)))
+fourDB = AbsDB (AbsDB (AppDB (VarDB 2) (AppDB (VarDB 2) (AppDB (VarDB 2) (AppDB (VarDB 2) (VarDB 1))))))
+
+unit_showDeBrujn = do
+  show trueDB @?= "\\ \\ 2"
+  show falseDB @?= "\\ \\ 1"
+  show ifThenElseDB @?= "\\ \\ \\ 3 2 1"
+  show oneDB @?= "\\ \\ 2 1"
+  show fourDB @?= "\\ \\ 2 (2 (2 (2 1)))"
+
+unit_funcToDeBrujn = do
+  toDeBruijn true @?= trueDB
+  toDeBruijn false @?= falseDB
+  toDeBruijn ifThenElse @?= ifThenElseDB
+  toDeBruijn one @?= oneDB
+  toDeBruijn four @?= fourDB
