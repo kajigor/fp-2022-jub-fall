@@ -19,8 +19,8 @@ unit_toDeBruijn = do
   show (toDeBruijn Lambda.three) @?= "\\\\2 (2 (2 1))"
 
 unit_alphaEq = do
-  assertBool "equal" (alphaEq Lambda.true Lambda.true)
-  assertBool "equal" (alphaEq Lambda.false Lambda.zero)
-  assertBool "not equal" (Prelude.not (alphaEq Lambda.true Lambda.false))
-  assertBool "not equal" (Prelude.not (alphaEq Lambda.and Lambda.or))
-  assertBool "not equal" (Prelude.not (alphaEq Lambda.true Lambda.successor))
+  alphaEq Lambda.true Lambda.true @?= True
+  alphaEq Lambda.false Lambda.zero @?= True
+  alphaEq Lambda.true Lambda.false @?= False
+  alphaEq Lambda.and Lambda.or @?= False
+  alphaEq Lambda.true Lambda.successor @?= False
