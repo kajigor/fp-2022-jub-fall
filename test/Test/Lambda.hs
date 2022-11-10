@@ -31,8 +31,8 @@ unit_fromDeBruijn = do
   show (fromDeBruijn (toDeBruijn Lambda.false)) @?= show false
 
 unit_alphaEq = do
-  alphaEq Lambda.true Lambda.true @?= True
+  alphaEq Lambda.true (fromDeBruijn (toDeBruijn Lambda.true)) @?= True
   alphaEq Lambda.false Lambda.zero @?= True
   alphaEq Lambda.true Lambda.false @?= False
   alphaEq Lambda.and Lambda.or @?= False
-  alphaEq Lambda.true Lambda.successor @?= False
+  alphaEq Lambda.true (fromDeBruijn (toDeBruijn Lambda.successor)) @?= False
