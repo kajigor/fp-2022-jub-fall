@@ -57,3 +57,9 @@ unit_funcFromDeBrujn = do
   show (fromDeBruijn oneDB) @?= "\\a.\\b.a b"
   show (fromDeBruijn fourDB) @?= "\\a.\\b.a (a (a (a b)))"
 
+trueOk = Abs "y" (Abs "x" (Var "y"))
+trueWrong = Abs "y" (Abs "x" (Var "x"))
+
+unit_funcAlphaEq = do
+  alphaEq true trueOk @?= True
+  alphaEq true trueWrong @?= False

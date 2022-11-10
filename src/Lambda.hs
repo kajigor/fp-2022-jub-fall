@@ -89,7 +89,7 @@ data Subst a
 
 -- Проверка термов на альфа-эквивалентность.
 alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq = undefined
+alphaEq one two = (show $ toDeBruijn $ one) == (show $ toDeBruijn $ two)
 
 -- Capture-avoiding substitution.
 cas :: Lambda a -> Subst a -> Lambda a
