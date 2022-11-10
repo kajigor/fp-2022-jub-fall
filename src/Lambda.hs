@@ -1,6 +1,9 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Lambda where
 
+import Data.List
+import Data.Maybe
+
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
 data Lambda a = Var a
@@ -103,15 +106,25 @@ data DeBruijn = VarDB Int
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
-  show = undefined
+  show (VarDB a) = show a
+  show (AbsDB a) = "\\" ++ show a
+  show (AppDB a b) = show a ++ " " ++ b' where
+    b' = case b of
+      (VarDB _)   -> show b
+      otherwise -> "(" ++ show b ++ ")"
 
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Lambda a -> DeBruijn
-toDeBruijn = undefined
+toDeBruijn :: Eq a => Lambda a -> DeBruijn
+toDeBruijn a = go [] a
+  where
+    go x (Var a) = VarDB n where
+      n = fromMaybe (Data.List.length x) (Data.List.elemIndex a x) + 1
+    go x (Abs a b) = AbsDB (go (a : x) b)
+    go x (App a b) = AppDB (go x a) (go x b)
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda a

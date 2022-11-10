@@ -10,3 +10,10 @@ unit_show = do
   show Lambda.two @?= "\\f.\\x.f (f x)"
   show Lambda.three @?= "\\f.\\x.f (f (f x))"
   show Lambda.four @?= "\\f.\\x.f (f (f (f x)))"
+
+unit_toDeBruijn = do
+  show (toDeBruijn Lambda.true) @?= "\\\\2"
+  show (toDeBruijn Lambda.and) @?= "\\\\2 1 2"
+  show (toDeBruijn Lambda.ifThenElse) @?= "\\\\\\3 2 1"
+  show (toDeBruijn Lambda.two) @?= "\\\\2 (2 1)"
+  show (toDeBruijn Lambda.three) @?= "\\\\2 (2 (2 1))"
