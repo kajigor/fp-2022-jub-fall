@@ -1,11 +1,14 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Lambda where
 
+import Data.List as List
+
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
 data Lambda a = Var a
               | App (Lambda a) (Lambda a)
               | Abs a (Lambda a)
+              deriving (Eq)
 
 -- true ≡ λx.λy.x
 true = Abs "x" (Abs "y" (Var "x"))
@@ -57,17 +60,28 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+  show (Var x) = x
+  show (App x y) = left ++ " " ++ right
+    where
+      right = case y of 
+        (Var _) -> show y
+        _ -> "(" ++ (show y) ++ ")"
+
+      left = case x of
+        (Abs _ _) -> "(" ++ (show x) ++ ")"
+        _ -> show x
+  show (Abs x y) = "\\" ++ x ++ "." ++ (show y) 
+
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
   show = undefined
 
 -- Выберите подходящий тип для подстановок.
-data Subst a
+data Subst a = Subst a (Lambda a)
 
 -- Проверка термов на альфа-эквивалентность.
 alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq = undefined
+alphaEq a b = show (toDeBruijn a) == show (toDeBruijn b)
 
 -- Capture-avoiding substitution.
 cas :: Lambda a -> Subst a -> Lambda a
@@ -94,8 +108,14 @@ instance Show DeBruijn where
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Lambda a -> DeBruijn
-toDeBruijn = undefined
+toDeBruijn :: Eq a => Lambda a -> DeBruijn
+toDeBruijn = toDeBruijn' []
+  where
+    toDeBruijn' res (Var x) = VarDB (getVar (List.elemIndex x res)) where
+        getVar (Just z) = z
+        getVar (Nothing) = List.length res
+    toDeBruijn' res (Abs x y) = AbsDB (toDeBruijn' (x : res) y)
+    toDeBruijn' res (App x y) = AppDB (toDeBruijn' res x) (toDeBruijn' res y)
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda a
