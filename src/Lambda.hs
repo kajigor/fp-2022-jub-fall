@@ -3,11 +3,7 @@ module Lambda where
 import Data.Set as Set
 import Data.List as List
 import Data.Maybe
-import qualified Control.Exception.Base as Set
 import Data.Char
-import qualified Tree as String
-import GHC.Exts (IsString)
-import Data.Unique (Unique)
 
 
 -- Тип для лямбда-термов.
@@ -113,32 +109,6 @@ instance VarGenerator String where
                     parse :: Int -> String
                     parse n | n < 26 = [chr (ord 'a' + n)]
                             | otherwise = parse (n `rem` 26) ++ parse (n `div` 26)          
-
-  
--- instance VarGenerator a where
-  
-
- 
--- instance VarGenerator Int  where
---   getVar name vars | Set.member name vars = getVar (name + 1) vars
---                    | otherwise = name                  
-  -- genVar var | pos <= List.length vars = vars List.!! (pos - 1)
---                       | otherwise = createNew vars
---                       where 
---                         createNew =  fromJust $ Data.List.find (Set.notMember vars generator)
---                         generator = [check len | len <- [1..]]
---                         check len | len < 26 = [chr (ord 'a' + len)]
---                                   | otherwise = 
-                
--- instance VarGenerator DeBruijn  where
---   convertVar vars pos | pos <= List.length vars = vars List.!! (pos - 1)
---                       | otherwise = createNew vars
---                       where 
---                         createNew =  fromJust $ Data.List.find (Set.notMember vars generator)
---                         generator = [check len | len <- [1..]]
---                         check len | len < 26 = [chr (ord 'a' + len)]
---                                   | otherwise = 
-
 
 
 -- Capture-avoiding substitution.
