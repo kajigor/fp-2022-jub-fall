@@ -22,6 +22,7 @@ description:         Please see the README on GitHub at <https://github.com/kaji
 dependencies:
 - base >= 4.7 && < 5
 - mtl
+- hashable
 
 ghc-options:
 - -Wall
@@ -36,6 +37,8 @@ ghc-options:
 
 library:
   source-dirs: src
+  dependencies: 
+    - containers
 
 executables:
   P08-exe:
@@ -65,3 +68,4 @@ tests:
     - tasty-hunit
     - tasty-discover
     - P08
+    - containers

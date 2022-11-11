@@ -1,9 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Lambda where
-import Control.Concurrent (yield)
 import Data.Set as Set
-import Data.Bits (Bits(xor))
-import Control.Arrow (ArrowChoice(right))
+import Data.List as List
+import Data.Maybe
+import qualified Control.Exception.Base as Set
+import Data.Char
+import qualified Tree as String
+import GHC.Exts (IsString)
+import Data.Unique (Unique)
 
 
 -- Тип для лямбда-термов.
@@ -63,15 +67,16 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
   show (Var name) = name
-  show (Abs x y) = "λ" ++ show x ++ "." ++ show y
+  show (Abs x y) = "λ" ++ x ++ "." ++ show y
   show (App x y) = left ++ " " ++ right
     where 
-      right = case y of
-        (Var _) -> show y
-        _ -> "(" ++ show y ++ ")"
       left = case x of 
         (Abs _ _) -> "(" ++ show y ++ ")"
         _ -> show x
+      right = case y of
+        (Var _) -> show y
+        _ -> "(" ++ show y ++ ")"
+      
  
               
 
@@ -81,43 +86,72 @@ instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
   show (Abs x y) = "λ" ++ show x ++ "." ++ show y
   show (App x y) = left ++ " " ++ right
     where 
-      right = case y of
-        (Var _) -> show y
-        _ -> "(" ++ show y ++ ")"
       left = case x of 
         (Abs _ _) -> "(" ++ show y ++ ")"
         _ -> show x
-  
+      right = case y of
+        (Var _) -> show y
+        _ -> "(" ++ show y ++ ")"
+      
 
 -- Выберите подходящий тип для подстановок.
 data Subst a = Subst a (Lambda a)
 
 -- Проверка термов на альфа-эквивалентность.
-alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq x y =  toDeBruijn x == toDeBruijn y
-
+alphaEq :: (Eq a, Eq b)=> Lambda a -> Lambda b -> Bool
+alphaEq x y = toDeBruijn x == toDeBruijn y
 
 class VarGenerator x where
-  getVar :: x -> Set.Set x -> x
+  getVar :: Int -> [x] -> x
 
-instance VarGenerator String  where
-  getVar name vars | Set.member name vars = getVar (name ++ "v") vars
-                   | otherwise = name
+instance VarGenerator String where
+  getVar pos vars | pos <= List.length vars = vars List.!! (pos - 1)
+                  | otherwise = createNew
+                  where 
+                    createNew = fromJust $ List.find (`Set.notMember` (Set.fromList vars)) generator
+                    generator = [parse n | n <- [0..]]
+                    parse :: Int -> String
+                    parse n | n < 26 = [chr (ord 'a' + n)]
+                            | otherwise = parse (n `rem` 26) ++ parse (n `div` 26)          
+
+  
+-- instance VarGenerator a where
+  
+
+ 
+-- instance VarGenerator Int  where
+--   getVar name vars | Set.member name vars = getVar (name + 1) vars
+--                    | otherwise = name                  
+  -- genVar var | pos <= List.length vars = vars List.!! (pos - 1)
+--                       | otherwise = createNew vars
+--                       where 
+--                         createNew =  fromJust $ Data.List.find (Set.notMember vars generator)
+--                         generator = [check len | len <- [1..]]
+--                         check len | len < 26 = [chr (ord 'a' + len)]
+--                                   | otherwise = 
+                
+-- instance VarGenerator DeBruijn  where
+--   convertVar vars pos | pos <= List.length vars = vars List.!! (pos - 1)
+--                       | otherwise = createNew vars
+--                       where 
+--                         createNew =  fromJust $ Data.List.find (Set.notMember vars generator)
+--                         generator = [check len | len <- [1..]]
+--                         check len | len < 26 = [chr (ord 'a' + len)]
+--                                   | otherwise = 
 
 
 
 -- Capture-avoiding substitution.
-cas :: (Ord a, VarGenerator a) => Lambda a -> Subst a -> Lambda a
+cas :: (Ord a, Eq a, VarGenerator a) => Lambda a -> Subst a -> Lambda a
 cas (Var x) (Subst y z) | x == y = z
                         | otherwise = Var x
 cas (App x y) sub = App (cas x sub) (cas y sub)          
 cas (Abs x y) (Subst z m) | x == z = Abs x y
-                          | x == z = Abs x y
                           | Set.notMember x (freeVars m) = Abs x (cas y (Subst z m) )
                           | otherwise = Abs nextVar $ cas (cas y (Subst x (Var nextVar))) (Subst z m)
                             where 
-                              nextVar = getVar x (Set.union (allVars y) (allVars m))
-
+                              nextVar = getVar (List.length uni) (Set.toList uni)
+                              uni = Set.union (allVars y) (allVars m)
                               freeVars (Var a) = Set.singleton a
                               freeVars (App a b) = Set.union (freeVars a) (freeVars b)
                               freeVars (Abs a b) = Set.delete a $ (freeVars b)
@@ -150,7 +184,7 @@ eval CallByName (App x y) = case evx of
   where
     evx = eval CallByName x
 eval NormalOrder (App x y) = case evx of
-  Abs a b -> eval NormalOrder $ cas b  (Subst a b)
+  Abs a b -> eval NormalOrder $ cas b  (Subst a y)
   _ -> App (eval NormalOrder evx) (eval NormalOrder y)
   where 
     evx = eval NormalOrder x
@@ -170,7 +204,7 @@ data DeBruijn = VarDB Int
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
   show (VarDB x) = show x
-  show (AbsDB x) = "λ." ++ show x
+  show (AbsDB x) = "λ " ++ show x
   show (AppDB x y) = left ++ " "  ++ right
     where 
       left = case x of
@@ -186,9 +220,17 @@ instance Show DeBruijn where
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Lambda a -> DeBruijn
-toDeBruijn = undefined
+toDeBruijn :: Eq a => Lambda a -> DeBruijn
+toDeBruijn x = convert x []
+  where 
+    convert (Var a) l = VarDB (fromMaybe (List.length l) (List.elemIndex a l) + 1)
+    convert (Abs a b) l = AbsDB (convert b (a : l))
+    convert (App a b) l = AppDB (convert a l) (convert b l)
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
-fromDeBruijn :: DeBruijn -> Lambda a
-fromDeBruijn = undefined
+fromDeBruijn :: DeBruijn -> Lambda String
+fromDeBruijn x = convertFrom x []
+  where 
+    convertFrom (VarDB a) l = Var (getVar a l)
+    convertFrom (AbsDB a) l = Abs newVar (convertFrom a (newVar : l)) where newVar = getVar (List.length l + 1) l
+    convertFrom (AppDB a b) l = App (convertFrom a l) (convertFrom b l)
