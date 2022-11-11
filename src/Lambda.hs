@@ -53,7 +53,7 @@ successor = Abs "n" (Abs "f" (Abs "x" (App (Var "f") (App (App (Var "n") (Var "f
 add' = Abs "m" (Abs "n" (App (App (Var "m") successor) (Var "n")))
 
 -- mult ≡ λm.λn.λf.m (n f)
-mult = Abs "m" (Abs "n" (App (Var "m") (App (Var "n") (Var "f"))))
+mult = Abs "m" (Abs "n" (Abs "f" (App (Var "m") (App (Var "n") (Var "f")))))
 
 -- mult' ≡ λm.λn.m (add n) 0
 mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
@@ -61,20 +61,30 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
   show (Var x) = x
-  show (App x y) = left ++ " " ++ right
+  
+  show (App x y) = left x ++ " " ++ right y
     where
-      right = case y of 
-        (Var _) -> show y
-        _ -> "(" ++ (show y) ++ ")"
+      left (Abs _ _) = "(" ++ (show x) ++ ")"
+      left _ = show x
 
-      left = case x of
-        (Abs _ _) -> "(" ++ (show x) ++ ")"
-        _ -> show x
-  show (Abs x y) = "\\" ++ x ++ "." ++ (show y) 
+      right (Var _) = show y
+      right  _ = "(" ++ (show y) ++ ")"
+
+  show (Abs x y) = "\\" ++ x ++ "." ++ (show y)
 
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+  show (Var x) = show x
+  
+  show (App x y) = left x ++ " " ++ right y
+    where
+      left (Abs _ _) = "(" ++ (show x) ++ ")"
+      left _ = show x
+
+      right (Var _) = show y
+      right  _ = "(" ++ (show y) ++ ")"
+
+  show (Abs x y) = "\\" ++ (show x) ++ "." ++ (show y)
 
 -- Выберите подходящий тип для подстановок.
 data Subst a = Subst a (Lambda a)
