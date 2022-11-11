@@ -111,8 +111,18 @@ data DeBruijn = VarDB Int
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
-  show = undefined
+  show (VarDB x) = show x
+  
+  show (AppDB x y) = left x ++ " " ++ right y
+    where
+      left (AbsDB _) = "(" ++ (show x) ++ ")"
+      left _ = show x
 
+      right (VarDB _) = show y
+      right  _ = "(" ++ (show y) ++ ")"
+
+  show (AbsDB x) = "\\ " ++ (show x)
+  
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
@@ -121,7 +131,7 @@ instance Show DeBruijn where
 toDeBruijn :: Eq a => Lambda a -> DeBruijn
 toDeBruijn = toDeBruijn' []
   where
-    toDeBruijn' res (Var x) = VarDB (getVar (List.elemIndex x res)) where
+    toDeBruijn' res (Var x) = VarDB (getVar (List.elemIndex x res) + 1) where
         getVar (Just z) = z
         getVar (Nothing) = List.length res
     toDeBruijn' res (Abs x y) = AbsDB (toDeBruijn' (x : res) y)
