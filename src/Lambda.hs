@@ -1,11 +1,13 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Lambda where
+  
 
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
 data Lambda a = Var a
               | App (Lambda a) (Lambda a)
               | Abs a (Lambda a)
+              deriving Eq
 
 -- true ≡ λx.λy.x
 true = Abs "x" (Abs "y" (Var "x"))
@@ -50,17 +52,33 @@ successor = Abs "n" (Abs "f" (Abs "x" (App (Var "f") (App (App (Var "n") (Var "f
 add' = Abs "m" (Abs "n" (App (App (Var "m") successor) (Var "n")))
 
 -- mult ≡ λm.λn.λf.m (n f)
-mult = Abs "m" (Abs "n" (App (Var "m") (App (Var "n") (Var "f"))))
+mult = Abs "m" (Abs "n" (Abs "f" (App (Var "m") (App (Var "n") (Var "f")))))
 
 -- mult' ≡ λm.λn.m (add n) 0
 mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show = undefined
+  show (Var a) = a
+  show (App a b) = f ++ " " ++ s where
+    f = case a of
+      (Abs _ _) -> "(" ++ show a ++ ")"
+      otherwise -> show a
+    s = case b of
+      (Var _) -> show b
+      otherwise -> "(" ++ show b ++ ")"
+  show (Abs a b) = ("$" ) ++ a ++ "." ++ show b
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show = undefined
+  show (Var a) = show a
+  show (App a b) = f ++ " " ++ s where
+    f = case a of
+      (Abs _ _) -> "(" ++ show a ++ ")"
+      otherwise -> show a
+    s = case b of
+      (Var _) -> show b
+      otherwise -> "(" ++ show b ++ ")"
+  show (Abs a b) = ("$" ) ++ show a ++ "." ++ show b
 
 -- Выберите подходящий тип для подстановок.
 data Subst a
