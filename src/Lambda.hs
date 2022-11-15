@@ -136,6 +136,9 @@ toDeBruijn (Var v) l fr
 toDeBruijn (Abs s lamb) l fr = AbsDB $ toDeBruijn lamb (Var s : l) fr
 toDeBruijn (App (Var v1) (Var v2)) l fr
   | Var v1 `notElem` l && Var v2 `notElem` l = AppDB (toDeBruijn (Var v1) l (fr ++ [Var v1] ++ [Var v2])) (toDeBruijn (Var v2) l (fr ++ [Var v1] ++ [Var v2]))
+  | Var v1 `elem` l && Var v2 `notElem` l = AppDB (toDeBruijn (Var v1) l fr) (toDeBruijn (Var v2) l (fr ++ [Var v1] ++ [Var v2]))
+  | Var v1 `notElem` l && Var v2 `elem` l = AppDB (toDeBruijn (Var v1) l (fr ++ [Var v1] ++ [Var v2])) (toDeBruijn (Var v2) l fr)
+  | Var v1 `elem` l && Var v2 `elem` l = AppDB (toDeBruijn (Var v1) l fr) (toDeBruijn (Var v2) l fr)
 toDeBruijn (App lamb1 (Var v)) l fr
   | Var v `elem` l = AppDB (toDeBruijn lamb1 l fr) (toDeBruijn (Var v) l fr)
   | Var v `notElem` l = AppDB (toDeBruijn lamb1 l (fr ++ [Var v])) (toDeBruijn (Var v) l (fr ++ [Var v]))
