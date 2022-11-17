@@ -29,13 +29,17 @@ unit_cas = do
     cas (App (Var "x") (Var "y")) (Subst "x" true) @?= App true (Var "y")
     cas (Abs "y" (App (Var "x") (Var "y"))) (Subst "x" true) @?= Abs "y" (App true (Var "y"))
 
-unit_de_bruijn = do
-    show ( toDeBruijn (Abs "x" (Abs "y" (Var "x"))) ) @?= "\\.\\.1"
-    show ( toDeBruijn (Abs "x" (Abs "y" (Var "y"))) ) @?= "\\.\\.0"
-    show ( toDeBruijn (Abs "x" (Abs "y" (Abs "z" (App (App (Var "x") (Var "z")) (App (Var "y") (Var "z")))))) ) @?= "\\.\\.\\.2 0 (1 0)"
+check_DeBruijn :: Maybe DeBruijn -> String -> Assertion
+check_DeBruijn Nothing _ = assertBool "Term should not be Nothing" False
+check_DeBruijn (Just term) s = show term @?= s
 
-    fromDeBruijn (toDeBruijn true) @?= Abs "a" (Abs "aa" (Var "a"))
-    fromDeBruijn (toDeBruijn false) @?= Abs "a" (Abs "aa" (Var "aa"))
+unit_de_bruijn = do
+    check_DeBruijn ( toDeBruijn (Abs "x" (Abs "y" (Var "x"))) ) "\\.\\.1"
+    check_DeBruijn ( toDeBruijn (Abs "x" (Abs "y" (Var "y"))) ) "\\.\\.0"
+    check_DeBruijn ( toDeBruijn (Abs "x" (Abs "y" (Abs "z" (App (App (Var "x") (Var "z")) (App (Var "y") (Var "z")))))) ) "\\.\\.\\.2 0 (1 0)"
+
+    fromDeBruijn (AbsDB $ AbsDB $ VarDB 1) @?= Abs "a" (Abs "aa" (Var "a"))
+    fromDeBruijn (AbsDB $ AbsDB $ VarDB 0) @?= Abs "a" (Abs "aa" (Var "aa"))
 
 unit_eval = do
     show (eval CallByName (App (Abs "x" $ Var "x") (Var "y"))) @?= "y"

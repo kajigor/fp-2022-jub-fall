@@ -72,11 +72,14 @@ instance {-# OVERLAPS #-} Show (Lambda String) where
     where
       right = case y of 
         (Var _) -> show y
-        _ -> "(" ++ (show y) ++ ")"
+        _ -> wrap (show y)
 
       left = case x of
-        (Abs _ _) -> "(" ++ (show x) ++ ")"
+        (Abs _ _) -> wrap (show x)
         _ -> show x
+
+      wrap :: String -> String
+      wrap s = "(" ++ s ++ ")"
   show (Abs x y) = "\\" ++ x ++ "." ++ (show y)
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
@@ -125,7 +128,7 @@ cas (Var x) (Subst y m) | x == y = m
                         | otherwise = Var x
 cas (App l1 l2) subst = App (cas l1 subst) (cas l2 subst)
 cas (Abs x l) subst@(Subst y m) | x == y = Abs x l
-                                | (Prelude.not $ Set.member x $ freeVar m) = Abs x (cas l subst)
+                                | (Set.notMember x $ freeVar m) = Abs x (cas l subst)
                                 | otherwise = let w = fresh $ Set.union (allVars l) (allVars m) in
                                   Abs w $ cas (cas l $ Subst x (Var w)) subst
   where
@@ -146,14 +149,12 @@ data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
 
 -- Интерпретатор лямбда термов, учитывающий стратегию.
 eval :: Ord a => Indactive a => Strategy -> Lambda a -> Lambda a
-eval CallByName (Var x) = Var x
-eval CallByName (Abs x l) = Abs x l
 eval CallByName (App e1 e2) = 
   let e1' = eval CallByName e1 in
   case e1' of
     (Abs x e) -> eval CallByName $ cas e $ Subst x e2
     _ -> App e1' e2
-eval NormalOrder (Var x) = Var x
+eval CallByName x = x
 eval NormalOrder (Abs x e) = Abs x $ eval NormalOrder e
 eval NormalOrder (App e1 e2) = 
   let e1' = eval CallByName e1 in
@@ -162,15 +163,14 @@ eval NormalOrder (App e1 e2) =
     _ -> let e1'' = eval NormalOrder e1' in 
       let e2' = eval NormalOrder e2 in 
       App e1'' e2'
-eval CallByValue (Var x) = Var x
-eval CallByValue (Abs x e) = Abs x e
+eval NormalOrder x = x
 eval CallByValue (App e1 e2) =
   let e1' = eval CallByValue e1 in
   let e2' = eval CallByValue e2 in 
   case e1' of
     (Abs x e) -> eval CallByValue $ cas e $ Subst x e2'
     _ -> App e1' e2'
-eval ApplicativeOrder (Var x) = Var x
+eval CallByValue x = x
 eval ApplicativeOrder (Abs x e) = Abs x $ eval ApplicativeOrder e
 eval ApplicativeOrder (App e1 e2) =
   let e1' = eval ApplicativeOrder e1 in
@@ -178,6 +178,7 @@ eval ApplicativeOrder (App e1 e2) =
   case e1' of
     (Abs x e) -> eval ApplicativeOrder $ cas e $ Subst x e2'
     _ -> App e1' e2'
+eval ApplicativeOrder x = x
 
 
 -- ДеБрауновское представление лямбда-термов
@@ -205,17 +206,23 @@ instance Show DeBruijn where
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Eq a => Lambda a -> DeBruijn
+toDeBruijn :: Eq a => Lambda a -> Maybe DeBruijn
 toDeBruijn l = go l []
   where
-    go :: Eq a => Lambda a -> [a] -> DeBruijn
-    go (Var x) list = 
-      let i = List.elemIndex x list in
+    go :: Eq a => Lambda a -> [a] -> Maybe DeBruijn
+    go (Var x) list = do
+      let i = List.elemIndex x list
       case i of
-        Just pos -> VarDB pos
-        Nothing -> undefined -- free variable
-    go (App l1 l2) list = AppDB (go l1 list) (go l2 list)
-    go (Abs x l) list = AbsDB (go l $ x : list)
+        Just pos -> Just $ VarDB pos
+        Nothing -> Nothing -- free variable
+    go (App l1 l2) list = do
+      l1' <- go l1 list
+      l2' <- go l2 list
+      return $ AppDB l1' l2'
+    go (Abs x l) list = do
+      l' <- go l $ x : list
+      return $ AbsDB l'
+
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: Indactive a => DeBruijn -> Lambda a
