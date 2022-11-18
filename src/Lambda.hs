@@ -83,7 +83,7 @@ isNotVar (Var a) = False
 isNotVar _ = True
 
 showBrackets :: String -> Bool -> String
-showBrackets str cond | cond == True = "(" ++ str ++ ")"
+showBrackets str cond | cond = "(" ++ str ++ ")"
                       | otherwise = str
 
 -- Красивая печать без лишних скобок.
@@ -96,31 +96,25 @@ instance MyShow a => Show (Lambda a) where
 class Ord a => Freshable a where 
   getFresh :: Set.Set a -> a
   available :: [a]
-  available = undefined
   getFresh st = (head $ filter notInLst available)
     where notInLst x = x `Set.notMember` st
 
 instance Freshable String where
-  available = [(gen x) | x <- [0..]]
-    where gen x | x < 26 = [chr(x + (ord 'a'))]
-                | otherwise = (gen (x `mod` 26)) ++ (gen (x `div` 26))
+  available = [(gen x) | x <- [1..]]
+    where gen x | x <= 26 = [chr((x - 1) + (ord 'a'))]
+                | otherwise = (gen (((x - 1) `mod` 26) + 1)) ++ (gen ((x - 1) `div` 26))
 
 -- Выберите подходящий тип для подстановок.
 data Subst a = SubPair a (Lambda a)
 
 -- Проверка термов на альфа-эквивалентность.
-alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq first second = helpfunction (toDeBruijn first) (toDeBruijn second)
-  where helpfunction :: DeBruijn -> DeBruijn -> Bool
-        helpfunction (VarDB x) (VarDB y) = (x == y)
-        helpfunction (AppDB ax ay) (AppDB bx by) = ((helpfunction ax bx) && (helpfunction ay by))
-        helpfunction (AbsDB av) (AbsDB bv) = (helpfunction av bv)
-        helpfunction _ _ = False
+alphaEq :: Ord a => Eq a => Lambda a -> Lambda a -> Bool
+alphaEq first second = (toDeBruijn first) == (toDeBruijn second)
 
 getVars :: Ord a => Lambda a -> Set.Set a
 getVars (Var x) = Set.singleton x
 getVars (App a b) = (getVars a) `Set.union` (getVars b)
-getVars (Abs x a) = (Set.singleton x) `Set.union` (getVars a)
+getVars (Abs x a) = Set.insert x (getVars a)
 
 cas_with_closed :: Ord a => Freshable a => Lambda a -> Subst a -> Set.Set a -> Lambda a
 cas_with_closed (Var a) (SubPair x subst) closed | (a == x) = subst
@@ -128,7 +122,7 @@ cas_with_closed (Var a) (SubPair x subst) closed | (a == x) = subst
 cas_with_closed (App a b) subst closed = (App (cas_with_closed a subst closed) (cas_with_closed b subst closed)) 
 cas_with_closed (Abs x a) subst closed = (Abs y (cas_with_closed (cas_with_closed a (SubPair x (Var y)) (new_closed)) subst (new_closed)))
   where y = (getFresh closed)
-        new_closed = (Set.singleton y) `Set.union` closed
+        new_closed = Set.insert y closed
 
 -- Capture-avoiding substitution.
 cas :: Ord a => Freshable a => Lambda a -> Subst a -> Lambda a
@@ -140,10 +134,10 @@ data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
 
 -- Интерпретатор лямбда термов, учитывающий стратегию.
 eval :: Ord a => Freshable a => Strategy -> Lambda a -> Lambda a
-eval CallByValue lambda = evalCallByValue lambda 
-eval CallByName lambda = evalCallByName lambda 
-eval NormalOrder lambda = evalNormalOrder lambda 
-eval ApplicativeOrder lambda = evalApplicativeOrder lambda 
+eval CallByValue = evalCallByValue 
+eval CallByName = evalCallByName 
+eval NormalOrder = evalNormalOrder 
+eval ApplicativeOrder = evalApplicativeOrder 
 
 evalCallByName :: Ord a => Freshable a => Lambda a -> Lambda a
 evalCallByName (App a b) = helpfunction (evalCallByName a) b
@@ -200,17 +194,33 @@ instance Show DeBruijn where
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Eq a => Lambda a -> DeBruijn
-toDeBruijn term = helpfunction term [] 0
-  where helpfunction :: Eq a => Lambda a -> [(a, Int)] -> Int -> DeBruijn
-        helpfunction (Var x) lst h = VarDB (subtract (snd (fromMaybe (x, -10) (find (\p -> (fst p) == x) lst))) h)
+
+getFreeVariables :: Eq a => Ord a => Lambda a -> Set.Set a
+getFreeVariables (Var a) = Set.singleton a
+getFreeVariables (App f g) = (getFreeVariables f) `Set.union` (getFreeVariables g)
+getFreeVariables (Abs x f) = Set.delete x (getFreeVariables f)
+
+toDeBruijn :: Eq a => Ord a => Lambda a -> DeBruijn
+toDeBruijn term = helpfunction term initialList 0
+  where helpfunction :: Eq a => Ord a => Lambda a -> [(a, Int)] -> Int -> DeBruijn
+        helpfunction (Var x) lst h = VarDB (subtract y h)
+          where y = (fromMaybe (-1) (lookup x lst))
         helpfunction (App f g) lst h  = AppDB (helpfunction f lst h) (helpfunction g lst h)
         helpfunction (Abs x g) lst h = AbsDB (helpfunction g ((x, h) : lst) (succ h))
+        initialList = zip (Set.toList (getFreeVariables term)) ([-1, -2..])
+
+getMaxFreeNumber :: DeBruijn -> Int
+getMaxFreeNumber term = helpfunction term 0
+  where helpfunction :: DeBruijn -> Int -> Int
+        helpfunction (VarDB x) h = x - h
+        helpfunction (AppDB f g) h = max (helpfunction f h) (helpfunction g h)
+        helpfunction (AbsDB g) h = helpfunction g (h + 1) 
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda String
-fromDeBruijn term = helpfunction term [] 0
+fromDeBruijn term = helpfunction term (take initialHeight (available)) initialHeight
   where helpfunction :: DeBruijn -> [String] -> Int -> Lambda String
         helpfunction (VarDB x) lst h = Var (lst!!(h - x))
         helpfunction (AppDB f g) lst h = App (helpfunction f lst h) (helpfunction g lst h)
         helpfunction (AbsDB g) lst h = Abs (getFresh (Set.fromList lst)) (helpfunction g (lst ++ [getFresh (Set.fromList lst)]) (succ h))
+        initialHeight = (max 0 (getMaxFreeNumber term))

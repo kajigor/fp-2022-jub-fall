@@ -68,6 +68,17 @@ unit_from_DeBruijn = do
     (alphaEq term6 (fromDeBruijn term6DeBruijn)) @?= True
     (alphaEq term4 (fromDeBruijn term6DeBruijn)) @?= False
 
+term7 = App (Var "x") (Abs "x" (App (Var "x") (Var "y")))
+
+term8 = Abs "y" (App (Abs "x" (App (Var "x") (Var "t"))) (Var "x"))
+
+term9 = Abs "x" (App (App (Var "y") (Var "x")) (Abs "y" (Var "y")))
+
+toDeBruijn_fromDeBruijn :: Assertion
+toDeBruijn_fromDeBruijn = do
+    (alphaEq (fromDeBruijn (toDeBruijn term7)) term7) @?= True
+    (alphaEq (fromDeBruijn (toDeBruijn term8)) term8) @?= True
+    (alphaEq (fromDeBruijn (toDeBruijn term9)) term9) @?= True
 
 unit_show_string_DeBruin :: Assertion
 unit_show_string_DeBruin = do
