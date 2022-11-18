@@ -204,7 +204,7 @@ toDeBruijn :: Eq a => Ord a => Lambda a -> DeBruijn
 toDeBruijn term = helpfunction term initialList 0
   where helpfunction :: Eq a => Ord a => Lambda a -> [(a, Int)] -> Int -> DeBruijn
         helpfunction (Var x) lst h = VarDB (subtract y h)
-          where y = (fromMaybe (-1) (lookup x lst))
+          where y = (fromJust (lookup x lst))
         helpfunction (App f g) lst h  = AppDB (helpfunction f lst h) (helpfunction g lst h)
         helpfunction (Abs x g) lst h = AbsDB (helpfunction g ((x, h) : lst) (succ h))
         initialList = zip (Set.toList (getFreeVariables term)) ([-1, -2..])
