@@ -3,7 +3,6 @@ module Test.Lambda where
 import Lambda
 import Test.Tasty.HUnit
 
-import Text.Printf
 
 unit_show_lambda :: IO ()
 unit_show_lambda = do
@@ -19,20 +18,49 @@ unit_show_lambda = do
   show Lambda.add @?= "\\m.\\n.\\f.\\x.m f (n f x)"
   show Lambda.successor @?= "\\n.\\f.\\x.f (n f x)"
   show Lambda.mult @?= "\\m.\\n.\\f.m (n f)"
-  show Lambda.t @?="v0"
 
-unit_show_debruijn :: IO ()
+unit_show_debruijn :: IO()
 unit_show_debruijn = do
-  show (toDeBruijn Lambda.true) @?= "\\ \\ 1"
-  show (toDeBruijn Lambda.false) @?= "\\ \\ 0"
-  show (toDeBruijn Lambda.and) @?= "\\ \\ 1 0 1"
-  show (toDeBruijn Lambda.or) @?= "\\ \\ 1 1 0"
-  show (toDeBruijn Lambda.not) @?=  "\\ 0 (\\ \\ 0) (\\ \\ 1)"
-  show (toDeBruijn Lambda.ifThenElse) @?= "\\ \\ \\ 2 1 0"
-  show (toDeBruijn Lambda.zero) @?= "\\ \\ 0"
-  show (toDeBruijn Lambda.one) @?= "\\ \\ 1 0"
-  show (toDeBruijn Lambda.three) @?= "\\ \\ 1 (1 (1 0))"
-  show (toDeBruijn Lambda.add) @?= "\\ \\ \\ \\ 3 1 (2 1 0)"
-  show (toDeBruijn Lambda.successor) @?= "\\ \\ \\ 1 (2 1 0)"
-  show (toDeBruijn Lambda.mult) @?= "\\ \\ \\ 2 (1 0)"
+  show Lambda.trueDB @?= "\\ \\ 1"
+  show Lambda.falseDB @?= "\\ \\ 0"
+  show Lambda.andDB @?= "\\ \\ 1 0 1"
+  show Lambda.orDB @?= "\\ \\ 1 1 0"
+  show Lambda.notDB @?=  "\\ 0 (\\ \\ 0) (\\ \\ 1)"
+  show Lambda.ifThenElseDB @?= "\\ \\ \\ 2 1 0"
+  show Lambda.zeroDB @?= "\\ \\ 0"
+  show Lambda.oneDB @?= "\\ \\ 1 0"
+  show Lambda.threeDB @?= "\\ \\ 1 (1 (1 0))"
+  show Lambda.addDB @?= "\\ \\ \\ \\ 3 1 (2 1 0)"
+  show Lambda.successorDB @?= "\\ \\ \\ 1 (2 1 0)"
+  show Lambda.multDB @?= "\\ \\ \\ 2 (1 0)"
   
+
+unit_to_debruijn :: IO ()
+unit_to_debruijn = do
+  toDeBruijn Lambda.true @?= Lambda.trueDB
+  toDeBruijn Lambda.false @?= Lambda.falseDB
+  toDeBruijn Lambda.and @?= Lambda.andDB
+  toDeBruijn Lambda.or @?= Lambda.orDB
+  toDeBruijn Lambda.not @?= Lambda.notDB
+  toDeBruijn Lambda.ifThenElse @?= Lambda.ifThenElseDB
+  toDeBruijn Lambda.zero @?= Lambda.zeroDB
+  toDeBruijn Lambda.one @?= Lambda.oneDB
+  toDeBruijn Lambda.three @?= Lambda.threeDB
+  toDeBruijn Lambda.add @?= Lambda.addDB
+  toDeBruijn Lambda.successor @?= Lambda.successorDB
+  toDeBruijn Lambda.mult @?= Lambda.multDB
+
+unit_from_debruijn :: IO ()
+unit_from_debruijn = do
+  fromDeBruijn Lambda.trueDB `alphaEq` Lambda.true  @?= True
+  fromDeBruijn Lambda.falseDB `alphaEq` Lambda.false  @?= True
+  fromDeBruijn Lambda.andDB `alphaEq` Lambda.and  @?= True
+  fromDeBruijn Lambda.orDB `alphaEq` Lambda.or  @?= True
+  fromDeBruijn Lambda.notDB `alphaEq` Lambda.not  @?= True
+  fromDeBruijn Lambda.ifThenElseDB `alphaEq` Lambda.ifThenElse  @?= True
+  fromDeBruijn Lambda.zeroDB `alphaEq` Lambda.zero  @?= True
+  fromDeBruijn Lambda.oneDB `alphaEq` Lambda.one  @?= True
+  fromDeBruijn Lambda.threeDB `alphaEq` Lambda.three  @?= True
+  fromDeBruijn Lambda.addDB `alphaEq` Lambda.add  @?= True
+  fromDeBruijn Lambda.successorDB `alphaEq` Lambda.successor  @?= True
+  fromDeBruijn Lambda.multDB `alphaEq` Lambda.mult @?= True

@@ -14,6 +14,7 @@ import Control.Monad.State
 data Lambda a = Var a
               | App (Lambda a) (Lambda a)
               | Abs a (Lambda a)
+              deriving(Eq)
 
 isVar::Lambda a -> Bool
 isVar (Var _) = True
@@ -45,7 +46,7 @@ data Subst a
 
 -- Проверка термов на альфа-эквивалентность.
 alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq = undefined
+alphaEq a b = toDeBruijn a == toDeBruijn b
 
 -- Capture-avoiding substitution.
 cas :: Lambda a -> Subst a -> Lambda a
@@ -62,6 +63,7 @@ eval = undefined
 data DeBruijn = VarDB Int
               | AbsDB DeBruijn
               | AppDB DeBruijn DeBruijn
+              deriving(Eq)
 
 isVarDB::DeBruijn -> Bool
 isVarDB VarDB{} = True
@@ -101,7 +103,7 @@ nextSymbol (s:xs) = chr (ord s + 1):xs
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda String
 fromDeBruijn debruijn = 
-  evalState (go debruijn []) ""
+  evalState (go debruijn []) "a"
   where 
     go:: DeBruijn -> [String] -> State String (Lambda String)
     go (VarDB x) xs | x >= length xs = do 
@@ -119,7 +121,6 @@ fromDeBruijn debruijn =
       x' <- go x (next:xs)
       return (Abs next x')
 
-t = fromDeBruijn (VarDB 0)
 
 -- Lambdas
 -- true ≡ λx.λy.x
@@ -170,3 +171,40 @@ mult = Abs "m" (Abs "n" (Abs "f" (App (Var "m") (App (Var "n") (Var "f")))))
 -- mult' ≡ λm.λn.m (add n) 0
 mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
+
+-- Lambdas DeBruijn
+-- trueDB ≡ \\ \\ 1
+trueDB = AbsDB (AbsDB (VarDB 1))
+
+-- falseDB ≡ \\ \\ 0
+falseDB = AbsDB (AbsDB (VarDB 0))
+
+-- andDB ≡ \\ \\ 1 0 1
+andDB = AbsDB (AbsDB (AppDB (AppDB (VarDB 1) (VarDB 0)) (VarDB 1)))
+
+-- orDB ≡ \\ \\ 1 1 0
+orDB = AbsDB (AbsDB (AppDB (AppDB (VarDB 1) (VarDB 1)) (VarDB 0)))
+
+-- notDB ≡ \\ 0 (\\ \\ 0) (\\ \\ 1)
+notDB = AbsDB (AppDB (AppDB (VarDB 0) falseDB) trueDB)
+
+-- ifThenElseDB ≡ \\ \\ \\ 2 1 0
+ifThenElseDB = AbsDB (AbsDB (AbsDB (AppDB (AppDB (VarDB 2) (VarDB 1)) (VarDB 0))))
+
+-- zeroDB ≡ \\ \\ 0
+zeroDB = AbsDB (AbsDB (VarDB 0))
+
+-- oneDB ≡ \\ \\ 1 0
+oneDB = AbsDB (AbsDB (AppDB (VarDB 1) (VarDB 0)))
+
+-- threeDB ≡ \\ \\ 1 (1 (1 0))
+threeDB =  AbsDB (AbsDB (AppDB (VarDB 1) (AppDB (VarDB 1) (AppDB (VarDB 1) (VarDB 0)))))
+
+-- addDB ≡ \\ \\ \\ \\ 3 1 (2 1 0)
+addDB = AbsDB (AbsDB (AbsDB (AbsDB (AppDB (AppDB (VarDB 3) (VarDB 1)) (AppDB (AppDB (VarDB 2) (VarDB 1)) (VarDB 0))))))
+
+-- successorDB ≡ \\ \\ \\ 1 (2 1 0)
+successorDB = AbsDB (AbsDB (AbsDB (AppDB (VarDB 1) (AppDB (AppDB (VarDB 2) (VarDB 1)) (VarDB 0)))))
+
+-- multDB ≡ \\ \\ \\ 2 (1 0)
+multDB = AbsDB (AbsDB (AbsDB (AppDB (VarDB 2) (AppDB (VarDB 1) (VarDB 0)))))
