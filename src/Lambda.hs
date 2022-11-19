@@ -6,7 +6,7 @@ import Control.Monad.Error (Error(strMsg))
 import Data.List
 import Data.Maybe
 import Data.Char
-import Control.Concurrent (yield)
+import Control.Monad.State
 
 
 -- Тип для лямбда-термов.
@@ -93,6 +93,33 @@ toDeBruijn = convert []
     convert acc (App x y) = AppDB (convert acc x) (convert acc y)
     convert acc (Abs x y) = AbsDB (convert (x:acc) y)
 
+nextSymbol :: String -> String
+nextSymbol [] = "a"
+nextSymbol str@('z':_) = 'a':str
+nextSymbol (s:xs) = chr (ord s + 1):xs
+
+-- Преобразовать деБрауновские лямбда-термы в обычные.
+fromDeBruijn :: DeBruijn -> Lambda String
+fromDeBruijn debruijn = 
+  evalState (go debruijn []) ""
+  where 
+    go:: DeBruijn -> [String] -> State String (Lambda String)
+    go (VarDB x) xs | x >= length xs = do 
+        next <- get
+        put (nextSymbol next)
+        return (Var next)
+                    | otherwise = return (Var (xs!!x))
+    go (AppDB x y) xs = do
+      x' <- go x xs
+      y' <- go y xs
+      return (App x' y')
+    go (AbsDB x) xs = do
+      next <- get
+      put (nextSymbol next)
+      x' <- go x (next:xs)
+      return (Abs next x')
+
+t = fromDeBruijn (VarDB 0)
 
 -- Lambdas
 -- true ≡ λx.λy.x
