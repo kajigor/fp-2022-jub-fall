@@ -7,6 +7,7 @@ import Data.List
 import Data.Maybe
 import Data.Char
 import Control.Monad.State
+import qualified Data.Set as Set
 
 
 -- Тип для лямбда-термов.
@@ -41,16 +42,49 @@ instance {-# OVERLAPS #-} Show (Lambda String) where
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
   show = undefined
 
--- Выберите подходящий тип для подстановок.
-data Subst a
-
 -- Проверка термов на альфа-эквивалентность.
 alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
 alphaEq a b = toDeBruijn a == toDeBruijn b
 
+allVars :: Ord a => Lambda a -> Set.Set a
+allVars (Var x) = Set.singleton x
+allVars (App x y) = allVars x `Set.union` allVars y
+allVars (Abs x y) = Set.singleton x `Set.union` allVars y
+
+boundVars :: Ord a => Lambda a -> Set.Set a
+boundVars Var{} = Set.empty
+boundVars (App x y) = boundVars x `Set.union` boundVars y
+boundVars (Abs x y) = Set.singleton x `Set.union` boundVars y
+
+freeVars :: Ord a => Lambda a -> Set.Set a
+freeVars term = allVars term `Set.difference` boundVars term
+
+class Ord a => NextFree a where
+  nextFree :: a -> a
+
+instance NextFree String where
+  nextFree [] = "a"
+  nextFree str@('z':_) = 'a':show (length str)
+  nextFree (s:xs) = chr (ord s + 1):xs
+
+
+-- Выберите подходящий тип для подстановок.
+data Subst a = Subst a (Lambda a)
+
 -- Capture-avoiding substitution.
-cas :: Lambda a -> Subst a -> Lambda a
-cas = undefined
+cas :: NextFree a => Lambda a -> Subst a -> Lambda a
+cas (Var x) (Subst var term) 
+  | x == var = term
+  | otherwise = Var x
+cas (App x y) sub = App (cas x sub) (cas y sub)
+cas orig@(Abs x y) sub@(Subst var term) 
+  | x == var = orig
+  | x `Set.notMember` freeVars term = Abs x (cas y sub)
+  | otherwise = Abs z (cas y (Subst var updatedSubTerm))
+  where 
+    z = nextFree $ Set.findMax (allVars orig `Set.union` allVars term)
+    updatedSubTerm = cas term (Subst x (Var z))
+
 
 -- Возможные стратегии редукции (о них расскажут 7 ноября).
 data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
@@ -112,11 +146,6 @@ toDeBruijn term =
       return (AbsDB x')
     
 
-nextSymbol :: String -> String
-nextSymbol [] = "a"
-nextSymbol str@('z':_) = 'a':str
-nextSymbol (s:xs) = chr (ord s + 1):xs
-
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda String
 fromDeBruijn debruijn =
@@ -125,7 +154,7 @@ fromDeBruijn debruijn =
     go:: DeBruijn -> [String] -> State String (Lambda String)
     go (VarDB x) xs | x >= length xs = do
         next <- get
-        put (nextSymbol next)
+        put (nextFree next)
         return (Var next)
                     | otherwise = return (Var (xs!!x))
     go (AppDB x y) xs = do
@@ -134,7 +163,7 @@ fromDeBruijn debruijn =
       return (App x' y')
     go (AbsDB x) xs = do
       next <- get
-      put (nextSymbol next)
+      put (nextFree next)
       x' <- go x (next:xs)
       return (Abs next x')
 
@@ -187,7 +216,6 @@ mult = Abs "m" (Abs "n" (Abs "f" (App (Var "m") (App (Var "n") (Var "f")))))
 
 -- mult' ≡ λm.λn.m (add n) 0
 mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
-
 
 
 -- Lambdas DeBruijn
