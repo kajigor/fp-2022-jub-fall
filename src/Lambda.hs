@@ -1,10 +1,13 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 
 module Lambda where
 
 import Data.List (elemIndex)
+import Data.Maybe
 import GHC.Float (stgWord32ToFloat)
+import System.Console.GetOpt (getOpt)
 
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
@@ -67,36 +70,44 @@ mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 instance {-# OVERLAPS #-} Show (Lambda String) where
   show (Var a) = a
   show (Abs a lamb) = "λ" ++ a ++ "." ++ show lamb
+  show (App (Abs a l) lamb2) = "(" ++ show (Abs a l) ++ ") " ++ show lamb2
   show (App lamb1 (App b l)) = show lamb1 ++ "(" ++ show (App b l) ++ ")"
   show (App (App a l) lamb2) = show (App a l) ++ " " ++ show lamb2
   show (App lamb1 lamb2) = show lamb1 ++ " " ++ show lamb2
 
---instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
---show = undefined
+instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
+  show (Var a) = show a
+  show (Abs a lamb) = "λ" ++ show a ++ "." ++ show lamb
+  show (App (Abs a l) lamb2) = "(" ++ show (Abs a l) ++ ") " ++ show lamb2
+  show (App lamb1 (App b l)) = show lamb1 ++ "(" ++ show (App b l) ++ ")"
+  show (App (App a l) lamb2) = show (App a l) ++ " " ++ show lamb2
+  show (App lamb1 lamb2) = show lamb1 ++ " " ++ show lamb2
 
 -- Выберите подходящий тип для подстановок.
-data Subst a = Sub (Lambda a) (Lambda a)
+--data Subst a = S Var a | B Lambda a
+data SubVar a = SubVar a
+
+data Subst a = Sub (SubVar a) (Lambda a)
 
 -- Проверка термов на альфа-эквивалентность.
 alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq lamb1 lamb2 = toDeBruijn lamb1 [] [] == toDeBruijn lamb2 [] []
+alphaEq lamb1 lamb2 = toDeBruijn lamb1 == toDeBruijn lamb2
 
 boundedVar :: Lambda a -> [a] -> [a]
 boundedVar (Var a) bounded = bounded
 boundedVar (Abs a lamb) bounded = a : bounded ++ boundedVar lamb []
 boundedVar (App lamb1 lamb2) bounded = bounded ++ boundedVar lamb1 [] ++ boundedVar lamb2 []
 
--- Capture-avoiding substitution.
+--Capture-avoiding substitution.
 cas :: (Eq a) => Lambda a -> Subst a -> Lambda a
-cas (Var a) (Sub (Var b) subLamb)
+cas (Var a) (Sub (SubVar b) subLamb)
   | Var a == Var b = subLamb
   | otherwise = Var a
-cas (App lamb1 lamb2) (Sub (Var b) subLamb) = App (cas lamb1 (Sub (Var b) subLamb)) (cas lamb2 (Sub (Var b) subLamb))
-cas (Abs a lamb) (Sub (Var b) subLamb)
+cas (App lamb1 lamb2) (Sub (SubVar b) subLamb) = App (cas lamb1 (Sub (SubVar b) subLamb)) (cas lamb2 (Sub (SubVar b) subLamb))
+cas (Abs a lamb) (Sub (SubVar b) subLamb)
   | b == a = lamb
-  | b /= a && a `elem` boundedVar subLamb [] = cas lamb (Sub (Var b) subLamb)
+  | b /= a && a `elem` boundedVar subLamb [] = cas lamb (Sub (SubVar b) subLamb)
   | otherwise = undefined
-cas _ _ = undefined
 
 -- Возможные стратегии редукции (о них расскажут 7 ноября).
 data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
@@ -125,34 +136,33 @@ instance Show DeBruijn where
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-getVal :: Maybe Int -> Int
-getVal (Just a) = a
-getVal Nothing = error "Nothing happened"
-
-toDeBruijn :: (Eq a) => Lambda a -> [Lambda a] -> [Lambda a] -> DeBruijn
-toDeBruijn (Var v) l fr
-  | Var v `elem` l = VarDB (getVal $ elemIndex (Var v) l)
-  | otherwise = VarDB (length l + getVal (elemIndex (Var v) fr))
-toDeBruijn (Abs s lamb) l fr = AbsDB $ toDeBruijn lamb (Var s : l) fr
-toDeBruijn (App (Var v1) (Var v2)) l fr
-  | Var v1 `notElem` l && Var v2 `notElem` l = AppDB (toDeBruijn (Var v1) l (fr ++ [Var v1] ++ [Var v2])) (toDeBruijn (Var v2) l (fr ++ [Var v1] ++ [Var v2]))
-  | Var v1 `elem` l && Var v2 `notElem` l = AppDB (toDeBruijn (Var v1) l fr) (toDeBruijn (Var v2) l (fr ++ [Var v1] ++ [Var v2]))
-  | Var v1 `notElem` l && Var v2 `elem` l = AppDB (toDeBruijn (Var v1) l (fr ++ [Var v1] ++ [Var v2])) (toDeBruijn (Var v2) l fr)
-  | Var v1 `elem` l && Var v2 `elem` l = AppDB (toDeBruijn (Var v1) l fr) (toDeBruijn (Var v2) l fr)
-toDeBruijn (App lamb1 (Var v)) l fr
-  | Var v `elem` l = AppDB (toDeBruijn lamb1 l fr) (toDeBruijn (Var v) l fr)
-  | Var v `notElem` l = AppDB (toDeBruijn lamb1 l (fr ++ [Var v])) (toDeBruijn (Var v) l (fr ++ [Var v]))
-toDeBruijn (App (Var v) lamb2) l fr
-  | Var v `elem` l = AppDB (toDeBruijn (Var v) l fr) (toDeBruijn lamb2 l fr)
-  | Var v `notElem` l = AppDB (toDeBruijn (Var v) l (fr ++ [Var v])) (toDeBruijn lamb2 l (fr ++ [Var v]))
-toDeBruijn (App lamb1 lamb2) l fr = AppDB (toDeBruijn lamb1 l fr) (toDeBruijn lamb2 l fr)
+toDeBruijn :: (Eq a) => Lambda a -> DeBruijn
+toDeBruijn x = go x [] []
+  where
+    go :: (Eq a) => Lambda a -> [Lambda a] -> [Lambda a] -> DeBruijn
+    go (Var v) l fr
+      | Var v `elem` l = VarDB (fromJust $ elemIndex (Var v) l) -- unfortunately, I don't know how to fetch the index without fromJust
+      | otherwise = VarDB (length l + fromJust (elemIndex (Var v) fr))
+    go (Abs s lamb) l fr = AbsDB $ go lamb (Var s : l) fr
+    go (App (Var v1) (Var v2)) l fr
+      | Var v1 `notElem` l && Var v2 `notElem` l = AppDB (go (Var v1) l (fr ++ [Var v1] ++ [Var v2])) (go (Var v2) l (fr ++ [Var v1] ++ [Var v2]))
+      | Var v1 `elem` l && Var v2 `notElem` l = AppDB (go (Var v1) l fr) (go (Var v2) l (fr ++ [Var v1] ++ [Var v2]))
+      | Var v1 `notElem` l && Var v2 `elem` l = AppDB (go (Var v1) l (fr ++ [Var v1] ++ [Var v2])) (go (Var v2) l fr)
+      | Var v1 `elem` l && Var v2 `elem` l = AppDB (go (Var v1) l fr) (go (Var v2) l fr)
+    go (App lamb1 (Var v)) l fr
+      | Var v `elem` l = AppDB (go lamb1 l fr) (go (Var v) l fr)
+      | Var v `notElem` l = AppDB (go lamb1 l (fr ++ [Var v])) (go (Var v) l (fr ++ [Var v]))
+    go (App (Var v) lamb2) l fr
+      | Var v `elem` l = AppDB (go (Var v) l fr) (go lamb2 l fr)
+      | Var v `notElem` l = AppDB (go (Var v) l (fr ++ [Var v])) (go lamb2 l (fr ++ [Var v]))
+    go (App lamb1 lamb2) l fr = AppDB (go lamb1 l fr) (go lamb2 l fr)
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 
-fromDeBruijn :: DeBruijn -> [a] -> [a] -> Lambda a
-fromDeBruijn (VarDB v) _ currUse = Var $ currUse !! v
-fromDeBruijn (AbsDB lamb) (x : varNames) currUse = Abs x $ fromDeBruijn lamb varNames (x : currUse)
-fromDeBruijn (AppDB lamb1 lamb2) vN cU = App (fromDeBruijn lamb1 vN cU) (fromDeBruijn lamb2 vN cU)
-fromDeBruijn _ _ _ = undefined
-
--- test  λx.λy.λs.λz.x s (y s z)  = Abs "x" (Abs "y" (Abs "s" (Abs "z"  (App (App (Var "x") (Var "s")) (App (App (Var "y") (Var "s")) (Var "z"))))))
+fromDeBruijn :: DeBruijn -> Lambda a
+fromDeBruijn l = go l [] []
+  where
+    go (VarDB v) _ currUse = Var $ currUse !! v
+    go (AbsDB lamb) (x : varNames) currUse = Abs x $ go lamb varNames (x : currUse)
+    go (AppDB lamb1 lamb2) vN cU = App (go lamb1 vN cU) (go lamb2 vN cU)
+    go _ _ _ = undefined
