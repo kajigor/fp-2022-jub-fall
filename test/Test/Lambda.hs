@@ -4,6 +4,7 @@ import qualified Data.Set as Set
 import Lambda
 import Test.Tasty
 import Test.Tasty.HUnit
+import Data.Function
 
 x :: Lambda [Char]
 x = Var "x"
@@ -71,6 +72,9 @@ db1'' = Abs "y" (Abs "z" (Var "z"))
 db2' :: Lambda String
 db2' = Abs "a" (Abs "b" (Abs "c" (App (App (Var "a") (Var "c")) (App (Var "b") (Var "c")))))
 
+db4 :: Lambda String
+db4 = (Abs "x" (Var "y"))
+
 twotimestwo :: Lambda [Char]
 twotimestwo = App (App Lambda.mult Lambda.two) Lambda.two
 
@@ -82,12 +86,13 @@ onetimesone' = App (App Lambda.mult' Lambda.one) Lambda.one
 
 unit_toDeBruijn :: IO ()
 unit_toDeBruijn = do
-  show (toDeBruijn db1) @?= "\\ \\ 2"
-  show (toDeBruijn db1') @?= "\\ \\ 2"
-  show (toDeBruijn db1'') @?= "\\ \\ 1"
-  show (toDeBruijn db2) @?= "\\ \\ \\ 3 1 (2 1)"
-  show (toDeBruijn db2') @?= "\\ \\ \\ 3 1 (2 1)"
-  show (toDeBruijn db3) @?= "\\ (\\ 1 (\\ 1)) (\\ 2 1)"
+  toDeBruijn db1 @?= AbsDB (AbsDB (VarDB 2))
+  toDeBruijn db1' @?= AbsDB (AbsDB (VarDB 2))
+  toDeBruijn db1'' @?= AbsDB (AbsDB (VarDB 1))
+  toDeBruijn db2 @?= AbsDB (AbsDB (AbsDB (AppDB (AppDB (VarDB 3) (VarDB 1)) (AppDB (VarDB 2) (VarDB 1))))) -- "\\1. \\2. \\3. 3 1 (2 1)"
+  toDeBruijn db2' @?= AbsDB (AbsDB (AbsDB (AppDB (AppDB (VarDB 3) (VarDB 1)) (AppDB (VarDB 2) (VarDB 1))))) -- "\\1. \\2. \\3. 3 1 (2 1)"
+  toDeBruijn db3 @?= AbsDB (AppDB (AbsDB (AppDB (VarDB 1) (AbsDB (VarDB 1)))) (AbsDB (AppDB (VarDB 2) (VarDB 1)))) -- "\\ (\\ 1 (\\ 1)) (\\ 2 1)"
+  toDeBruijn db4 @?= AbsDB (VarDB 2)
 
 back1 :: Lambda String
 back1 = fromDeBruijn $ toDeBruijn db1
@@ -95,12 +100,15 @@ back2 :: Lambda String
 back2 = fromDeBruijn $ toDeBruijn db2
 back3 :: Lambda String
 back3 = fromDeBruijn $ toDeBruijn db3
+back4 :: Lambda String
+back4 = fromDeBruijn $ toDeBruijn db4
 
 unit_fromDeBruijn :: IO ()
 unit_fromDeBruijn = do
-  show (toDeBruijn back1) @?= show (toDeBruijn db1)
-  show (toDeBruijn back2) @?= show (toDeBruijn db2)
-  show (toDeBruijn back3) @?= show (toDeBruijn db3)
+  toDeBruijn back1 @?= toDeBruijn db1
+  toDeBruijn back2 @?= toDeBruijn db2
+  toDeBruijn back3 @?= toDeBruijn db3
+  toDeBruijn back4 @?= toDeBruijn db4
 
 unit_alpha :: IO ()
 unit_alpha = do
@@ -111,27 +119,36 @@ unit_alpha = do
 
 unit_cas :: IO ()
 unit_cas = do
-  show (cas x sxy) @?= "y"
-  show (cas xy sxy) @?= "y y"
-  show (cas lxy sxy) @?= "\\x.y"
-  show (cas (Abs "z" y) sxy) @?= "\\z.y"
-  show (cas (Abs "z" x) sxy) @?= "\\z.y"
-  show (cas (Abs "z" x) sxz) @?= "\\a.z"
-  show (cas (Abs "y" x) sxz) @?= "\\y.z"
-  show (cas (Abs "z" lzx) sxz) @?= "\\a.a z"
-  show (cas (Abs "f" (Abs "x" (Var "f"))) (Subst "a" (Var "f"))) @?= "\\b.\\x.b"
+  cas x sxy @?= y
+  cas xy sxy @?= App y y
+  cas lxy sxy @?= lxy
+  cas (Abs "z" y) sxy @?= Abs "z" (Var "y") 
+  cas (Abs "z" x) sxy @?= Abs "z" (Var "y") 
+  cas (Abs "z" x) sxz @?= Abs "a" (Var "z") 
+  cas (Abs "y" x) sxz @?= Abs "y" (Var "z") 
+  cas (Abs "z" lzx) sxz @?= Abs "a" (App (Var "a") (Var "z"))
+  cas (Abs "f" (Abs "x" (Var "f"))) (Subst "a" (Var "f")) @?= Abs "b" (Abs "x" (Var "b"))
+
+nfafx :: Lambda [Char]
+nfafx = (App (App (Var "n") (Var "f")) (App (App (Var "a") (Var "f")) (Var "x")))
+
+fxx :: Lambda [Char]
+fxx = Abs "f" (Abs "x" (Var "x"))
 
 unit_no :: IO ()
 unit_no = do
-  show (eval NormalOrder Lambda.successor) @?= "\\n.\\f.\\x.f (n f x)"
-  show (eval NormalOrder Lambda.mult) @?= "\\m.\\n.\\f.m (n f)"
-  show (eval NormalOrder Lambda.mult') @?= "\\m.\\n.m (\\a.\\f.\\x.n f (a f x)) (\\f.\\x.x)"
-  show (eval NormalOrder twotimestwo) @?= show Lambda.four
-  show (eval NormalOrder twotimestwo') @?= show Lambda.four
+  eval NormalOrder Lambda.successor @?= Abs "n" (Abs "f" (Abs "x" (App (Var "f") (App (App (Var "n") (Var "f")) (Var "x"))))) --  "\\n.\\f.\\x.f (n f x)"
+  eval NormalOrder Lambda.mult @?= Abs "m" (Abs "n" (Abs "f" (App (Var "m") (App (Var "n") (Var "f"))))) -- "\\m.\\n.\\f.m (n f)"
+  eval NormalOrder Lambda.mult' @?= Abs "m" (Abs "n" (App (App (Var "m") (Abs "a" (Abs "f" (Abs "x" nfafx)))) fxx)) -- "\\m.\\n.m (\\a.\\f.\\x.n f (a f x)) (\\f.\\x.x)"
+  eval NormalOrder twotimestwo @?= Lambda.four
+  eval NormalOrder twotimestwo' @?= Lambda.four
+
+alphaCmp :: (Ord a, Show a, HasCallStack) => Lambda a -> Lambda a -> Assertion
+alphaCmp = (@?=) `on` toDeBruijn
 
 unit_ao :: IO ()
 unit_ao = do
-  (show . toDeBruijn) (eval ApplicativeOrder Lambda.mult) @?= "\\ \\ \\ 3 (2 1)"
-  (show . toDeBruijn) (eval ApplicativeOrder Lambda.mult') @?= "\\ \\ 2 (\\ \\ \\ 4 2 (3 2 1)) (\\ \\ 1)"
-  (show . toDeBruijn) (eval ApplicativeOrder onetimesone') @?= (show . toDeBruijn) Lambda.one
-  (show . toDeBruijn) (eval ApplicativeOrder twotimestwo) @?= (show . toDeBruijn) Lambda.four
+  eval ApplicativeOrder Lambda.mult `alphaCmp` eval NormalOrder Lambda.mult
+  eval ApplicativeOrder Lambda.mult' `alphaCmp` eval NormalOrder Lambda.mult'
+  eval ApplicativeOrder onetimesone' `alphaCmp` eval NormalOrder onetimesone'
+  eval ApplicativeOrder twotimestwo `alphaCmp` eval NormalOrder twotimestwo

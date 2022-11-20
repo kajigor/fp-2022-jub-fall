@@ -7,6 +7,7 @@ import Data.Char
 import Data.Function
 import Data.List
 import Data.Maybe
+import Control.Monad.State
 import qualified Data.Set as Set
 
 -- Тип для лямбда-термов.
@@ -15,53 +16,69 @@ data Lambda a
   = Var a
   | App (Lambda a) (Lambda a)
   | Abs a (Lambda a)
+  deriving (Eq)
 
 -- true ≡ λx.λy.x
+true :: Lambda [Char]
 true = Abs "x" (Abs "y" (Var "x"))
 
 -- false ≡ λx.λy.y
+false :: Lambda [Char]
 false = Abs "x" (Abs "y" (Var "y"))
 
 -- and ≡ λp.λq.p q p
 and = Abs "p" (Abs "q" (App (App (Var "p") (Var "q")) (Var "p")))
 
 -- or ≡ λp.λq.p p q
+or :: Lambda [Char]
 or = Abs "p" (Abs "q" (App (App (Var "p") (Var "p")) (Var "q")))
 
 -- not ≡ λp.p FALSE TRUE
+not :: Lambda [Char]
 not = Abs "p" (App (App (Var "p") false) true)
 
 -- ifThenElse ≡ λp.λa.λb.p a b
+ifThenElse :: Lambda [Char]
 ifThenElse = Abs "p" (Abs "a" (Abs "b" (App (App (Var "p") (Var "a")) (Var "b"))))
 
 -- zero ≡ λf.λx.x
+zero :: Lambda [Char]
 zero = Abs "f" (Abs "x" (Var "x"))
 
 -- one ≡ λf.λx.f x
+one :: Lambda [Char]
 one = Abs "f" (Abs "x" (App (Var "f") (Var "x")))
 
 -- two ≡ λf.λx.f (f x)
+two :: Lambda [Char]
 two = Abs "f" (Abs "x" (App (Var "f") (App (Var "f") (Var "x"))))
 
 -- three ≡ λf.λx.f (f (f x))
+three :: Lambda [Char]
 three = Abs "f" (Abs "x" (App (Var "f") (App (Var "f") (App (Var "f") (Var "x")))))
 
 --  four ≡ λf.λx.f (f (f (f x)))
+four :: Lambda [Char]
 four = Abs "f" (Abs "x" (App (Var "f") (App (Var "f") (App (Var "f") (App (Var "f") (Var "x"))))))
 
 -- add ≡ λm.λn.λf.λx.m f (n f x)
+add :: Lambda [Char]
 add = Abs "m" (Abs "n" (Abs "f" (Abs "x" (App (App (Var "m") (Var "f")) (App (App (Var "n") (Var "f")) (Var "x"))))))
 
 -- successor ≡ λn.λf.λx.f (n f x)
+successor :: Lambda [Char]
 successor = Abs "n" (Abs "f" (Abs "x" (App (Var "f") (App (App (Var "n") (Var "f")) (Var "x")))))
 
 -- add' ≡ λm.λn.m successor n
+add' :: Lambda [Char]
 add' = Abs "m" (Abs "n" (App (App (Var "m") successor) (Var "n")))
 
 -- mult ≡ λm.λn.λf.m (n f)
+mult :: Lambda [Char]
 mult = Abs "m" (Abs "n" (Abs "f" (App (Var "m") (App (Var "n") (Var "f")))))
 
 -- mult' ≡ λm.λn.m (add n) 0
+mult' :: Lambda [Char]
 mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
 class ShowProperly a where
@@ -98,7 +115,6 @@ instance ShowProperly a => Show (Lambda a) where
 
 class Ord a => Fresh a where
   candidates :: [a]
-  candidates = undefined
 
   fresh :: Set.Set a -> a
   fresh used = head $ filter isFree candidates
@@ -117,18 +133,18 @@ instance Fresh String where
 data Subst a = Subst a (Lambda a)
 
 -- Проверка термов на альфа-эквивалентность.
-alphaEq :: Eq a => Lambda a -> Lambda a -> Bool
-alphaEq = (==) `on` (show . toDeBruijn)
+alphaEq :: Ord a => Lambda a -> Lambda a -> Bool
+alphaEq = (==) `on` toDeBruijn
 
 freeVariables :: Ord a => Lambda a -> Set.Set a
 freeVariables (Var x) = Set.singleton x
 freeVariables (App x y) = freeVariables x `Set.union` freeVariables y
-freeVariables (Abs x y) = freeVariables y `Set.difference` Set.singleton x
+freeVariables (Abs x y) = x `Set.delete` freeVariables y
 
 getVariables :: Ord a => Lambda a -> Set.Set a
 getVariables (Var x) = Set.singleton x
 getVariables (App x y) = freeVariables x `Set.union` freeVariables y
-getVariables (Abs x y) = freeVariables y `Set.union` Set.singleton x
+getVariables (Abs x y) = x `Set.insert` freeVariables y
 
 -- Capture-avoiding substitution.
 cas :: Fresh a => Lambda a -> Subst a -> Lambda a
@@ -184,6 +200,7 @@ data DeBruijn
   = VarDB Int
   | AppDB DeBruijn DeBruijn
   | AbsDB DeBruijn
+  deriving (Eq)
 
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
@@ -199,9 +216,10 @@ instance Show DeBruijn where
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Eq a => Lambda a -> DeBruijn
-toDeBruijn = fromJust . f []
+toDeBruijn :: Ord a => Lambda a -> DeBruijn
+toDeBruijn term = fromJust (f fv term)
   where
+    fv = Set.toList $ freeVariables term
     f s (Var x) = do
       i <- elemIndex x s
       return $ VarDB (i + 1)
@@ -213,13 +231,18 @@ toDeBruijn = fromJust . f []
       y' <- f (x : s) y
       return $ AbsDB y'
 
+sizeDeBruijn :: DeBruijn -> Int
+sizeDeBruijn (VarDB _) = 1
+sizeDeBruijn (AppDB x y) = sizeDeBruijn x + sizeDeBruijn y
+sizeDeBruijn (AbsDB y) = sizeDeBruijn y
+
 -- Преобразовать деБрауновские лямбда-термы в обычные.
-fromDeBruijn :: Fresh a =>  DeBruijn -> Lambda a
-fromDeBruijn = f []
-  where 
+fromDeBruijn :: Fresh a => DeBruijn -> Lambda a
+fromDeBruijn term = f (take (sizeDeBruijn term) candidates) term
+  where
     f :: Fresh a => [a] -> DeBruijn -> Lambda a
     f stack (VarDB x) = Var $ fromJust $ listToMaybe $ drop (x - 1) stack
     f stack (AppDB x y) = App (f stack x) (f stack y)
-    f stack (AbsDB y) = Abs x (f (x:stack) y)
-        where x = fresh $ Set.fromList stack
-        
+    f stack (AbsDB y) = Abs x (f (x : stack) y)
+      where
+        x = fresh $ Set.fromList stack
