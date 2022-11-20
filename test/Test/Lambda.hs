@@ -33,7 +33,7 @@ unit_show_debruijn = do
   show Lambda.addDB @?= "\\ \\ \\ \\ 3 1 (2 1 0)"
   show Lambda.successorDB @?= "\\ \\ \\ 1 (2 1 0)"
   show Lambda.multDB @?= "\\ \\ \\ 2 (1 0)"
-  
+
 
 unit_to_debruijn :: IO ()
 unit_to_debruijn = do
@@ -49,10 +49,17 @@ unit_to_debruijn = do
   toDeBruijn Lambda.add @?= Lambda.addDB
   toDeBruijn Lambda.successor @?= Lambda.successorDB
   toDeBruijn Lambda.mult @?= Lambda.multDB
+  toDeBruijn (Var "x") @?= VarDB 0
+  toDeBruijn (App (Var "x") (Var "y")) @?= AppDB (VarDB 0) (VarDB 1)
+  toDeBruijn (App (Var "x") (Var "x")) @?= AppDB (VarDB 0) (VarDB 0)
+  toDeBruijn (Abs "a" (Var "x")) @?= AbsDB (VarDB 1)
+  toDeBruijn (App (Abs "a" (Var "x")) (Abs "b" (Var "x"))) @?= AppDB (AbsDB (VarDB 1)) (AbsDB (VarDB 1))
+  toDeBruijn (App (Abs "a" (Var "x")) (Abs "b" (Var "y"))) @?= AppDB (AbsDB (VarDB 1)) (AbsDB (VarDB 2))
+  toDeBruijn (App (Abs "a" (Var "a")) (Abs "b" (Var "a"))) @?= AppDB (AbsDB (VarDB 0)) (AbsDB (VarDB 1))
 
 unit_from_debruijn :: IO ()
 unit_from_debruijn = do
-  fromDeBruijn Lambda.trueDB `alphaEq` Lambda.true  @?= True
+  fromDeBruijn trueDB `alphaEq` true  @?= True
   fromDeBruijn Lambda.falseDB `alphaEq` Lambda.false  @?= True
   fromDeBruijn Lambda.andDB `alphaEq` Lambda.and  @?= True
   fromDeBruijn Lambda.orDB `alphaEq` Lambda.or  @?= True
@@ -64,3 +71,4 @@ unit_from_debruijn = do
   fromDeBruijn Lambda.addDB `alphaEq` Lambda.add  @?= True
   fromDeBruijn Lambda.successorDB `alphaEq` Lambda.successor  @?= True
   fromDeBruijn Lambda.multDB `alphaEq` Lambda.mult @?= True
+

@@ -89,11 +89,28 @@ instance Show DeBruijn where
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
 toDeBruijn :: Eq a => Lambda a -> DeBruijn
-toDeBruijn = convert []
+toDeBruijn term =
+  evalState (go [] term) []
   where
-    convert acc (Var str) = VarDB (fromJust (elemIndex str acc))
-    convert acc (App x y) = AppDB (convert acc x) (convert acc y)
-    convert acc (Abs x y) = AbsDB (convert (x:acc) y)
+    go :: Eq a => [a] -> Lambda a-> State [a] DeBruijn
+    go acc (Var x)
+      | isJust $ elemIndex x acc = return $ VarDB $ fromJust (elemIndex x acc)
+      | otherwise = do
+        free <- get
+        if isNothing $ elemIndex x free
+          then do
+            put (free ++ [x])
+            return $ VarDB (length free + length acc)
+          else
+            return $ VarDB (fromJust (elemIndex x free) + length acc)
+    go acc (App x y) = do
+      x' <- go acc x
+      y' <- go acc y
+      return (AppDB x' y')
+    go acc (Abs x y) = do
+      x' <- go (x:acc) y
+      return (AbsDB x')
+    
 
 nextSymbol :: String -> String
 nextSymbol [] = "a"
@@ -102,11 +119,11 @@ nextSymbol (s:xs) = chr (ord s + 1):xs
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda String
-fromDeBruijn debruijn = 
+fromDeBruijn debruijn =
   evalState (go debruijn []) "a"
-  where 
+  where
     go:: DeBruijn -> [String] -> State String (Lambda String)
-    go (VarDB x) xs | x >= length xs = do 
+    go (VarDB x) xs | x >= length xs = do
         next <- get
         put (nextSymbol next)
         return (Var next)
@@ -170,6 +187,7 @@ mult = Abs "m" (Abs "n" (Abs "f" (App (Var "m") (App (Var "n") (Var "f")))))
 
 -- mult' ≡ λm.λn.m (add n) 0
 mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
+
 
 
 -- Lambdas DeBruijn
