@@ -6,6 +6,43 @@ import Test.Tasty
 import Test.Tasty.HUnit
 import Data.Function
 
+
+-- true ≡ λx.λy.x
+true :: Lambda [Char]
+true = Abs "x" (Abs "y" (Var "x"))
+
+-- false ≡ λx.λy.y
+false :: Lambda [Char]
+false = Abs "x" (Abs "y" (Var "y"))
+
+-- and' ≡ λp.λq.p q p
+and' = Abs "p" (Abs "q" (App (App (Var "p") (Var "q")) (Var "p")))
+
+-- zero ≡ λf.λx.x
+zero :: Lambda [Char]
+zero = Abs "f" (Abs "x" (Var "x"))
+
+-- two ≡ λf.λx.f (f x)
+two :: Lambda [Char]
+two = Abs "f" (Abs "x" (App (Var "f") (App (Var "f") (Var "x"))))
+
+-- add ≡ λm.λn.λf.λx.m f (n f x)
+add :: Lambda [Char]
+add = Abs "m" (Abs "n" (Abs "f" (Abs "x" (App (App (Var "m") (Var "f")) (App (App (Var "n") (Var "f")) (Var "x"))))))
+
+-- successor ≡ λn.λf.λx.f (n f x)
+successor :: Lambda [Char]
+successor = Abs "n" (Abs "f" (Abs "x" (App (Var "f") (App (App (Var "n") (Var "f")) (Var "x")))))
+
+-- add' ≡ λm.λn.m successor n
+add' :: Lambda [Char]
+add' = Abs "m" (Abs "n" (App (App (Var "m") successor) (Var "n")))
+
+-- mult' ≡ λm.λn.m (add n) 0
+mult' :: Lambda [Char]
+mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
+
+
 x :: Lambda [Char]
 x = Var "x"
 
@@ -26,30 +63,24 @@ unit_show = do
   show x @?= "x"
   show xy @?= "x y"
   show lxy @?= "\\x.y"
-  show Lambda.true @?= "\\x.\\y.x"
-  show Lambda.and @?= "\\p.\\q.p q p"
-  show Lambda.two @?= "\\f.\\x.f (f x)"
-  show Lambda.mult' @?= "\\m.\\n.m ((\\m.\\n.\\f.\\x.m f (n f x)) n) (\\f.\\x.x)"
+  show true @?= "\\x.\\y.x"
+  show and' @?= "\\p.\\q.p q p"
+  show two @?= "\\f.\\x.f (f x)"
+  show mult' @?= "\\m.\\n.m ((\\m.\\n.\\f.\\x.m f (n f x)) n) (\\f.\\x.x)"
 
 unit_freeVariables :: IO ()
 unit_freeVariables = do
   freeVariables x @?= Set.fromList ["x"]
   freeVariables xy @?= Set.fromList ["x", "y"]
   freeVariables lxy @?= Set.fromList ["y"]
-  freeVariables Lambda.true @?= Set.empty
-  freeVariables Lambda.and @?= Set.empty
-  freeVariables Lambda.two @?= Set.empty
-  freeVariables Lambda.mult' @?= Set.empty
+  freeVariables true @?= Set.empty
+  freeVariables and' @?= Set.empty
+  freeVariables two @?= Set.empty
+  freeVariables mult' @?= Set.empty
 
 unit_fresh :: IO ()
 unit_fresh = do
   take 33 (candidates :: [String]) @?= ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "ba", "bb", "bc", "bd", "be", "bf", "bg"]
-
-sxy :: Subst [Char]
-sxy = Subst "x" y
-
-sxz :: Subst [Char]
-sxz = Subst "x" z
 
 lzx :: Lambda [Char]
 lzx = App (Var "z") (Var "x")
@@ -74,15 +105,6 @@ db2' = Abs "a" (Abs "b" (Abs "c" (App (App (Var "a") (Var "c")) (App (Var "b") (
 
 db4 :: Lambda String
 db4 = (Abs "x" (Var "y"))
-
-twotimestwo :: Lambda [Char]
-twotimestwo = App (App Lambda.mult Lambda.two) Lambda.two
-
-twotimestwo' :: Lambda [Char]
-twotimestwo' = App (App Lambda.mult' Lambda.two) Lambda.two
-
-onetimesone' :: Lambda [Char]
-onetimesone' = App (App Lambda.mult' Lambda.one) Lambda.one
 
 unit_toDeBruijn :: IO ()
 unit_toDeBruijn = do
@@ -116,39 +138,3 @@ unit_alpha = do
   alphaEq db1 db1'' @?= False
   alphaEq db1 db2' @?= False
   alphaEq db2 db2' @?= True
-
-unit_cas :: IO ()
-unit_cas = do
-  cas x sxy @?= y
-  cas xy sxy @?= App y y
-  cas lxy sxy @?= lxy
-  cas (Abs "z" y) sxy @?= Abs "z" (Var "y") 
-  cas (Abs "z" x) sxy @?= Abs "z" (Var "y") 
-  cas (Abs "z" x) sxz @?= Abs "a" (Var "z") 
-  cas (Abs "y" x) sxz @?= Abs "y" (Var "z") 
-  cas (Abs "z" lzx) sxz @?= Abs "a" (App (Var "a") (Var "z"))
-  cas (Abs "f" (Abs "x" (Var "f"))) (Subst "a" (Var "f")) @?= Abs "b" (Abs "x" (Var "b"))
-
-nfafx :: Lambda [Char]
-nfafx = (App (App (Var "n") (Var "f")) (App (App (Var "a") (Var "f")) (Var "x")))
-
-fxx :: Lambda [Char]
-fxx = Abs "f" (Abs "x" (Var "x"))
-
-unit_no :: IO ()
-unit_no = do
-  eval NormalOrder Lambda.successor @?= Abs "n" (Abs "f" (Abs "x" (App (Var "f") (App (App (Var "n") (Var "f")) (Var "x"))))) --  "\\n.\\f.\\x.f (n f x)"
-  eval NormalOrder Lambda.mult @?= Abs "m" (Abs "n" (Abs "f" (App (Var "m") (App (Var "n") (Var "f"))))) -- "\\m.\\n.\\f.m (n f)"
-  eval NormalOrder Lambda.mult' @?= Abs "m" (Abs "n" (App (App (Var "m") (Abs "a" (Abs "f" (Abs "x" nfafx)))) fxx)) -- "\\m.\\n.m (\\a.\\f.\\x.n f (a f x)) (\\f.\\x.x)"
-  eval NormalOrder twotimestwo @?= Lambda.four
-  eval NormalOrder twotimestwo' @?= Lambda.four
-
-alphaCmp :: (Ord a, Show a, HasCallStack) => Lambda a -> Lambda a -> Assertion
-alphaCmp = (@?=) `on` toDeBruijn
-
-unit_ao :: IO ()
-unit_ao = do
-  eval ApplicativeOrder Lambda.mult `alphaCmp` eval NormalOrder Lambda.mult
-  eval ApplicativeOrder Lambda.mult' `alphaCmp` eval NormalOrder Lambda.mult'
-  eval ApplicativeOrder onetimesone' `alphaCmp` eval NormalOrder onetimesone'
-  eval ApplicativeOrder twotimestwo `alphaCmp` eval NormalOrder twotimestwo

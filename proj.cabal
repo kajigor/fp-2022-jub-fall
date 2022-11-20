@@ -25,6 +25,8 @@ source-repository head
 library
   exposed-modules:
       Lambda
+      Parse
+      Reductions
   other-modules:
       Paths_proj
   hs-source-dirs:
@@ -55,6 +57,7 @@ test-suite proj-test
   main-is: Test.hs
   other-modules:
       Test.Lambda
+      Test.Reductions
       Paths_proj
   hs-source-dirs:
       test
