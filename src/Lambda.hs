@@ -80,10 +80,10 @@ cas (App x y) sub = App (cas x sub) (cas y sub)
 cas orig@(Abs x y) sub@(Subst var term) 
   | x == var = orig
   | x `Set.notMember` freeVars term = Abs x (cas y sub)
-  | otherwise = Abs z (cas y (Subst var updatedSubTerm))
+  | otherwise = Abs z (cas updatdOrig (Subst var term))
   where 
     z = nextFree $ Set.findMax (allVars orig `Set.union` allVars term)
-    updatedSubTerm = cas term (Subst x (Var z))
+    updatdOrig = cas y (Subst x (Var z))
 
 
 -- Возможные стратегии редукции (о них расскажут 7 ноября).

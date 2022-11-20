@@ -2,6 +2,7 @@ module Test.Lambda where
 
 import Lambda
 import Test.Tasty.HUnit
+import Lambda (Subst(Subst))
 
 unit_show_lambda :: IO ()
 unit_show_lambda = do
@@ -47,6 +48,8 @@ t6 = App (Abs "a" (Var "x")) (Abs "b" (Var "y"))
 
 t7 = App (Abs "a" (Var "a")) (Abs "b" (Var "a"))
 
+t10 = App (Abs "a" (Var "a")) (Abs "b" (Var "c"))
+
 
 unit_to_debruijn :: IO ()
 unit_to_debruijn = do
@@ -86,8 +89,26 @@ unit_from_debruijn = do
   fromDeBruijn Lambda.multDB `alphaEq` Lambda.mult @?= True
   t5 `alphaEq` t6 @?= False
   t2 `alphaEq` t3 @?= False
+  t7 `alphaEq` t10 @?= True
+
+t8 = Abs "a" (App (Var "x") (Var "y"))
+
+t9 = App (Abs "a" (Var "a")) (Abs "b" (Var "x"))
+
+t11 = Abs "x" (Var "a")
+
+t12 = Abs "y" (Var "x")
+
+t13 = Abs "y" (Abs "a" (Var "x"))
 
 
 unit_cas :: IO ()
 unit_cas = do
   t1 `cas` (Subst "x" t2) @?= t2
+  t1 `cas` (Subst "y" t2) @?= t1
+  t2 `cas` (Subst "y" t1) @?= t3
+  t4 `cas` (Subst "a" t2) @?= t4
+  t4 `cas` (Subst "x" t2) @?= t8
+  t7 `cas` (Subst "a" t1) @?= t9
+  t11 `cas` (Subst "a" t1) @?= t12
+  t11 `cas` (Subst "a" t4) @?= t13
