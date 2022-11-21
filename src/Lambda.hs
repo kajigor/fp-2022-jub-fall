@@ -4,7 +4,6 @@
 module Lambda where
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
-import GHC.RTS.Flags (getDebugFlags)
 import Data.Maybe (isNothing)
 
 -- Тип для лямбда-термов.
@@ -62,24 +61,24 @@ mult = Abs "m" (Abs "n" (App (Var "m") (App (Var "n") (Var "f"))))
 -- mult' ≡ λm.λn.m (add n) 0
 mult' = Abs "m" (Abs "n" (App (App (Var "m") (App add (Var "n"))) zero))
 
+commonShow :: Lambda a -> (a -> String) -> String
+commonShow (Var x) f = f x
+commonShow (App (Abs x l1) (App l r)) f = "(" ++ commonShow (Abs x l1) f ++ ") " ++ "(" ++ commonShow (App l r) f ++ ")"
+commonShow (App (Abs x l1) l2) f = "(" ++ commonShow (Abs x l1) f ++ ") " ++ commonShow l2 f
+commonShow (App l1 (App l2 l3)) f = commonShow l1 f ++ " (" ++ commonShow (App l2 l3) f ++ ")"
+commonShow (App l r) f = commonShow l f ++ " " ++ commonShow r f
+commonShow (Abs l r) f = "\\" ++ f l ++ "." ++ commonShow r f
+
 -- Красивая печать без лишних скобок.
 instance {-# OVERLAPS #-} Show (Lambda String) where
-  show (Var x) = x
-  show (App (Abs x l1) l2) = "(" ++ show (Abs x l1) ++ ") " ++ show l2
-  show (App l1 (App l2 l3)) = show l1 ++ " (" ++ show (App l2 l3) ++ ")"
-  show (App l r) = show l ++ " " ++ show r
-  show (Abs l r) = "\\" ++ l ++ "." ++ show r
+  show l = commonShow l id
 
 -- data Lambda a = Var a
 --               | App (Lambda a) (Lambda a)
 --               | Abs a (Lambda a)
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show (Var x) = show x
-  show (App (Abs x l1) l2) = "(" ++ show (Abs x l1) ++ ") " ++ show l2
-  show (App l1 (App l2 l3)) = show l1 ++ " (" ++ show (App l2 l3) ++ ")"
-  show (App l r) = show l ++ " " ++ show r
-  show (Abs l r) = "\\" ++ show l ++ "." ++ show r
+  show l = commonShow l show
 
 -- Выберите подходящий тип для подстановок.
 data Subst a = Subst a (Lambda a) (Map.Map a a) -- переменная, заменитель, (map, которые рашает, на что заменять свободные переменные земенители при необходимости)
@@ -121,6 +120,7 @@ data DeBruijn = VarDB Int
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
   show (VarDB x) = show x
+  show (AppDB (AbsDB l1) (AppDB l r)) = "(" ++ show (AbsDB l1) ++ ") " ++ "(" ++ show (AppDB l r) ++ ")"
   show (AppDB (AbsDB l1) l2) = "(" ++ show (AbsDB l1) ++ ") " ++ show l2
   show (AppDB l1 (AppDB l2 l3)) = show l1 ++  " (" ++ show (AppDB l2 l3) ++ ")"
   show (AppDB l r) = show l ++ " " ++ show r
@@ -130,32 +130,49 @@ instance Show DeBruijn where
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
+
+fst3 :: (a, b, c) -> a -- не получилось почему-то заимпортить (не знаю почему)
+fst3 (a, _, _) = a
+
 -- Преобразовать обычные лямбда-термы в деБрауновские
 toDeBruijn :: Ord a => Lambda a -> DeBruijn -- выбор: либо (Ord a) и Map, либо (Hashable a) и HashMap 
                                             -- ну или хранить все в листе и делать все за квадрат
                                             -- (если без Map, то застрелиться можно)
-toDeBruijn l = getDeBruijn l 0 Map.empty
-  where
-    getDeBruijn :: Ord a => Lambda a -> Int -> Map.Map a Int -> DeBruijn
-    getDeBruijn (Var x) depth m | isNothing (Map.lookup x m) = VarDB (-1) -- Свободная переменная
-                                | otherwise = VarDB (depth - (m Map.! x) + 1)
-    getDeBruijn (Abs x rest) depth m = AbsDB (getDeBruijn rest (depth + 1) (Map.insert x (depth + 1) m))
-    getDeBruijn (App l r) depth m = AppDB (getDeBruijn l depth m) (getDeBruijn r depth m)
+toDeBruijn l = fst3 $ getDeBruijn l 0 Map.empty Map.empty 1
+  where -- Можно было бы бахнуть State монаду, кажется (но ее писать долго, быстрее это)
+    getDeBruijn :: Ord a => Lambda a -> Int -> Map.Map a Int -> Map.Map a Int -> Int -> (DeBruijn, Map.Map a Int, Int)
+    getDeBruijn (Var x) depth m freeMap freeDepth | isNothing (Map.lookup x m) = if isNothing (Map.lookup x freeMap) then  -- Свободная переменная
+                                                                                    let freeMap1 = Map.insert x (freeDepth - 1) freeMap in
+                                                                                      (VarDB (depth - (freeMap1 Map.! x) + 1), freeMap1, freeDepth - 1)
+                                                                                 else 
+                                                                                      (VarDB (depth - (freeMap Map.! x) + 1), freeMap, freeDepth)
+                                                  | otherwise = (VarDB (depth - (m Map.! x) + 1), freeMap, freeDepth)
+    getDeBruijn (Abs x rest) depth m freeMap freeDepth = 
+      let (deb1, freeMap1, freeDepth1) = getDeBruijn rest (depth + 1) (Map.insert x (depth + 1) m) freeMap freeDepth in
+        (AbsDB deb1, freeMap1, freeDepth1)
+    getDeBruijn (App l r) depth m freeMap freeDepth =
+      let (deb1, freeMap1, freeDepth1) = getDeBruijn l depth m freeMap freeDepth in
+        let (deb2, freeMap2, freeDepth2) = getDeBruijn r depth m freeMap1 freeDepth1 in
+          (AppDB deb1 deb2, freeMap2, freeDepth2)
 
 -- add ≡ λm.λn.λf.λx.m f (n f x)
 -- add = Abs "m" (Abs "n" (Abs "f" (Abs "x" (App (App (Var "m") (Var "f")) (App (App (Var "n") (Var "f")) (Var "x"))))))
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
 fromDeBruijn :: DeBruijn -> Lambda Int
-fromDeBruijn d = fst $ fromDB d 0 0 Map.empty
-  where
-    fromDB :: DeBruijn -> Int -> Int -> Map.Map Int Int -> (Lambda Int, Int)
-    fromDB (VarDB x) depth _ m | isNothing (Map.lookup x m) = (Var (-1), 0) -- Свободная переменная
-                               | otherwise = (Var (m Map.! (depth - x + 1)), 0)
-    fromDB (AbsDB rest) depth lastID m = 
-      let (l, cnt) = fromDB rest (depth + 1) (lastID + 1) (Map.insert (depth + 1) (lastID + 1) m) in 
-        (Abs (lastID + 1) l, cnt + 1)
-    fromDB (AppDB l r) depth lastID m = 
-      let (curL, cnt) = fromDB l depth lastID m in
-      let (curR, res) = fromDB r depth (lastID + cnt) m in
-      (App curL curR, res)
+fromDeBruijn d = fst3 $ fromDB d 0 0 Map.empty Map.empty
+  where -- тоже, наверное, по-хорошему надо было State монадой делать
+    fromDB :: DeBruijn -> Int -> Int -> Map.Map Int Int -> Map.Map Int Int -> (Lambda Int, Int, Map.Map Int Int)
+    fromDB (VarDB x) depth lastID m freeMap | isNothing (Map.lookup (depth - x + 1) m) =  if isNothing (Map.lookup (depth - x + 1) freeMap) then -- Свободная переменная
+                                                                                            let freeMap1 = Map.insert (depth - x + 1) (lastID + 1) freeMap in
+                                                                                              (Var (freeMap1 Map.! (depth - x + 1)), lastID + 1, freeMap1)
+                                                                                          else 
+                                                                                              (Var (freeMap Map.! (depth - x + 1)), lastID, freeMap)
+                                            | otherwise = (Var (m Map.! (depth - x + 1)), lastID, freeMap)
+    fromDB (AbsDB rest) depth lastID m freeMap = 
+      let (l, lastID1, freeMap1) = fromDB rest (depth + 1) (lastID + 1) (Map.insert (depth + 1) (lastID + 1) m) freeMap in 
+        (Abs (lastID + 1) l, lastID1, freeMap1)
+    fromDB (AppDB l r) depth lastID m freeMap = 
+      let (curL, lastID1, freeMap1) = fromDB l depth lastID m freeMap in
+        let (curR, lastID2, freeMap2) = fromDB r depth lastID1 m freeMap1 in
+          (App curL curR, lastID2, freeMap2)

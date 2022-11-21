@@ -2,7 +2,6 @@ module Test.Lambda where
 
 import Test.Tasty.HUnit (Assertion, (@?=))
 import Lambda
-import Hedgehog.Internal.Property (Diff(diffPrefix))
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
@@ -17,11 +16,12 @@ unit_show = do
   show add @?= "\\m.\\n.\\f.\\x.m f (n f x)"
   show (App (Abs "x" (Var "x y")) (Var "z")) @?= "(\\x.x y) z"
   show l4 @?= "\\x.x \\x.x"
+  show withFree1 @?= "(\\x.z \\z.y x z) (y \\y.y \\w.w y)"
 
 
-db1 = VarDB (-1)
+db1 = VarDB 1
 l1 = Var "x"
-r1 = Var (-1)
+r1 = Var 1
 cas1 = Var "y"
 
 -- λy. (λx. x y) (λz. y z) ≡ λ (λ 1 2) (λ 2 1)
@@ -49,6 +49,7 @@ unit_DeBruijne = do
   toDeBruijn l3 @?= db3
   toDeBruijn l4 @?= db4
   toDeBruijn l4_1 @?= db4
+  toDeBruijn withFree1 @?= dbWithFree1
 
   fromDeBruijn db1 @?= r1
   fromDeBruijn db2 @?= r2
@@ -98,9 +99,12 @@ unit_alphaEq = do
 
 -- (λx. z (λz. y x z)) (y (λy. y (λw. w y)))
 withFree1 = App (Abs "x" (App (Var "z") (Abs "z" (App (App (Var "y") (Var "x")) (Var "z"))))) (App (Var "y") (Abs "y" (App (Var "y") (Abs "w" (App (Var "w") (Var "y"))))))
+casMap1_0 :: Map.Map [Char] [Char]
 casMap1_0 = Map.fromList [("x", "s1"), ("w", "s2")]
 sub1_0 = Subst "y" (App (Var "x") (Var "w")) casMap1_0
 casResult1_0 = App (Abs "s1" (App (Var "z") (Abs "z" (App (App (App (Var "x") (Var "w")) (Var "s1")) (Var "z"))))) (App (App (Var "x") (Var "w")) (Abs "y" (App (Var "y") (Abs "w" (App (Var "w") (Var "y"))))))
+
+dbWithFree1 = AppDB (AbsDB (AppDB (VarDB 2) (AbsDB (AppDB (AppDB (VarDB 4) (VarDB 2)) (VarDB 1))))) (AppDB (VarDB 2) (AbsDB (AppDB (VarDB 1) (AbsDB (AppDB (VarDB 1) (VarDB 2))))))
 
 unit_cas :: Assertion
 unit_cas = do
