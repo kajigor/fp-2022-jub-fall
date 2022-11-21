@@ -7,48 +7,38 @@ import Data.Char
 import Data.Function
 import Data.List
 import Data.Maybe
--- import Control.Monad.State
 import qualified Data.Set as Set
 
 -- Тип для лямбда-термов.
 -- Параметризуем типом переменной.
-data Lambda a
-  = Var a
-  | App (Lambda a) (Lambda a)
-  | Abs a (Lambda a)
+data Lambda
+  = Var String
+  | App Lambda Lambda
+  | Abs String Lambda
   deriving (Eq)
-
-class ShowProperly a where
-  repr :: a -> String
-
-instance {-# OVERLAPPABLE #-} Show a => ShowProperly a where
-  repr = show
-
-instance {-# OVERLAPS #-} ShowProperly String where
-  repr = id
 
 condWrap :: Bool -> String -> String
 condWrap True s = "(" ++ s ++ ")"
 condWrap False s = s
 
-isApp :: Lambda a -> Bool
+isApp :: Lambda -> Bool
 isApp e = case e of
   App _ _ -> True
   _ -> False
 
-isAbs :: Lambda a -> Bool
+isAbs :: Lambda -> Bool
 isAbs e = case e of
   Abs _ _ -> True
   _ -> False
 
 -- Красивая печать без лишних скобок.
-instance ShowProperly a => Show (Lambda a) where
+instance Show Lambda where
   show expr = case expr of
-    Var s -> repr s
+    Var s -> s
     App x y ->
       condWrap (isAbs x) (show x) ++ " "
         ++ condWrap (isApp y || isAbs y) (show y)
-    Abs x y -> "\\" ++ repr x ++ "." ++ show y
+    Abs x y -> "λ" ++ x ++ "." ++ show y
 
 class Ord a => Fresh a where
   candidates :: [a]
@@ -66,17 +56,22 @@ instance Fresh String where
         | n < alpha = [chr (n + ord 'a')]
         | otherwise = f (n `div` alpha) ++ f (n `rem` alpha)
 
-freeVariables :: Ord a => Lambda a -> Set.Set a
+freeVariables :: Lambda -> Set.Set String
 freeVariables (Var x) = Set.singleton x
 freeVariables (App x y) = freeVariables x `Set.union` freeVariables y
 freeVariables (Abs x y) = x `Set.delete` freeVariables y
 
-getVariables :: Ord a => Lambda a -> Set.Set a
+getVariables :: Lambda -> Set.Set String
 getVariables (Var x) = Set.singleton x
-getVariables (App x y) = freeVariables x `Set.union` freeVariables y
+getVariables (App x y) = getVariables x `Set.union` getVariables y
 getVariables (Abs x y) = x `Set.insert` freeVariables y
 
-
+-- ДеБрауновское представление лямбда-термов
+data DeBruijn
+  = VarDB Int
+  | AppDB DeBruijn DeBruijn
+  | AbsDB DeBruijn
+  deriving (Eq)
 
 isAppDB :: DeBruijn -> Bool
 isAppDB e = case e of
@@ -88,13 +83,6 @@ isAbsDB e = case e of
   AbsDB _ -> True
   _ -> False
 
--- ДеБрауновское представление лямбда-термов
-data DeBruijn
-  = VarDB Int
-  | AppDB DeBruijn DeBruijn
-  | AbsDB DeBruijn
-  deriving (Eq)
-
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
   show expr = case expr of
@@ -102,14 +90,14 @@ instance Show DeBruijn where
     AppDB x y ->
       condWrap (isAbsDB x) (show x) ++ " "
         ++ condWrap (isAppDB y || isAbsDB y) (show y)
-    AbsDB y -> "\\ " ++ show y
+    AbsDB y -> "λ " ++ show y
 
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Ord a => Lambda a -> DeBruijn
+toDeBruijn :: Lambda -> DeBruijn
 toDeBruijn term = fromJust (f fv term)
   where
     fv = Set.toList $ freeVariables term
@@ -130,16 +118,65 @@ sizeDeBruijn (AppDB x y) = sizeDeBruijn x + sizeDeBruijn y
 sizeDeBruijn (AbsDB y) = sizeDeBruijn y
 
 -- Преобразовать деБрауновские лямбда-термы в обычные.
-fromDeBruijn :: Fresh a => DeBruijn -> Lambda a
+fromDeBruijn :: DeBruijn -> Lambda
 fromDeBruijn term = f (take (sizeDeBruijn term) candidates) term
   where
-    f :: Fresh a => [a] -> DeBruijn -> Lambda a
+    f :: [String] -> DeBruijn -> Lambda
     f stack (VarDB x) = Var $ fromJust $ listToMaybe $ drop (x - 1) stack
     f stack (AppDB x y) = App (f stack x) (f stack y)
     f stack (AbsDB y) = Abs x (f (x : stack) y)
       where
         x = fresh $ Set.fromList stack
-      
+
+data VarName = Bound Int | Free String deriving Eq
+
+instance Show VarName where
+  show (Bound x) = show x
+  show (Free x) = x
+
+data LocallyNameless
+  = VarLN VarName
+  | AppLN LocallyNameless LocallyNameless
+  | AbsLN LocallyNameless
+  deriving Eq
+
+isAppLN :: LocallyNameless -> Bool
+isAppLN e = case e of
+  AppLN _ _ -> True
+  _ -> False
+
+isAbsLN :: LocallyNameless -> Bool
+isAbsLN e = case e of
+  AbsLN _ -> True
+  _ -> False
+
+instance Show LocallyNameless where
+  show expr = case expr of
+    VarLN s -> show s
+    AppLN x y ->
+      condWrap (isAbsLN x) (show x) ++ " "
+        ++ condWrap (isAppLN y || isAbsLN y) (show y)
+    AbsLN y -> "λ " ++ show y
+
+toLocallyNameless :: Lambda -> LocallyNameless
+toLocallyNameless = f []
+  where
+    f :: [String] -> Lambda -> LocallyNameless
+    f s (Var x) = VarLN $ maybe (Free x) Bound (elemIndex x s)
+    f s (App x y) = AppLN (f s x) (f s y)
+    f s (Abs x y) = AbsLN (f (x : s) y)
+
+fromLocallyNameless :: LocallyNameless -> Lambda
+fromLocallyNameless = f []
+  where
+    f :: [String] -> LocallyNameless -> Lambda
+    f stack (VarLN (Bound x)) = Var $ fromJust $ listToMaybe $ drop (x - 1) stack
+    f stack (VarLN (Free x)) = Var x
+    f stack (AppLN x y) = App (f stack x) (f stack y)
+    f stack (AbsLN y) = Abs x (f (x : stack) y)
+      where
+        x = fresh $ Set.fromList stack
+
 -- Проверка термов на альфа-эквивалентность.
-alphaEq :: Ord a => Lambda a -> Lambda a -> Bool
+alphaEq :: Lambda -> Lambda -> Bool
 alphaEq = (==) `on` toDeBruijn
