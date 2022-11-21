@@ -18,6 +18,12 @@ justVar = Var "x"
 justVar2 :: Lambda MyString
 justVar2 = Var $ MyString "x"
 
+
+lambdaFailedShow :: Lambda String
+lambdaFailedShow = App t t
+    where
+        t = Abs "x" (App (Var "x") (Var "x"))
+
 true2 = Abs (MyString "x") (Abs (MyString "y") (Var (MyString "x")))
 
 unit_show_string = do
@@ -26,6 +32,7 @@ unit_show_string = do
     show Lambda.and @?= "λp.λq.p q p"
     show Lambda.zero @?= "λf.λx.x"
     show Lambda.two @?= "λf.λx.f (f x)"
+    show lambdaFailedShow @?= "(λx.x x) (λx.x x)"
 
 unit_show_poly = do
     show justVar2 @?= "x"
@@ -43,7 +50,7 @@ deBruijn3 = AppDB (AbsDB $ VarDB 0) (VarDB 0)
 unit_show_DeBruijn = do
     show deBruijn1 @?= "0"
     show deBruijn2 @?= "λ.0"
-    show deBruijn3 @?= "λ.0 0"
+    show deBruijn3 @?= "(λ.0) 0"
 
 trueDB :: DeBruijn
 trueDB = AbsDB (AbsDB (VarDB 1))
@@ -75,12 +82,20 @@ sample1DB = AppDB (AbsDB $ AbsDB $ VarDB 0) (AbsDB $ VarDB 0)
 sample1DBtransformed :: Lambda Int
 sample1DBtransformed = App (Abs 0 (Abs 1 (Var 1))) (Abs 0 (Var 0))
 
+failedToDeBruijn1 :: Lambda String
+failedToDeBruijn1 = Abs "x" $ Var "x"
+
+failedToDeBruijn2 :: Lambda String
+failedToDeBruijn2 = Abs "x" $ Var "y"
+
 unit_toDeBruijn = do
     toDeBruijn Lambda.true @?= trueDB
     toDeBruijn Lambda.and @?= andDB
     toDeBruijn Lambda.zero @?= zeroDB
     toDeBruijn Lambda.two @?= twoDB
     toDeBruijn sample1 @?= sample1DB
+    toDeBruijn failedToDeBruijn1 @?= AbsDB (VarDB 0)
+    toDeBruijn failedToDeBruijn2 @?= AbsDB (VarDB 1)
 
 instance (Eq a, Hashable a) => Eq (Lambda a) where
     (==) :: (Eq a, Hashable a) => Lambda a -> Lambda a -> Bool
