@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Lambda where
 import Data.Map.Strict as Map
@@ -169,32 +170,33 @@ eval CallByName e@(Abs _ _) = e
 eval CallByName (App e1 e2) = case e1' of
   Abs lx e -> eval CallByName $ cas e $ Subst (lx, e2)
   _ -> App e1' e2
-  where e1' = eval CallByName e1
+  where !e1' = eval CallByName e1
 
 eval NormalOrder e@(Var _) = e
 eval NormalOrder (Abs lx e) = Abs lx $ eval NormalOrder e
 eval NormalOrder (App e1 e2) = case e1' of
   Abs lx e -> eval NormalOrder $ cas e $ Subst (lx, e2)
   _ -> App e1'' e2'
-  where e1' = eval CallByName e1
-        e1'' = eval NormalOrder e1
-        e2' = eval NormalOrder e2
+    where
+      !e1'' = eval NormalOrder e1
+      !e2' = eval NormalOrder e2
+  where !e1' = eval CallByName e1
 
 eval CallByValue e@(Var _) = e
 eval CallByValue e@(Abs _ _) = e
 eval CallByValue (App e1 e2) = case e1' of
   Abs lx e -> eval CallByValue $ cas e $ Subst (lx, e2')
   _ -> App e1' e2'
-  where e1' = eval CallByValue e1
-        e2' = eval CallByValue e2
+  where !e1' = eval CallByValue e1
+        !e2' = eval CallByValue e2
 
 eval ApplicativeOrder e@(Var _) = e
 eval ApplicativeOrder (Abs lx e) = Abs lx $ eval ApplicativeOrder e
 eval ApplicativeOrder (App e1 e2) = case e1' of
   Abs lx e -> eval ApplicativeOrder $ cas e $ Subst (lx, e2')
   _ -> App e1' e2'
-  where e1' = eval ApplicativeOrder e1
-        e2' = eval ApplicativeOrder e2
+  where !e1' = eval ApplicativeOrder e1
+        !e2' = eval ApplicativeOrder e2
 
 -- ДеБрауновское представление лямбда-термов
 data DeBruijn = VarDB Int
