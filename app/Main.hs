@@ -1,10 +1,11 @@
 module Main where
 
 import Codec.Picture (PixelRGB8 (PixelRGB8))
+import Data.List (transpose)
 import Data.List.Split
 import Graphics.Image as I
+import Graphics.Image.IO (readImage)
 import Prelude as P
-import Data.List ( transpose )
 
 pixListAveragePixel :: [Pixel RGBA Word8] -> Pixel RGBA Word8
 pixListAveragePixel pixList = averagePixel $ P.map (\x -> x `div` length pixList) (go pixList [0, 0, 0, 0])
@@ -42,14 +43,27 @@ pixelizeImgRows (x1 : x2 : xs) = [P.zipWith pixelizeTwo x1 x2] ++ [P.zipWith pix
 pixelizeWithR :: [[Pixel RGBA Word8]] -> Int -> [[Pixel RGBA Word8]]
 pixelizeWithR vec n = Data.List.transpose (pixelizeImgN (Data.List.transpose (pixelizeImgN vec n)) n)
 
+fromRGB1D :: [Pixel RGB Word8] -> [Pixel RGBA Word8]
+fromRGB1D [] = []
+fromRGB1D ((PixelRGB r g b) : xs) = PixelRGBA r g b 255 : fromRGB1D xs
+
+fromRGB2D :: [[Pixel RGB Word8]] -> [[Pixel RGBA Word8]]
+fromRGB2D = P.map fromRGB1D
+
 main :: IO ()
 main = do
-  l <- readImageExact PNG "Lenna.png" :: IO (Either String (I.Image VS I.RGBA Word8))
+  l <- readImageExact PNG "testpics/Lenna.png" :: IO (Either String (I.Image VS I.RGBA Word8))
+  r <- readImageExact PNG "testpics/Lenna.png" :: IO (Either String (I.Image VS I.RGB Word8))
   let image = case l of
-        Right img -> img
-        Left a -> error "Wrong format of image"
-  let vec = toLists image
+        Right img -> Left img
+        Left a -> case r of
+          Right img -> Right img
+          Left a -> error "Unsupportable format"
 
-  let backToImage = fromLists $  pixelizeWithR vec 140 :: I.Image VS I.RGBA Word8
-  writeImageExact PNG [] "res.png" backToImage
+  let vec = case image of
+        Right im -> fromRGB2D $ toLists im
+        Left im -> toLists im
+
+  let backToImage = fromLists $ pixelizeWithR vec 140 :: I.Image VS I.RGBA Word8
+  writeImageExact PNG [] "testpics/res.png" backToImage
   putStrLn "HeHaskell!"
