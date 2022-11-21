@@ -62,6 +62,23 @@ unit_toDeBruijn = do
   toDeBruijn db3 @?= AbsDB (AppDB (AbsDB (AppDB (VarDB 1) (AbsDB (VarDB 1)))) (AbsDB (AppDB (VarDB 2) (VarDB 1)))) -- "λ (λ 1 (λ 1)) (λ 2 1)"
   toDeBruijn db4 @?= AbsDB (VarDB 2)
 
+v1 :: LocallyNameless
+v1 = VarLN (Bound 1)
+v2 :: LocallyNameless
+v2 = VarLN (Bound 2)
+v3 :: LocallyNameless
+v3 = VarLN (Bound 3)
+
+unit_toLocallyNameless :: IO ()
+unit_toLocallyNameless = do
+  toLocallyNameless db1 @?= AbsLN (AbsLN v2)
+  toLocallyNameless db1' @?= AbsLN (AbsLN v2)
+  toLocallyNameless db1'' @?= AbsLN (AbsLN v1)
+  toLocallyNameless db2 @?= AbsLN (AbsLN (AbsLN (AppLN (AppLN v3 v1) (AppLN v2 v1)))) -- "λ1. λ2. λ3. 3 1 (2 1)"
+  toLocallyNameless db2' @?= AbsLN (AbsLN (AbsLN (AppLN (AppLN v3 v1) (AppLN v2 v1)))) -- "λ1. λ2. λ3. 3 1 (2 1)"
+  toLocallyNameless db3 @?= AbsLN (AppLN (AbsLN (AppLN v1 (AbsLN v1))) (AbsLN (AppLN v2 v1))) -- "λ (λ 1 (λ 1)) (λ 2 1)"
+  toLocallyNameless db4 @?= AbsLN (VarLN (Free "y"))
+
 back1 :: Lambda
 back1 = fromDeBruijn $ toDeBruijn db1
 back2 :: Lambda
@@ -77,6 +94,22 @@ unit_fromDeBruijn = do
   toDeBruijn back2 @?= toDeBruijn db2
   toDeBruijn back3 @?= toDeBruijn db3
   toDeBruijn back4 @?= toDeBruijn db4
+
+back1' :: Lambda
+back1' = fromLocallyNameless $ toLocallyNameless db1
+back2' :: Lambda
+back2' = fromLocallyNameless $ toLocallyNameless db2
+back3' :: Lambda
+back3' = fromLocallyNameless $ toLocallyNameless db3
+back4' :: Lambda
+back4' = fromLocallyNameless $ toLocallyNameless db4
+
+unit_fromLocallyNameless :: IO ()
+unit_fromLocallyNameless = do
+  toLocallyNameless back1' @?= toLocallyNameless db1
+  toLocallyNameless back2' @?= toLocallyNameless db2
+  toLocallyNameless back3' @?= toLocallyNameless db3
+  toLocallyNameless back4' @?= toLocallyNameless db4
 
 unit_alpha :: IO ()
 unit_alpha = do

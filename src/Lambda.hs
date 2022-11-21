@@ -162,7 +162,7 @@ toLocallyNameless :: Lambda -> LocallyNameless
 toLocallyNameless = f []
   where
     f :: [String] -> Lambda -> LocallyNameless
-    f s (Var x) = VarLN $ maybe (Free x) Bound (elemIndex x s)
+    f s (Var x) = VarLN $ maybe (Free x) (Bound . (+1)) (elemIndex x s)
     f s (App x y) = AppLN (f s x) (f s y)
     f s (Abs x y) = AbsLN (f (x : s) y)
 
