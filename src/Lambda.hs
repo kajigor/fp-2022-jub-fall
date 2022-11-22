@@ -14,7 +14,7 @@ import qualified Data.Set as Set
 -- Параметризуем типом переменной.
 data Lambda a = Var a
               | App (Lambda a) (Lambda a)
-              | Abs { bind :: a, body :: (Lambda a)}
+              | Abs a (Lambda a)
               deriving(Eq)
 
 isVar::Lambda a -> Bool
@@ -89,17 +89,21 @@ cas orig@(Abs x y) sub@(Subst var term)
 -- Возможные стратегии редукции (о них расскажут 7 ноября).
 data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder deriving(Eq)
 
+bRed :: NextFree a=> Lambda a -> Lambda a
+bRed (App (Abs x y) z) = y `cas` Subst x z
+bRed _ = undefined
+
 evalApp :: NextFree a=> Strategy -> Lambda a -> Lambda a -> Lambda a
 evalApp CallByName x y = do
   let x' = eval CallByName x
   if isAbs x'
-    then eval CallByName (x' `cas` Subst (bind x') y)
+    then eval CallByName (bRed (App x' y))
     else App x' y
 
 evalApp NormalOrder x y = do
   let x' = eval CallByName x
   if isAbs x'
-    then eval NormalOrder (x' `cas` Subst (bind x') y)
+    then eval NormalOrder (bRed (App x' y))
     else do
       let x'' = eval NormalOrder x'
       let y' = eval NormalOrder y
@@ -109,14 +113,14 @@ evalApp CallByValue x y = do
   let x' = eval CallByValue x
   let y' = eval CallByValue y
   if isAbs x'
-    then eval CallByValue (x' `cas` Subst (bind x') y')
+    then eval CallByValue (bRed (App x' y))
     else App x' y'
 
 evalApp ApplicativeOrder x y = do
   let x' = eval ApplicativeOrder x
   let y' = eval ApplicativeOrder y
   if isAbs x'
-    then eval ApplicativeOrder (x' `cas` Subst (bind x') y')
+    then eval ApplicativeOrder (bRed (App x' y))
     else App x' y'
 
 

@@ -2,7 +2,7 @@ module Test.Lambda where
 
 import Lambda
 import Test.Tasty.HUnit
-import Lambda (Subst(Subst))
+import Lambda (bRed)
 
 unit_show_lambda :: IO ()
 unit_show_lambda = do
@@ -73,6 +73,7 @@ unit_to_debruijn = do
   toDeBruijn t6 @?= AppDB (AbsDB (VarDB 1)) (AbsDB (VarDB 2))
   toDeBruijn t7 @?= AppDB (AbsDB (VarDB 0)) (AbsDB (VarDB 1))
 
+
 unit_from_debruijn :: IO ()
 unit_from_debruijn = do
   fromDeBruijn trueDB `alphaEq` true @?= True
@@ -101,14 +102,27 @@ t12 = Abs "y" (Var "x")
 
 t13 = Abs "y" (Abs "a" (Var "x"))
 
-
 unit_cas :: IO ()
 unit_cas = do
-  t1 `cas` (Subst "x" t2) @?= t2
-  t1 `cas` (Subst "y" t2) @?= t1
-  t2 `cas` (Subst "y" t1) @?= t3
-  t4 `cas` (Subst "a" t2) @?= t4
-  t4 `cas` (Subst "x" t2) @?= t8
-  t7 `cas` (Subst "a" t1) @?= t9
-  t11 `cas` (Subst "a" t1) @?= t12
-  t11 `cas` (Subst "a" t4) @?= t13
+  t1 `cas` Subst "x" t2 @?= t2
+  t1 `cas` Subst "y" t2 @?= t1
+  t2 `cas` Subst "y" t1 @?= t3
+  t4 `cas` Subst "a" t2 @?= t4
+  t4 `cas` Subst "x" t2 @?= t8
+  t7 `cas` Subst "a" t1 @?= t9
+  t11 `cas` Subst "a" t1 @?= t12
+  t11 `cas` Subst "a" t4 @?= t13
+
+tId = Abs "x" (Var "x")
+tS = Abs "x" (Abs "y" (Abs "z" (App (App (Var "x") (Var "z")) (App (Var "y") (Var "z")))))
+tDouble = Abs "x" (App (Var "x") (Var "x"))
+tAddOne = App Lambda.add Lambda.one
+tAddOneOne = App tAddOne Lambda.one
+
+unit_eval_CallByName :: IO ()
+unit_eval_CallByName = do
+  CallByName `eval` App tId Lambda.one `alphaEq` Lambda.one @?= True
+  CallByName `eval` t3 `alphaEq` t3 @?= True
+  CallByName `eval` tAddOneOne `alphaEq` Lambda.two @?= False
+  CallByName `eval` tAddOneOne `alphaEq` bRed (App (bRed tAddOne) Lambda.one) @?= True
+  
