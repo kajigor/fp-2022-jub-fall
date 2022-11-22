@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 
@@ -131,30 +132,30 @@ eval :: Eq a => Freshable a => Strategy -> Lambda a -> Lambda a
 eval _ (Var x) = Var x
 eval CallByValue (Abs x e) = Abs x e
 eval CallByValue (App e1 e2) =
-  let e1' = eval CallByValue e1
-   in let e2' = eval CallByValue e2
+  let !e1' = eval CallByValue e1
+   in let !e2' = eval CallByValue e2
        in case e1' of
             Abs x e -> eval CallByValue $ cas e Subst {from = x, to = e2'}
             _ -> App e1' e2'
 eval CallByName (Abs x e) = Abs x e
 eval CallByName (App e1 e2) =
-  let evaluated = eval CallByName e1
+  let !evaluated = eval CallByName e1
    in case evaluated of
         Abs x e1' -> eval CallByName $ cas e1' Subst {from = x, to = e2}
         _ -> App evaluated e2
 eval NormalOrder (Abs x e) = Abs x $ eval NormalOrder e
 eval NormalOrder (App e1 e2) =
-  let e1' = eval CallByName e1
+  let !e1' = eval CallByName e1
    in case e1' of
         Abs x e -> eval NormalOrder $ cas e Subst {from = x, to = e2}
         _ ->
-          let e1'' = eval NormalOrder e1'
-           in let e2' = eval NormalOrder e2
+          let !e1'' = eval NormalOrder e1'
+           in let !e2' = eval NormalOrder e2
                in App e1'' e2'
 eval ApplicativeOrder (Abs x e) = Abs x $ eval ApplicativeOrder e
 eval ApplicativeOrder (App e1 e2) =
-  let e1' = eval ApplicativeOrder e1
-   in let e2' = eval NormalOrder e2
+  let !e1' = eval ApplicativeOrder e1
+   in let !e2' = eval ApplicativeOrder e2
        in case e1' of
             Abs x e -> eval ApplicativeOrder $ cas e Subst {from = x, to = e2'}
             _ -> App e1' e2'
@@ -165,17 +166,17 @@ data DeBruijn
   | AbsDB DeBruijn
   | AppDB DeBruijn DeBruijn
   deriving (Eq)
+
 showWithBraces' :: DeBruijn -> String
 showWithBraces' (VarDB a) = show a
 showWithBraces' a = "(" ++ show a ++ ")"
+
 -- Красивая печать без лишних скобок.
 instance Show DeBruijn where
   show (VarDB name) = show name
   show (AppDB a@(AbsDB _) b) = showWithBraces' a ++ " " ++ showWithBraces' b
   show (AppDB a b) = show a ++ " " ++ showWithBraces' b
   show (AbsDB a) = "λ" ++ "." ++ show a
-    where
-
 
 -- λx. λy. x ≡ λ λ 2
 -- λx. λy. λz. x z (y z) ≡ λ λ λ 3 1 (2 1)
@@ -188,20 +189,19 @@ toDeBruijn expr = fst $ computeDeBruijn expr Map.empty 0 Map.empty
     --                                                   bounded variables   depth   free variables
     computeDeBruijn :: (Eq a, Hashable a) => Lambda a -> Map.HashMap a Int -> Int -> Map.HashMap a Int -> (DeBruijn, Map.HashMap a Int) -- result, free variables
     computeDeBruijn (Var a) indexes depth freeVariables =
-      case  Map.lookup a indexes of
+      case Map.lookup a indexes of
         Just index -> (VarDB (depth - index - 1), freeVariables)
-        _ -> let (index, freeVariables') = getOrPut a freeVariables in
-             (VarDB $ depth + index - 1, freeVariables')
-
+        _ ->
+          let (index, freeVariables') = getOrPut a freeVariables
+           in (VarDB $ depth + index - 1, freeVariables')
     computeDeBruijn (Abs a b) indexes depth freeVariables =
-      let indexes' = Map.insert a depth indexes in
-      let (absBody, freeVariables') = computeDeBruijn b indexes' (depth + 1) freeVariables in
-      (AbsDB absBody, freeVariables')
-
+      let indexes' = Map.insert a depth indexes
+       in let (absBody, freeVariables') = computeDeBruijn b indexes' (depth + 1) freeVariables
+           in (AbsDB absBody, freeVariables')
     computeDeBruijn (App a b) index depth freeVariables =
-      let (left, freeVariables') = computeDeBruijn a index depth freeVariables in
-      let (right, freeVariables'') = computeDeBruijn b index depth freeVariables' in
-      (AppDB left right, freeVariables'')
+      let (left, freeVariables') = computeDeBruijn a index depth freeVariables
+       in let (right, freeVariables'') = computeDeBruijn b index depth freeVariables'
+           in (AppDB left right, freeVariables'')
 
     getOrPut :: (Eq a, Hashable a) => a -> Map.HashMap a Int -> (Int, Map.HashMap a Int)
     getOrPut key map = case Map.lookup key map of
