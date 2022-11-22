@@ -87,11 +87,26 @@ cas orig@(Abs x y) sub@(Subst var term)
 
 
 -- Возможные стратегии редукции (о них расскажут 7 ноября).
-data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
+data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder deriving(Eq)
 
 -- Интерпретатор лямбда термов, учитывающий стратегию.
-eval :: Strategy -> Lambda a -> Lambda a
-eval = undefined
+eval :: NextFree a=> Strategy -> Lambda a -> Lambda a
+eval _ (Var x) = Var x
+eval strat (Abs x y) 
+  | strat == CallByName || strat == CallByValue = Abs x y 
+  | otherwise = Abs x (eval strat y)
+eval strat (App x y) = do
+  let x' = eval strat x
+  f x' y where
+  f (Abs x e) y 
+    | strat == CallByName ||  strat == NormalOrder = eval strat (y `cas` (Subst x e))
+    | strat == CallByValue || strat == ApplicativeOrder = eval strat (y `cas` (Subst x (eval strat e)))
+  f x y | strat == CallByName = App x y
+  f x y | strat == CallByValue || strat == ApplicativeOrder = App x (eval strat y)
+  f x y | strat == NormalOrder = App (eval strat x) (eval strat y)
+   
+-- TODO :check maybe problems with Normal Order
+
 
 -- ДеБрауновское представление лямбда-термов
 data DeBruijn = VarDB Int
