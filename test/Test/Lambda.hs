@@ -2,7 +2,8 @@ module Test.Lambda where
 
 import Lambda
 import Test.Tasty.HUnit
-import Lambda (bRed)
+import Lambda (betaRed)
+import Test.Terms
 
 unit_show_lambda :: IO ()
 unit_show_lambda = do
@@ -33,22 +34,6 @@ unit_show_debruijn = do
   show Lambda.addDB @?= "\\ \\ \\ \\ 3 1 (2 1 0)"
   show Lambda.successorDB @?= "\\ \\ \\ 1 (2 1 0)"
   show Lambda.multDB @?= "\\ \\ \\ 2 (1 0)"
-
-t1 = Var "x"
-
-t2 = App (Var "x") (Var "y")
-
-t3 = App (Var "x") (Var "x")
-
-t4 = Abs "a" (Var "x")
-
-t5 = App (Abs "a" (Var "x")) (Abs "b" (Var "x"))
-
-t6 = App (Abs "a" (Var "x")) (Abs "b" (Var "y"))
-
-t7 = App (Abs "a" (Var "a")) (Abs "b" (Var "a"))
-
-t10 = App (Abs "a" (Var "a")) (Abs "b" (Var "c"))
 
 
 unit_to_debruijn :: IO ()
@@ -92,16 +77,6 @@ unit_from_debruijn = do
   t2 `alphaEq` t3 @?= False
   t7 `alphaEq` t10 @?= True
 
-t8 = Abs "a" (App (Var "x") (Var "y"))
-
-t9 = App (Abs "a" (Var "a")) (Abs "b" (Var "x"))
-
-t11 = Abs "x" (Var "a")
-
-t12 = Abs "y" (Var "x")
-
-t13 = Abs "y" (Abs "a" (Var "x"))
-
 unit_cas :: IO ()
 unit_cas = do
   t1 `cas` Subst "x" t2 @?= t2
@@ -113,16 +88,45 @@ unit_cas = do
   t11 `cas` Subst "a" t1 @?= t12
   t11 `cas` Subst "a" t4 @?= t13
 
-tId = Abs "x" (Var "x")
-tS = Abs "x" (Abs "y" (Abs "z" (App (App (Var "x") (Var "z")) (App (Var "y") (Var "z")))))
-tDouble = Abs "x" (App (Var "x") (Var "x"))
-tAddOne = App Lambda.add Lambda.one
-tAddOneOne = App tAddOne Lambda.one
-
 unit_eval_CallByName :: IO ()
 unit_eval_CallByName = do
+  CallByName `eval` t2 @?= t2
+  CallByName `eval` t4 @?= t4
   CallByName `eval` App tId Lambda.one `alphaEq` Lambda.one @?= True
   CallByName `eval` t3 `alphaEq` t3 @?= True
   CallByName `eval` tAddOneOne `alphaEq` Lambda.two @?= False
-  CallByName `eval` tAddOneOne `alphaEq` bRed (App (bRed tAddOne) Lambda.one) @?= True
-  
+  CallByName `eval` tAddOneOne `alphaEq` betaRed (App (betaRed tAddOne) Lambda.one) @?= True
+  CallByName `eval` t15 `alphaEq` betaRed t15 @?= True
+
+unit_eval_NormalOrder :: IO ()
+unit_eval_NormalOrder = do
+  NormalOrder `eval` t2 @?= t2
+  NormalOrder `eval` t4 @?= t4
+  NormalOrder `eval` App tId Lambda.one @?= CallByName `eval` App tId Lambda.one
+  NormalOrder `eval` t3 `alphaEq` t3 @?= True
+  NormalOrder `eval` tAddOneOne `alphaEq` Lambda.two @?= True
+  NormalOrder `eval` tAddOneTwo `alphaEq` Lambda.three @?= True
+  NormalOrder `eval` t15 `alphaEq` tId @?= True
+  NormalOrder `eval` t14 `alphaEq` t2 @?= True
+
+unit_eval_CallByValue :: IO ()
+unit_eval_CallByValue = do
+  CallByValue `eval` t2 @?= t2
+  CallByValue `eval` t4 @?= t4
+  CallByValue `eval` App tId Lambda.one  @?= CallByName `eval` App tId Lambda.one
+  CallByValue `eval` t3 `alphaEq` t3 @?= True
+  CallByValue `eval` tAddOneOne @?= CallByName `eval` tAddOneOne
+  CallByValue `eval` t14 @?= NormalOrder `eval` t14 
+  CallByValue `eval` t15 @?= CallByName `eval` t15
+
+
+unit_eval_ApplicativeOrder :: IO ()
+unit_eval_ApplicativeOrder = do
+  ApplicativeOrder `eval` t2 @?= t2
+  ApplicativeOrder `eval` t4 @?= t4
+  ApplicativeOrder `eval` App tId Lambda.one @?= CallByName `eval` App tId Lambda.one
+  ApplicativeOrder `eval` t3 `alphaEq` t3 @?= True
+  ApplicativeOrder `eval` tAddOneOne `alphaEq` Lambda.two @?= True
+  ApplicativeOrder `eval` tAddOneTwo `alphaEq` Lambda.three @?= True
+  ApplicativeOrder `eval` t15 `alphaEq` tId @?= True
+  ApplicativeOrder `eval` t14 `alphaEq` t2 @?= True

@@ -22,6 +22,7 @@ description:         Please see the README on GitHub at <https://github.com/kaji
 dependencies:
 - base >= 4.7 && < 5
 - mtl
+- containers
 
 ghc-options:
 - -Wall
@@ -47,6 +48,8 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - P08
+    - containers
+    
 
 tests:
   P08-test:
