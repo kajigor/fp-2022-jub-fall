@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Lib
+      Parser
   other-modules:
       Paths_math
   hs-source-dirs:
@@ -52,6 +53,7 @@ test-suite math-test
   main-is: Test.hs
   other-modules:
       Test.Integral
+      Test.Parser
       Paths_math
   hs-source-dirs:
       test
