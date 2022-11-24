@@ -10,8 +10,10 @@ module Test.Lambda where
  vary = Var "y" 
  varz :: Lambda String
  varz = Var "z"
- 
+ t = Abs "w" (App (App (Var "w") (Var "w")) (Var "w"))
+ term = App (Abs "x" (Var "z")) (App t t)
  unit_show = do
+     show term @?= "(λx.z) ((λw.w w w) (λw.w w w))"
      show varx @?= "x"
      show true @?= "λx.λy.x"
      show false @?= "λx.λy.y"
@@ -52,12 +54,9 @@ module Test.Lambda where
      show (fromDeBruijn (VarDB 1)) @?= "a"
      show (fromDeBruijn (AbsDB $ AbsDB $ AppDB (VarDB 2) (AppDB (VarDB 1) (VarDB 3))))  @?= "λa.λb.a (b c)"
 
- instance Eq a => Eq (Lambda a) where
-     (App a b) == (App c d) = a == c && b == d
-     (Abs a b) == (Abs c d) = a == c && b == d
-     (Var a) == (Var b) = a == b
-     _ == _ = False
+ 
  unit_alphaEq = do
+     assertBool "equal" (Prelude.not $ alphaEq (App varx vary) (App varx varx))
      assertBool "not equal" (alphaEq vary vary)
      assertBool "not equal" (alphaEq (fromDeBruijn (toDeBruijn true)) true)
      assertBool "not equal" (alphaEq (Abs 0 (Abs 1 (App (App (Var 0) (Var 1)) (Var 0)))) Lambda.and)
@@ -73,6 +72,11 @@ module Test.Lambda where
      show (cas (Abs "x" $ Abs "y" $ App varx (App vary varz)) (Subst "a" (Abs "x" (App varx vary)))) @?= "λx.λz.x (z z)"
 
 
+ instance Eq a => Eq (Lambda a) where
+     (App a b) == (App c d) = a == c && b == d
+     (Abs a b) == (Abs c d) = a == c && b == d
+     (Var a) == (Var b) = a == b
+     _ == _ = False
  
 
  unit_eval = do
