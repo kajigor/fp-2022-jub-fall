@@ -3,6 +3,7 @@ module Lambda where
 import Data.Set as Set
 import Data.List as List
 import Data.Maybe
+import Data.Function (on)
 import Data.Char
 
 
@@ -67,15 +68,12 @@ instance {-# OVERLAPS #-} Show (Lambda String) where
   show (App x y) = left ++ " " ++ right
     where 
       left = case x of 
-        (Abs _ _) -> "(" ++ show y ++ ")"
+        (Abs _ _) -> "(" ++ show x ++ ")"
         _ -> show x
       right = case y of
         (Var _) -> show y
         _ -> "(" ++ show y ++ ")"
       
- 
-              
-
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
   show (Var name) =  show name
@@ -83,7 +81,7 @@ instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
   show (App x y) = left ++ " " ++ right
     where 
       left = case x of 
-        (Abs _ _) -> "(" ++ show y ++ ")"
+        (Abs _ _) -> "(" ++ show x ++ ")"
         _ -> show x
       right = case y of
         (Var _) -> show y
@@ -94,7 +92,7 @@ instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
 data Subst a = Subst a (Lambda a)
 
 -- Проверка термов на альфа-эквивалентность.
-alphaEq :: (Eq a, Eq b)=> Lambda a -> Lambda b -> Bool
+alphaEq :: (Ord a, Ord b)=> Lambda a -> Lambda b -> Bool
 alphaEq x y = toDeBruijn x == toDeBruijn y
 
 class VarGenerator x where
@@ -110,9 +108,13 @@ instance VarGenerator String where
                     parse n | n < 26 = [chr (ord 'a' + n)]
                             | otherwise = parse (n `rem` 26) ++ parse (n `div` 26)          
 
-
+freeVars :: Ord a => Lambda a -> Set.Set a
+freeVars (Var a) = Set.singleton a
+freeVars (App a b) = Set.union (freeVars a) (freeVars b)
+freeVars (Abs a b) = Set.delete a $ (freeVars b)
+ 
 -- Capture-avoiding substitution.
-cas :: (Ord a, Eq a, VarGenerator a) => Lambda a -> Subst a -> Lambda a
+cas :: (Ord a, VarGenerator a) => Lambda a -> Subst a -> Lambda a
 cas (Var x) (Subst y z) | x == y = z
                         | otherwise = Var x
 cas (App x y) sub = App (cas x sub) (cas y sub)          
@@ -122,10 +124,7 @@ cas (Abs x y) (Subst z m) | x == z = Abs x y
                             where 
                               nextVar = getVar (List.length uni) (Set.toList uni)
                               uni = Set.union (allVars y) (allVars m)
-                              freeVars (Var a) = Set.singleton a
-                              freeVars (App a b) = Set.union (freeVars a) (freeVars b)
-                              freeVars (Abs a b) = Set.delete a $ (freeVars b)
-                  
+                            
                               allVars (Var a) = Set.singleton a
                               allVars (App a b) = Set.union (allVars a) (allVars b)
                               allVars (Abs a b) = Set.insert a (allVars b) 
@@ -190,8 +189,8 @@ instance Show DeBruijn where
 -- λz. (λy. y (λx. x)) (λx. z x) ≡ λ (λ 1 (λ 1)) (λ 2 1)
 
 -- Преобразовать обычные лямбда-термы в деБрауновские
-toDeBruijn :: Eq a => Lambda a -> DeBruijn
-toDeBruijn x = convert x []
+toDeBruijn :: Ord a => Lambda a -> DeBruijn
+toDeBruijn x = convert x (Set.toList (freeVars x))
   where 
     convert (Var a) l = VarDB (fromMaybe (List.length l) (List.elemIndex a l) + 1)
     convert (Abs a b) l = AbsDB (convert b (a : l))
