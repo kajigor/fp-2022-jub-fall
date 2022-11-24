@@ -76,16 +76,10 @@ instance {-# OVERLAPS #-} Show (Lambda String) where
       
 
 instance {-# OVERLAPPABLE #-} Show a => Show (Lambda a) where
-  show (Var name) =  show name
-  show (Abs x y) = "λ" ++ show x ++ "." ++ show y
-  show (App x y) = left ++ " " ++ right
-    where 
-      left = case x of 
-        (Abs _ _) -> "(" ++ show x ++ ")"
-        _ -> show x
-      right = case y of
-        (Var _) -> show y
-        _ -> "(" ++ show y ++ ")"
+  show = show <$> transform where
+    transform (Var x) = Var(show x)
+    transform (Abs x y) = Abs (show x) (transform y)
+    transform (App x y) = App (transform x) (transform y)
       
 
 -- Выберите подходящий тип для подстановок.
