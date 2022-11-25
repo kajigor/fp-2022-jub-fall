@@ -24,15 +24,21 @@ unit_expr_parser = do
     let x = Var "x"
     let y = Var "y"
     let z = Var "z"
+    let minus = BinOp Minus
+    let plus = BinOp Plus
+    let mult = BinOp Mult
+    let div = BinOp Div
     
 
     runParser exprParser "-3.14" @?= Just ("", Number (-3.14))
     runParser exprParser "x" @?= Just ("", x)
     runParser exprParser "-x" @?= Just ("", UnaryOp UnaryMinus x)
-    runParser exprParser "1-variable" @?= Just ("", BinOp Minus (Number 1) (Var "variable"))
-    runParser exprParser "x*y+x/y" @?= Just ("", BinOp Plus (BinOp Mult x y) (BinOp Div x y))
-    runParser exprParser "sin(1-x)" @?= Just ("", UnaryOp Sin $ BinOp Minus (Number 1) x)
+    runParser exprParser "x-y+z-x+y-z" @?= Just ("", x `minus` y `plus` z `minus` x `plus` y `minus` z)
+    runParser exprParser "x*y/z*x" @?= Just ("", x `mult` y `div` z `mult` x)
+    runParser exprParser "1-variable" @?= Just ("", minus (Number 1) (Var "variable"))
+    runParser exprParser "x*y+x/y" @?= Just ("", plus (mult x y) (div x y))
+    runParser exprParser "sin(1-x)" @?= Just ("", UnaryOp Sin $ minus (Number 1) x)
     runParser exprParser "cos(x^abs(y))" @?= Just ("", UnaryOp Cos $ BinOp Pow x $ UnaryOp Abs y)
     runParser exprParser "x+z*(-y)^((sin(z)))" @?= 
-        Just ("", BinOp Plus x $ BinOp Mult z $ BinOp Pow (UnaryOp UnaryMinus y) $ UnaryOp Sin z) 
+        Just ("", plus x $ mult z $ BinOp Pow (UnaryOp UnaryMinus y) $ UnaryOp Sin z) 
     

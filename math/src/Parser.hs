@@ -76,14 +76,25 @@ data UnaryOp = UnaryMinus
 
 exprParser :: Parser Expr
 exprParser = -- 1-2+3  will be 1-(2+3) and I have no idea how to fix
-    binOP <$> withoutPMParser <*> (minus <|> plus) <*> exprParser
-          <|> withoutPMParser
+    -- binOP <$> withoutPMParser <*> (minus <|> plus) <*> exprParser
+      plusMinusParser
+  <|> withoutPMParser
   where
 
+    plusMinusParser = 
+      let first = withoutPMParser in
+      let term = (,) <$> (minus <|> plus) <*> withoutPMParser in
+        foldl (\acc x -> BinOp (fst x) acc (snd x)) <$> first <*> some term
+
     withoutPMParser = -- without plus/minus
-      binOP <$> withoutPMMDPareser <*> (mult <|> divide) <*> withoutPMParser
+          multDivParser
       <|> withoutPMMDPareser
       <|> (UnaryOp <$> umin <*> withoutPMParser)
+
+    multDivParser =
+      let first = withoutPMMDPareser in
+      let factor = (,) <$> (mult <|> divide) <*> withoutPMMDPareser  in
+        foldl (\acc x -> BinOp (fst x) acc (snd x)) <$> first <*> some factor
 
     withoutPMMDPareser = -- without plus/minus/div/mult
       (binOP <$> (unaryParser <|> unit) <*> pow <*> (unaryParser <|> unit))
