@@ -1,0 +1,5 @@
+Expr:
+BinOp Minus (BinOp Plus (Number 1) (BinOp Mult (Number 2) (Ident "x"))) (Ident "y")
+
+Value:
+72
