@@ -25,6 +25,7 @@ cas (Abs y expr) (Subst x m)
 
 -- Возможные стратегии редукции (о них расскажут 7 ноября).
 data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
+  deriving Show
 
 isWeak :: Strategy -> Bool
 isWeak CallByValue = True

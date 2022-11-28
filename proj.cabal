@@ -50,8 +50,10 @@ executable proj-exe
   build-depends:
       base >=4.7 && <5
     , containers
+    , filepath
     , megaparsec
     , mtl
+    , optparse-applicative
     , proj
   default-language: Haskell2010
 

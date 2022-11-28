@@ -58,4 +58,4 @@ parseApp = do
   return $ listToApp (f : xs)
 
 parseLambda :: Parser Lambda
-parseLambda = try parseAbs <|> try parseApp <|> try parseVar <|> try parseBrackets
+parseLambda = space *> (try parseAbs <|> try parseApp <|> try parseVar <|> try parseBrackets) <* space
