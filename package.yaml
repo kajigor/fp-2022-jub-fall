@@ -70,4 +70,6 @@ tests:
     - tasty-hedgehog
     - tasty-hunit
     - tasty-discover
+    - tasty-quickcheck
     - proj
+    

@@ -117,3 +117,15 @@ unit_alpha = do
   alphaEq db1 db1'' @?= False
   alphaEq db1 db2' @?= False
   alphaEq db2 db2' @?= True
+
+unitTests :: [TestTree]
+unitTests =
+  [ testCase "show" unit_show
+  , testCase "freeVariables" unit_freeVariables
+  , testCase "fresh" unit_fresh
+  , testCase "toDeBruijn" unit_toDeBruijn
+  , testCase "toLocallyNameless" unit_toLocallyNameless
+  , testCase "fromDeBruijn" unit_fromDeBruijn
+  , testCase "fromLocallyNameless" unit_fromLocallyNameless
+  , testCase "alpha" unit_alpha
+  ]

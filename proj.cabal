@@ -63,6 +63,7 @@ test-suite proj-test
   other-modules:
       Test.Lambda
       Test.Parse
+      Test.ParsePB
       Test.Reductions
       Paths_proj
   hs-source-dirs:
@@ -81,4 +82,5 @@ test-suite proj-test
     , tasty-discover
     , tasty-hedgehog
     , tasty-hunit
+    , tasty-quickcheck
   default-language: Haskell2010

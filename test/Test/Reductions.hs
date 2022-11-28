@@ -44,3 +44,11 @@ unit_ao = do
   eval ApplicativeOrder mult' `alphaCmp` eval NormalOrder mult'
   eval ApplicativeOrder onetimesone' `alphaCmp` eval NormalOrder onetimesone'
   eval ApplicativeOrder twotimestwo `alphaCmp` eval NormalOrder twotimestwo
+
+
+unitTests :: [TestTree]
+unitTests =
+  [ testCase "cas" unit_cas
+  , testCase "no" unit_no
+  , testCase "ao" unit_ao
+  ]

@@ -36,3 +36,9 @@ unit_parseLambda = do
   parseMaybe parseLambda "λn.λf.λx.f (n f x)\n" @?= Just successor
   parseMaybe parseLambda "λn.λf.λx.f (n f x)" @?= Just successor
   parseMaybe parseLambda "\\n.\\f.\\x.f (n f x)" @?= Just successor
+
+unitTests :: [TestTree]
+unitTests =
+  [ testCase "parseLambda" unit_parseLambda
+  , testCase "listToApp" unit_listToApp
+  ]
