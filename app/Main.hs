@@ -1,5 +1,11 @@
 module Main (main) where
 
+import Graphics.UI.Gtk
+import Minesweeper
+
 main :: IO ()
 main = do
-  putStrLn "Hello from the app"
+    initGUI
+    window <- windowNew
+    widgetShowAll window
+    mainGUI
