@@ -176,7 +176,7 @@ eval ApplicativeOrder (App e1 e2) =
   let e1' = eval ApplicativeOrder e1 in
   let e2' = eval ApplicativeOrder e2 in
   case e1' of
-    (Abs x e) -> eval ApplicativeOrder $ cas e $ Subst x e2'
+    (Abs x e) -> eval ApplicativeOrder $ cas e $ Subst x $! e2'
     _ -> App e1' e2'
 eval ApplicativeOrder x = x
 
