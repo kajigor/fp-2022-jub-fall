@@ -6,6 +6,7 @@ module Parser where
 import Data.Char
 import Control.Applicative
 import Data.Functor
+import Expr
 
 newtype Parser a = Parser { runParser :: String -> Maybe (String, a) }
 
@@ -53,26 +54,6 @@ instance Alternative Parser where
     case u xs of
       Nothing -> v xs
       z -> z
-
-data Expr = BinOp BinOp Expr Expr
-          | Number Double
-          | Var String
-          | UnaryOp UnaryOp Expr
-          deriving (Show, Eq)
-
-data BinOp = Plus
-           | Minus
-           | Mult
-           | Div
-           | Pow
-           deriving (Show, Eq)
-
-data UnaryOp = UnaryMinus
-             | Sin
-             | Cos
-             | Abs
-             deriving (Show, Eq)
-
 
 exprParser :: Parser Expr
 exprParser = -- 1-2+3  will be 1-(2+3) and I have no idea how to fix

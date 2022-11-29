@@ -3,7 +3,7 @@ module Test.Parser where
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
 import Control.Exception (assert)
 import Parser
-import Parser (exprParser, UnaryOp (UnaryMinus), Expr (UnaryOp))
+import Expr
 
 unit_string_parser = do
     runParser (string "abc") "abcde" @?= Just ("de", "abc")

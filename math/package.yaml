@@ -21,6 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- transformers
 
 ghc-options:
 - -Wall
@@ -35,6 +36,8 @@ ghc-options:
 
 library:
   source-dirs: src
+  dependencies:
+  - containers
 
 executables:
   math-exe:
@@ -46,6 +49,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - math
+    - optparse-applicative
 
 tests:
   math-test:
@@ -62,3 +66,4 @@ tests:
     - tasty-hedgehog
     - tasty-hunit
     - tasty-discover
+    - containers
