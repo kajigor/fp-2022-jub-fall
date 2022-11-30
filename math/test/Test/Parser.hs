@@ -18,7 +18,7 @@ unit_number_parser = do
     runParser number "123.123" @?= Just ("", 123.123)
     runParser number "123.000123" @?= Just ("", 123.000123)
     runParser number "0.0001" @?= Just ("", 0.0001)
-    
+
 
 unit_expr_parser = do
     let x = Var "x"
@@ -28,7 +28,8 @@ unit_expr_parser = do
     let plus = BinOp Plus
     let mult = BinOp Mult
     let div = BinOp Div
-    
+    let pow = BinOp Pow
+
 
     runParser exprParser "-3.14" @?= Just ("", Number (-3.14))
     runParser exprParser "x" @?= Just ("", x)
@@ -39,6 +40,7 @@ unit_expr_parser = do
     runParser exprParser "x*y+x/y" @?= Just ("", plus (mult x y) (div x y))
     runParser exprParser "sin(1-x)" @?= Just ("", UnaryOp Sin $ minus (Number 1) x)
     runParser exprParser "cos(x^abs(y))" @?= Just ("", UnaryOp Cos $ BinOp Pow x $ UnaryOp Abs y)
-    runParser exprParser "x+z*(-y)^((sin(z)))" @?= 
-        Just ("", plus x $ mult z $ BinOp Pow (UnaryOp UnaryMinus y) $ UnaryOp Sin z) 
-    
+    runParser exprParser "x+z*(-y)^((sin(z)))" @?=
+        Just ("", plus x $ mult z $ BinOp Pow (UnaryOp UnaryMinus y) $ UnaryOp Sin z)
+    runParser exprParser "sin(x^cos(y))*x" @?= Just("", UnaryOp Sin (x `pow` UnaryOp Cos y) `mult` x)
+

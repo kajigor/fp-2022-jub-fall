@@ -82,7 +82,7 @@ exprParser = -- 1-2+3  will be 1-(2+3) and I have no idea how to fix
       <|> unaryParser
       <|> unit
 
-    unaryParser = UnaryOp <$> (sin <|> cos <|> abs) <*> exprParser
+    unaryParser = UnaryOp <$> (sin <|> cos <|> abs) <*> exprInBrkts
 
     unit = numberParser <|> exprInBrkts <|> varParser
 

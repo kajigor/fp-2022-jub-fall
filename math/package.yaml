@@ -49,6 +49,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - math
+    - containers
     - optparse-applicative
 
 tests:
