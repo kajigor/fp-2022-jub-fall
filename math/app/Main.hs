@@ -68,12 +68,44 @@ getValueRepeated s = do
     lift $ print s
     msum $ repeat getDouble
 
+getError = do
+    s <- lift getLine
+    guard (isCorrectDouble s)
+    guard ((read s :: Double) > 0)
+    return s
+
+getErrorRepeated = do
+    lift $ putStrLn "Enter positive error"
+    msum $ repeat getError
+
 
 askValue :: String -> IO Double
 askValue s = do
     val <- runMaybeT $ getValueRepeated s
     return $ case val of ~(Just v) -> read v :: Double
 
+
+parseMethod :: String -> Maybe Method 
+parseMethod s = case s of
+    "linear" -> Just LinearApproximation
+    "rectangle" -> Just MiddleRectange
+    "parabolic" -> Just ParabolicApproximation
+    _ -> Nothing
+
+isCorrectMethod :: String -> Bool
+isCorrectMethod s = case parseMethod s of
+    Just _ -> True
+    _ -> False
+
+getMethod :: MaybeT IO String
+getMethod = do
+    s <- lift getLine
+    guard (isCorrectMethod s)
+    return s
+
+getMethodRepeated = do
+    lift $ putStrLn "Enter method (linear/rectangle/parabolic)"
+    msum $ repeat getMethod
 
 main = do
     mbexpr <- runMaybeT getExprRepeated
@@ -84,20 +116,19 @@ main = do
     let left = case mbleft of ~(Just l) -> read l :: Double
     mbright <- runMaybeT getRightRepeated
     let right = case mbright of ~(Just r) -> read r :: Double
-    print expr
-    print var
-    print left
-    print right
-
 
     let vars = Set.delete var $ variables expr
 
-    print vars
-
     values <- mapM askValue (Set.toList vars)
-
-    print values
 
     let new_expr = setValues expr (Map.fromList $ zip (Set.toList vars) values)
 
-    print new_expr
+    mberror <- runMaybeT getErrorRepeated
+    let error = case mberror of ~(Just e) -> read e :: Double
+
+    mbmethod <- runMaybeT getMethodRepeated
+    let smethod = case mbmethod of ~(Just s) -> s
+    let method = case parseMethod smethod of ~(Just m) -> m
+
+    putStr "integral value is: "
+    print $ integrateWithError ParabolicApproximation (eval new_expr var) left right error

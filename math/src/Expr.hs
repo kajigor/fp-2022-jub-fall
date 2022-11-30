@@ -23,6 +23,27 @@ data UnaryOp = UnaryMinus
              deriving (Show, Eq)
 
 
+eval :: Expr -> String -> Double -> Double
+eval (BinOp op l r) name val = operation op (eval l name val) (eval r name val)
+    where
+        operation :: BinOp -> Double -> Double -> Double
+        operation Plus = (+)
+        operation Minus = (-)
+        operation Div = (/)
+        operation Mult = (*)
+        operation Pow = (**)
+eval (Number n) _ _ = n
+eval (Var y) name val | y == name = val
+                      | otherwise = undefined
+eval (UnaryOp op e) name val = operation op $ eval e name val
+    where
+        operation :: UnaryOp -> Double -> Double
+        operation Sin = sin
+        operation Cos = cos
+        operation Abs = abs
+        operation UnaryMinus = sin
+
+
 variables :: Expr -> Set String
 variables (Number _) = Set.empty
 variables (BinOp _ a b) = variables a `Set.union` variables b
