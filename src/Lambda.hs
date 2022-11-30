@@ -155,6 +155,7 @@ eval CallByName (App e1 e2) =
     (Abs x e) -> eval CallByName $ cas e $ Subst x e2
     _ -> App e1' e2
 eval CallByName x = x
+
 eval NormalOrder (Abs x e) = Abs x $ eval NormalOrder e
 eval NormalOrder (App e1 e2) = 
   let e1' = eval CallByName e1 in
@@ -164,13 +165,15 @@ eval NormalOrder (App e1 e2) =
       let e2' = eval NormalOrder e2 in 
       App e1'' e2'
 eval NormalOrder x = x
+
 eval CallByValue (App e1 e2) =
   let e1' = eval CallByValue e1 in
   let e2' = eval CallByValue e2 in 
   case e1' of
-    (Abs x e) -> eval CallByValue $ cas e $ Subst x e2'
+    (Abs x e) -> eval CallByValue $ cas e $ Subst x $! e2'
     _ -> App e1' e2'
 eval CallByValue x = x
+
 eval ApplicativeOrder (Abs x e) = Abs x $ eval ApplicativeOrder e
 eval ApplicativeOrder (App e1 e2) =
   let e1' = eval ApplicativeOrder e1 in
