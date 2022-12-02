@@ -136,23 +136,23 @@ eval ApplicativeOrder (Abs x y) = Abs x $ eval ApplicativeOrder y
 eval _ (Abs x y) = Abs x y
 
 eval CallByValue (App x y) = case evx of 
-  Abs a b -> eval CallByValue $ cas b (Subst a evy)
+  Abs a b -> eval CallByValue $ cas b (Subst a $! evy)
   _ -> App evx evy
   where 
     evx = eval CallByValue x
     evy = eval CallByValue y
 eval CallByName (App x y) = case evx of
-  Abs a b -> eval CallByName $ cas b  (Subst a y)
+  Abs a b -> eval CallByName $ cas b  (Subst a $! y)
   _ -> App evx y
   where
     evx = eval CallByName x
 eval NormalOrder (App x y) = case evx of
-  Abs a b -> eval NormalOrder $ cas b  (Subst a y)
+  Abs a b -> eval NormalOrder $ cas b  (Subst a $! y)
   _ -> App (eval NormalOrder evx) (eval NormalOrder y)
   where 
-    evx = eval NormalOrder x
+    evx = eval CallByName x
 eval ApplicativeOrder (App x y) = case evx of
-  Abs a b -> eval ApplicativeOrder $ cas b (Subst a evy)
+  Abs a b -> eval ApplicativeOrder $ cas b (Subst a $! evy)
   _ -> App evx evy
   where
     evx = eval ApplicativeOrder x
