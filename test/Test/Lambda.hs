@@ -91,4 +91,6 @@ module Test.Lambda where
     
      eval ApplicativeOrder (App (Abs "x" $ Var "x") $ Var "y") @?= Var "y"
      eval ApplicativeOrder (App (App true $ Var "a") $ Var "y'") @?= Var "a"
-    
+
+     -- eval ApplicativeOrder term @?= Var "z" -- should be endlees
+     eval NormalOrder term @?= Var "z"
