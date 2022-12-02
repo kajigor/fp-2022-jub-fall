@@ -1,6 +1,13 @@
 module Test.Parser where
 
-import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
+import Test.Tasty.HUnit
+import Test.Tasty
+
+import Hedgehog
+import qualified Hedgehog.Gen as Gen
+import qualified Hedgehog.Range as Range
+import Test.Tasty.Hedgehog
+
 import Control.Exception (assert)
 import Parser
 import Expr
@@ -21,9 +28,9 @@ unit_number_parser = do
 
 
 unit_expr_parser = do
-    let x = Var "x"
-    let y = Var "y"
-    let z = Var "z"
+    let x = Expr.Var "x"
+    let y = Expr.Var "y"
+    let z = Expr.Var "z"
     let minus = BinOp Minus
     let plus = BinOp Plus
     let mult = BinOp Mult
@@ -36,7 +43,7 @@ unit_expr_parser = do
     runParser exprParser "-x" @?= Just ("", UnaryOp UnaryMinus x)
     runParser exprParser "x-y+z-x+y-z" @?= Just ("", x `minus` y `plus` z `minus` x `plus` y `minus` z)
     runParser exprParser "x*y/z*x" @?= Just ("", x `mult` y `div` z `mult` x)
-    runParser exprParser "1-variable" @?= Just ("", minus (Number 1) (Var "variable"))
+    runParser exprParser "1-variable" @?= Just ("", minus (Number 1) (Expr.Var "variable"))
     runParser exprParser "x*y+x/y" @?= Just ("", plus (mult x y) (div x y))
     runParser exprParser "sin(1-x)" @?= Just ("", UnaryOp Sin $ minus (Number 1) x)
     runParser exprParser "cos(x^abs(y))" @?= Just ("", UnaryOp Cos $ BinOp Pow x $ UnaryOp Abs y)
@@ -44,3 +51,11 @@ unit_expr_parser = do
         Just ("", plus x $ mult z $ BinOp Pow (UnaryOp UnaryMinus y) $ UnaryOp Sin z)
     runParser exprParser "sin(x^cos(y))*x" @?= Just("", UnaryOp Sin (x `pow` UnaryOp Cos y) `mult` x)
 
+
+
+props :: [TestTree]
+props = 
+  [ testCase "string parser" unit_string_parser
+  , testCase "number parser" unit_number_parser
+  , testCase "expr parser" unit_expr_parser
+  ]

@@ -69,10 +69,13 @@ test-suite math-test
       HUnit
     , base >=4.7 && <5
     , containers
+    , hedgehog
     , math
     , tasty
     , tasty-discover
     , tasty-hedgehog
+    , tasty-hspec
     , tasty-hunit
+    , tasty-quickcheck
     , transformers
   default-language: Haskell2010

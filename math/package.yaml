@@ -68,3 +68,6 @@ tests:
     - tasty-hunit
     - tasty-discover
     - containers
+    - hedgehog
+    - tasty-quickcheck
+    - tasty-hspec
