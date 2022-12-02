@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 module Main (main) where
 
 import Lib
@@ -7,14 +8,13 @@ import Data.Set as Set
 import Data.Map as Map
 import Data.Char
 import Control.Monad
-import Control.Applicative
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe as MaybeT
 
 isCorrectExpr :: String -> Bool
 isCorrectExpr s =
     case runParser exprParser s of
-        Just ("", expr) -> True
+        Just ("", _) -> True
         _ -> False
 
 getExpr :: MaybeT IO Expr
@@ -24,6 +24,7 @@ getExpr = do
     case runParser exprParser s of
         ~(Just ("", expr)) -> return expr
 
+getExprRepeated :: MaybeT IO Expr
 getExprRepeated = do
     lift $ putStrLn "Enter function"
     msum $ repeat getExpr
@@ -38,6 +39,7 @@ getVar = do
     guard (isCorrectVar s)
     return s
 
+getVarRepeated :: MaybeT IO String
 getVarRepeated = do
     lift $ putStrLn "Enter integration variable"
     msum $ repeat getVar
@@ -54,26 +56,31 @@ getDouble = do
     guard (isCorrectDouble s)
     return s
 
+getLeftRepeated :: MaybeT IO String
 getLeftRepeated = do
     lift $ putStrLn "Enter left bound"
     msum $ repeat getDouble
 
+getRightRepeated :: MaybeT IO String
 getRightRepeated = do
     lift $ putStrLn "Enter right bound"
     msum $ repeat getDouble
 
 
+getValueRepeated :: Show a => a -> MaybeT IO String
 getValueRepeated s = do
     lift $ putStr "Enter value for parameter "
     lift $ print s
     msum $ repeat getDouble
 
+getError :: MaybeT IO String
 getError = do
     s <- lift getLine
     guard (isCorrectDouble s)
     guard ((read s :: Double) > 0)
     return s
 
+getErrorRepeated :: MaybeT IO String
 getErrorRepeated = do
     lift $ putStrLn "Enter positive error"
     msum $ repeat getError
@@ -103,10 +110,12 @@ getMethod = do
     guard (isCorrectMethod s)
     return s
 
+getMethodRepeated :: MaybeT IO String
 getMethodRepeated = do
     lift $ putStrLn "Enter method (linear/rectangle/parabolic)"
     msum $ repeat getMethod
 
+main :: IO ()
 main = do
     mbexpr <- runMaybeT getExprRepeated
     let expr = case mbexpr of ~(Just e) -> e
@@ -124,11 +133,11 @@ main = do
     let new_expr = setValues expr (Map.fromList $ zip (Set.toList vars) values)
 
     mberror <- runMaybeT getErrorRepeated
-    let error = case mberror of ~(Just e) -> read e :: Double
+    let error' = case mberror of ~(Just e) -> read e :: Double
 
     mbmethod <- runMaybeT getMethodRepeated
     let smethod = case mbmethod of ~(Just s) -> s
     let method = case parseMethod smethod of ~(Just m) -> m
 
     putStr "integral value is: "
-    print $ integrateWithError ParabolicApproximation (eval new_expr var) left right error
+    print $ integrateWithError method (eval new_expr var) left right error'

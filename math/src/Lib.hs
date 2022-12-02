@@ -25,7 +25,7 @@ integrateWithStepsCount ParabolicApproximation f a b steps =
 integrateLinAppWithPrevValue :: (Double -> Double) -> Double -> Double -> Int -> Double -> Double
 integrateLinAppWithPrevValue f a b steps prev =
   let h = (b - a) / fromIntegral steps in
-  let get_x = \i -> a + h * fromIntegral i in
+  let get_x = \i -> a + h * i in
   let new_terms = map (\i -> f $ get_x $ 2 * fromIntegral i + 1) [0..(steps `div` 2 - 1)] in
   prev / 2 + h * sum new_terms
 
@@ -57,10 +57,10 @@ theta ParabolicApproximation = 1 / 15
 theta _ = 1 / 3
 
 approximation :: Method -> [Double] -> Double -> Double
-approximation method l@(x : xs) err = go xs l
+approximation method l@(_ : xs) err = go xs l
   where 
     go :: [Double] -> [Double] -> Double
-    go (x : _ : xs) (y : ys) | abs(x - y) < theta method / 2 * err = x
-                             | otherwise = go xs ys 
+    go (x : _ : xs') (y : ys) | abs(x - y) < theta method / 2 * err = x
+                             | otherwise = go xs' ys 
     go _ _ = undefined
 approximation _ _ _ = undefined

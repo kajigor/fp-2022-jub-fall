@@ -1,6 +1,7 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use lambda-case" #-}
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
 module Parser where
 
 import Data.Char
@@ -56,8 +57,7 @@ instance Alternative Parser where
       z -> z
 
 exprParser :: Parser Expr
-exprParser = -- 1-2+3  will be 1-(2+3) and I have no idea how to fix
-    -- binOP <$> withoutPMParser <*> (minus <|> plus) <*> exprParser
+exprParser = 
       plusMinusParser
   <|> withoutPMParser
   where
@@ -82,7 +82,7 @@ exprParser = -- 1-2+3  will be 1-(2+3) and I have no idea how to fix
       <|> unaryParser
       <|> unit
 
-    unaryParser = UnaryOp <$> (sin <|> cos <|> abs) <*> exprInBrkts
+    unaryParser = UnaryOp <$> (sin' <|> cos' <|> abs') <*> exprInBrkts
 
     unit = numberParser <|> exprInBrkts <|> varParser
 
@@ -100,9 +100,9 @@ exprParser = -- 1-2+3  will be 1-(2+3) and I have no idea how to fix
     divide = char '/' $> Div
     pow    = char '^' $> Pow 
 
-    sin  = string "sin" $> Sin
-    cos  = string "cos" $> Cos
-    abs  = string "abs" $> Abs
+    sin'  = string "sin" $> Sin
+    cos'  = string "cos" $> Cos
+    abs'  = string "abs" $> Abs
     umin = char '-' $> UnaryMinus
 
 

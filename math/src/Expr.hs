@@ -1,26 +1,55 @@
+{-# LANGUAGE InstanceSigs #-}
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
 module Expr where
 
 import Data.Set as Set
-import Data.Map as Map
+import Data.Map as Map ( Map, lookup )
+import Numeric
 
 data Expr = BinOp BinOp Expr Expr
           | Number Double
           | Var String
           | UnaryOp UnaryOp Expr
-          deriving (Show, Eq)
+          deriving Eq
+
+
+instance Show Expr where 
+    show :: Expr -> String
+    show (BinOp op l r) = "(" ++ show l ++ ")" ++ show op ++ "(" ++ show r ++ ")"
+    show (Number n) = showFFloat (Just 6) n ""
+    show (Var x) = x
+    show (UnaryOp uOp e) = show uOp ++ "(" ++ show e ++ ")"
+
 
 data BinOp = Plus
            | Minus
            | Mult
            | Div
            | Pow
-           deriving (Show, Eq)
+           deriving Eq
+
+
+instance Show BinOp where
+    show :: BinOp -> String
+    show Plus = "+"
+    show Minus = "-"
+    show Div = "/"
+    show Mult = "*"
+    show Pow = "^"
+
 
 data UnaryOp = UnaryMinus
              | Sin
              | Cos
              | Abs
-             deriving (Show, Eq)
+             deriving Eq
+
+
+instance Show UnaryOp where
+    show UnaryMinus = "-"
+    show Sin = "sin"
+    show Cos = "cos"
+    show Abs = "abs"
 
 
 eval :: Expr -> String -> Double -> Double
@@ -52,9 +81,9 @@ variables (UnaryOp _ a) = variables a
 
 
 setValues :: Expr -> Map String Double -> Expr
-setValues (Number x) map = Number x
-setValues (BinOp op a b) map = BinOp op (setValues a map) (setValues b map)
-setValues (UnaryOp op a) map = UnaryOp op (setValues a map)
-setValues (Var x) map = case Map.lookup x map of
+setValues (Number x) _ = Number x
+setValues (BinOp op a b) varsMap = BinOp op (setValues a varsMap) (setValues b varsMap)
+setValues (UnaryOp op a) varsMap = UnaryOp op (setValues a varsMap)
+setValues (Var x) varsMap = case Map.lookup x varsMap of
     Nothing -> Var x
     Just num -> Number num

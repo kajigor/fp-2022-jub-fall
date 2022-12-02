@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-missing-export-lists #-}
 module Test.Integral where
 
 import Test.Tasty.HUnit
@@ -9,8 +10,10 @@ import qualified Hedgehog.Range as Range
 import Test.Tasty
 import Test.Tasty.Hedgehog
 
+sqr :: Num a => a -> a
 sqr x = x * x
 
+unit_integrals :: IO ()
 unit_integrals = do
     assertBool "should be similar" $
       abs (integrateWithStepsCount MiddleRectange sqr 0 1 100 - 1 / 3) < 0.001
@@ -71,7 +74,7 @@ genFunction =
 
 
 genError :: Gen Double
-genError = Gen.double (Range.constant 0.1 1)
+genError = Gen.double (Range.constant 0.001 1)
 
 genBound :: Gen Double
 genBound = Gen.double (Range.constant 0.0 1.0)
