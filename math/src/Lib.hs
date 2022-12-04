@@ -1,4 +1,5 @@
-module Lib ( integrateWithStepsCount, 
+{-# LANGUAGE InstanceSigs #-}
+module Lib ( integrateWithStepsCount,
              Method(MiddleRectange, LinearApproximation, ParabolicApproximation),
              integrateWithError, linearApproximationList
             )
@@ -18,7 +19,7 @@ integrateWithStepsCount LinearApproximation f a b steps =
   let terms = map f_i [1..(steps - 1)] in
   h * ((f a + f b) / 2 + sum terms)
 integrateWithStepsCount ParabolicApproximation f a b steps =
-  (4 * integrateWithStepsCount LinearApproximation f a b steps - 
+  (4 * integrateWithStepsCount LinearApproximation f a b steps -
     integrateWithStepsCount LinearApproximation f a b (steps `div` 2)) / 3
 
 
@@ -31,36 +32,54 @@ integrateLinAppWithPrevValue f a b steps prev =
 
 
 integrateWithError :: Method -> (Double -> Double) -> Double -> Double -> Double -> Double
-integrateWithError MiddleRectange f a b err = 
-  approximation MiddleRectange (map (integrateWithStepsCount MiddleRectange f a b) [10..]) err
-integrateWithError LinearApproximation f a b err = 
+integrateWithError MiddleRectange f a b err =
+  approximation MiddleRectange (fmap (integrateWithStepsCount MiddleRectange f a b) (infListNumbs 10)) err
+integrateWithError LinearApproximation f a b err =
   approximation LinearApproximation (linearApproximationList f a b) err
-integrateWithError ParabolicApproximation f a b err = 
+integrateWithError ParabolicApproximation f a b err =
   approximation ParabolicApproximation paraboloicList err
   where
-    paraboloicList = zipWith (\x y -> (4 * x - y) / 3) 
-      (tail $ linearApproximationList f a b) $ linearApproximationList f a b
+    paraboloicList :: InfList Double
+    paraboloicList = zipWithInf (\x y -> (4 * x - y) / 3)
+      (tailInf linApp) linApp
+
+    linApp = linearApproximationList f a b
 
 
 linearApproximationSeq :: (Double -> Double) -> Double -> Double -> Int -> Double
 linearApproximationSeq f a b 0 = integrateWithStepsCount LinearApproximation f a b 10
-linearApproximationSeq f a b n = 
+linearApproximationSeq f a b n =
   integrateLinAppWithPrevValue f a b (10 * (2 ^ n)) $ linearApproximationSeq f a b (n - 1)
 
 
-linearApproximationList :: (Double -> Double) -> Double -> Double -> [Double]
-linearApproximationList f a b = map (linearApproximationSeq f a b) [0..]
+data InfList a = a ::: (InfList a)
+
+instance Functor InfList where
+  fmap :: (a -> b) -> InfList a -> InfList b
+  fmap f (x ::: xs) = f x ::: fmap f xs
+
+tailInf :: InfList a -> InfList a
+tailInf (_ ::: xs) = xs
+
+zipWithInf :: (t1 -> t2 -> a) -> InfList t1 -> InfList t2 -> InfList a
+zipWithInf f (x ::: xs) (y ::: ys) = f x y ::: zipWithInf f xs ys
+
+infListNumbs :: Int -> InfList Int
+infListNumbs n = n ::: infListNumbs (n + 1)
+
+
+linearApproximationList :: (Double -> Double) -> Double -> Double -> InfList Double
+linearApproximationList f a b = fmap (linearApproximationSeq f a b) (infListNumbs 0)
 
 
 theta :: Method -> Double
 theta ParabolicApproximation = 1 / 15
 theta _ = 1 / 3
 
-approximation :: Method -> [Double] -> Double -> Double
-approximation method l@(_ : xs) err = go xs l
-  where 
-    go :: [Double] -> [Double] -> Double
-    go (x : _ : xs') (y : ys) | abs(x - y) < theta method / 2 * err = x
-                             | otherwise = go xs' ys 
-    go _ _ = undefined
-approximation _ _ _ = undefined
+
+approximation :: Method -> InfList Double -> Double -> Double
+approximation method l@(_ ::: xs) err = go xs l
+  where
+    go :: InfList Double -> InfList Double -> Double
+    go (x ::: (_ ::: xs')) (y ::: ys) | abs(x - y) < theta method / 2 * err = x
+                             | otherwise = go xs' ys

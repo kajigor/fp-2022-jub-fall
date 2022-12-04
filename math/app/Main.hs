@@ -11,22 +11,21 @@ import Control.Monad
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe as MaybeT
 
-isCorrectExpr :: String -> Bool
-isCorrectExpr s =
-    case runParser exprParser s of
-        Just ("", _) -> True
-        _ -> False
 
 getExpr :: MaybeT IO Expr
 getExpr = do
+    lift $ putStrLn "Enter function. Function should consist of +/-/*/ '/' /^."
+    lift $ putStrLn "There can also be unary operators: sin/cos/abs."
+    lift $ putStrLn "Function can contain few variables but only one of them "
+    lift $ putStrLn "can be used for integration (values of other you should enter later)."
     s <- lift getLine
-    guard (isCorrectExpr s)
     case runParser exprParser s of
-        ~(Just ("", expr)) -> return expr
+        Just ("", expr) -> return expr
+        _ -> mzero
+
 
 getExprRepeated :: MaybeT IO Expr
 getExprRepeated = do
-    lift $ putStrLn "Enter function"
     msum $ repeat getExpr
 
 
@@ -35,13 +34,13 @@ isCorrectVar = all isLower
 
 getVar :: MaybeT IO String
 getVar = do
+    lift $ putStrLn "Enter integration variable."
     s <- lift getLine
     guard (isCorrectVar s)
     return s
 
 getVarRepeated :: MaybeT IO String
 getVarRepeated = do
-    lift $ putStrLn "Enter integration variable"
     msum $ repeat getVar
 
 
@@ -75,6 +74,7 @@ getValueRepeated s = do
 
 getError :: MaybeT IO String
 getError = do
+    lift $ putStrLn "Enter positive error"
     s <- lift getLine
     guard (isCorrectDouble s)
     guard ((read s :: Double) > 0)
@@ -82,7 +82,6 @@ getError = do
 
 getErrorRepeated :: MaybeT IO String
 getErrorRepeated = do
-    lift $ putStrLn "Enter positive error"
     msum $ repeat getError
 
 
@@ -106,25 +105,23 @@ isCorrectMethod s = case parseMethod s of
 
 getMethod :: MaybeT IO String
 getMethod = do
+    lift $ putStrLn "Enter method (linear/rectangle/parabolic)"
     s <- lift getLine
     guard (isCorrectMethod s)
     return s
 
 getMethodRepeated :: MaybeT IO String
 getMethodRepeated = do
-    lift $ putStrLn "Enter method (linear/rectangle/parabolic)"
     msum $ repeat getMethod
 
 main :: IO ()
 main = do
-    mbexpr <- runMaybeT getExprRepeated
-    let expr = case mbexpr of ~(Just e) -> e
-    mbvar <- runMaybeT getVarRepeated
-    let var = case mbvar of ~(Just v) -> v
-    mbleft <- runMaybeT getLeftRepeated
-    let left = case mbleft of ~(Just l) -> read l :: Double
-    mbright <- runMaybeT getRightRepeated
-    let right = case mbright of ~(Just r) -> read r :: Double
+    putStrLn "Hello! It is integration console application!\n\n"
+
+    Just expr <- runMaybeT getExprRepeated
+    Just var <- runMaybeT getVarRepeated
+    Just str_left <- runMaybeT getLeftRepeated
+    Just str_right <- runMaybeT getRightRepeated
 
     let vars = Set.delete var $ variables expr
 
@@ -132,12 +129,14 @@ main = do
 
     let new_expr = setValues expr (Map.fromList $ zip (Set.toList vars) values)
 
-    mberror <- runMaybeT getErrorRepeated
-    let error' = case mberror of ~(Just e) -> read e :: Double
+    Just str_error <- runMaybeT getErrorRepeated
 
-    mbmethod <- runMaybeT getMethodRepeated
-    let smethod = case mbmethod of ~(Just s) -> s
-    let method = case parseMethod smethod of ~(Just m) -> m
+    Just (Just method) <- runMaybeT (parseMethod <$> getMethodRepeated)
 
     putStr "integral value is: "
-    print $ integrateWithError method (eval new_expr var) left right error'
+    print $ integrateWithError 
+        method 
+        (eval new_expr var) 
+        (read str_left :: Double) 
+        (read str_right :: Double) 
+        (read str_error :: Double) 
