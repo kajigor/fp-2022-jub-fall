@@ -27,7 +27,7 @@ data FieldChars = FieldChars {
     cols :: Int,
     bombs :: Set.Set (Cell),
     counts :: [[Int]]
-}
+} deriving Show
 
 getCellByNumber :: Int -> Int -> Int -> Set.Set (Cell) -> Int -> Cell
 getCellByNumber number x y placedBombs cols =
