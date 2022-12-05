@@ -13,6 +13,7 @@ import Data.Void
 import Lambda
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import Data.List.NonEmpty
 
 type Parser = Parsec Void String
 
@@ -42,20 +43,18 @@ parseBrackets = do
   _close <- char ')'
   return result
 
-listToApp :: [Lambda] -> Lambda
-listToApp [] = undefined
-listToApp [f] = f
-listToApp (f : x : xs) = listToApp (App f x : xs)
+listToApp :: NonEmpty Lambda -> Lambda
+listToApp (f :| xs) = foldl App f xs
 
 parseNoApp :: Parser Lambda
-parseNoApp = try parseAbs <|> try parseVar <|> try parseBrackets
+parseNoApp = parseAbs <|> parseVar <|> parseBrackets
 
 parseApp :: Parser Lambda
 parseApp = do
-  f <- try parseVar <|> try parseBrackets
+  f <- parseVar <|> parseBrackets
   _space <- char ' '
   xs <- parseNoApp `sepBy` char ' '
-  return $ listToApp (f : xs)
+  return $ listToApp (f :| xs)
 
 parseLambda :: Parser Lambda
-parseLambda = space *> (try parseAbs <|> try parseApp <|> try parseVar <|> try parseBrackets) <* space
+parseLambda = space *> (try parseApp <|> parseNoApp) <* space

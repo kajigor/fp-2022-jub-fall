@@ -65,6 +65,7 @@ test-suite proj-test
       Test.Parse
       Test.ParsePB
       Test.Reductions
+      Test.ReductionsPB
       Paths_proj
   hs-source-dirs:
       test

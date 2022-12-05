@@ -8,12 +8,13 @@ import Test.Tasty
 import Test.Tasty.HUnit
 import Text.Megaparsec
 import Text.Megaparsec.Char
+import Data.List.NonEmpty
 
 unit_listToApp :: IO()
 unit_listToApp = do
-  listToApp [x] @?= x
-  listToApp [x, y] @?= xy
-  listToApp [x, y, z] @?= xyz
+  listToApp (x :| []) @?= x
+  listToApp (x :| [y]) @?= xy
+  listToApp (x :| [y, z]) @?= xyz
 
 unit_parseLambda :: IO ()
 unit_parseLambda = do
