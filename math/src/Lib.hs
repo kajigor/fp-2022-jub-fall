@@ -32,13 +32,14 @@ integrateLinAppWithPrevValue f a b steps prev =
 
 
 integrateWithError :: Method -> (Double -> Double) -> Double -> Double -> Double -> Double
-integrateWithError MiddleRectange f a b err =
-  approximation MiddleRectange (fmap (integrateWithStepsCount MiddleRectange f a b) (infListNumbs 10)) err
-integrateWithError LinearApproximation f a b err =
-  approximation LinearApproximation (linearApproximationList f a b) err
-integrateWithError ParabolicApproximation f a b err =
-  approximation ParabolicApproximation paraboloicList err
+integrateWithError method f a b err =
+  case method of
+    MiddleRectange -> approximation method rectangleList err
+    LinearApproximation -> approximation method linApp err
+    ParabolicApproximation -> approximation method paraboloicList err
   where
+    rectangleList = fmap (integrateWithStepsCount MiddleRectange f a b) (infListNumbs 10)
+
     paraboloicList :: InfList Double
     paraboloicList = zipWithInf (\x y -> (4 * x - y) / 3)
       (tailInf linApp) linApp

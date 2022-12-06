@@ -10,6 +10,7 @@ import Data.Char
 import Control.Monad
 import Control.Monad.Trans.Class
 import Control.Monad.Trans.Maybe as MaybeT
+import Data.Maybe
 
 
 getExpr :: MaybeT IO Expr
@@ -44,52 +45,43 @@ getVarRepeated = do
     msum $ repeat getVar
 
 
-isCorrectDouble :: String -> Bool
-isCorrectDouble s = case runParser number s of
-    Just ("", _) -> True
-    _ -> False
-
-getDouble :: MaybeT IO String
+getDouble :: MaybeT IO Double
 getDouble = do
     s <- lift getLine
-    guard (isCorrectDouble s)
-    return s
+    case runParser number s of
+        (Just ("", a)) -> return a
+        _ -> mzero
 
-getLeftRepeated :: MaybeT IO String
+getLeftRepeated :: MaybeT IO Double
 getLeftRepeated = do
     lift $ putStrLn "Enter left bound"
     msum $ repeat getDouble
 
-getRightRepeated :: MaybeT IO String
+getRightRepeated :: MaybeT IO Double
 getRightRepeated = do
     lift $ putStrLn "Enter right bound"
     msum $ repeat getDouble
 
 
-getValueRepeated :: Show a => a -> MaybeT IO String
+getValueRepeated :: Show a => a -> MaybeT IO Double
 getValueRepeated s = do
     lift $ putStr "Enter value for parameter "
     lift $ print s
     msum $ repeat getDouble
 
-getError :: MaybeT IO String
+getError :: MaybeT IO Double
 getError = do
     lift $ putStrLn "Enter positive error"
     s <- lift getLine
-    guard (isCorrectDouble s)
-    guard ((read s :: Double) > 0)
-    return s
+    case runParser number s of
+        (Just ("", a)) -> if a > 0 
+                          then return a
+                          else mzero
+        _ -> mzero
 
-getErrorRepeated :: MaybeT IO String
+getErrorRepeated :: MaybeT IO Double
 getErrorRepeated = do
     msum $ repeat getError
-
-
-askValue :: String -> IO Double
-askValue s = do
-    val <- runMaybeT $ getValueRepeated s
-    return $ case val of ~(Just v) -> read v :: Double
-
 
 parseMethod :: String -> Maybe Method 
 parseMethod s = case s of
@@ -98,19 +90,15 @@ parseMethod s = case s of
     "parabolic" -> Just ParabolicApproximation
     _ -> Nothing
 
-isCorrectMethod :: String -> Bool
-isCorrectMethod s = case parseMethod s of
-    Just _ -> True
-    _ -> False
-
-getMethod :: MaybeT IO String
+getMethod :: MaybeT IO Method
 getMethod = do
     lift $ putStrLn "Enter method (linear/rectangle/parabolic)"
     s <- lift getLine
-    guard (isCorrectMethod s)
-    return s
+    case parseMethod s of
+        (Just method) -> return method
+        _ -> mzero
 
-getMethodRepeated :: MaybeT IO String
+getMethodRepeated :: MaybeT IO Method
 getMethodRepeated = do
     msum $ repeat getMethod
 
@@ -120,23 +108,25 @@ main = do
 
     Just expr <- runMaybeT getExprRepeated
     Just var <- runMaybeT getVarRepeated
-    Just str_left <- runMaybeT getLeftRepeated
-    Just str_right <- runMaybeT getRightRepeated
+    Just left <- runMaybeT getLeftRepeated
+    Just right <- runMaybeT getRightRepeated
 
     let vars = Set.delete var $ variables expr
 
-    values <- mapM askValue (Set.toList vars)
+    values <- mapM runMaybeT $ fmap getValueRepeated (Set.toList vars)
 
-    let new_expr = setValues expr (Map.fromList $ zip (Set.toList vars) values)
+    let upd_values = fmap fromJust values
 
-    Just str_error <- runMaybeT getErrorRepeated
+    let new_expr = setValues expr (Map.fromList $ zip (Set.toList vars) upd_values)
 
-    Just (Just method) <- runMaybeT (parseMethod <$> getMethodRepeated)
+    Just error' <- runMaybeT getErrorRepeated
+
+    Just method <- runMaybeT getMethodRepeated
 
     putStr "integral value is: "
     print $ integrateWithError 
         method 
         (eval new_expr var) 
-        (read str_left :: Double) 
-        (read str_right :: Double) 
-        (read str_error :: Double) 
+        left
+        right
+        error'

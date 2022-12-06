@@ -89,7 +89,7 @@ prop_error = property $ do
   let intLin = integrateWithError LinearApproximation func left right err
   let intRec = integrateWithError MiddleRectange func left right err
   let intPar = integrateWithError ParabolicApproximation func left right err
-  Hedgehog.assert (checkAllSame 1 intLin intRec intPar)
+  Hedgehog.assert (checkAllSame (err * 2) intLin intRec intPar)
 
   where
     checkAllSame :: Double -> Double -> Double -> Double -> Bool
@@ -99,8 +99,25 @@ prop_error = property $ do
       abs(b - c) < 2 * err
 
 
+prop_linear_int :: Property
+prop_linear_int = property $ do
+  k <- forAll $ Gen.double (Range.constant (-100) 100)
+  b <- forAll $ Gen.double (Range.constant (-100) 100)
+  left <- forAll genBound
+  right <- forAll genBound
+  let func = \x -> x * k + b
+  let err = 0.00001
+  let intLin = integrateWithError LinearApproximation func left right err
+  let intRec = integrateWithError MiddleRectange func left right err
+  let intPar = integrateWithError ParabolicApproximation func left right err
+  let trueValue = (right - left) * (func left + func right) / 2
+  Hedgehog.assert (abs (intLin - trueValue) < err)
+  Hedgehog.assert (abs (intRec - trueValue) < err)
+  Hedgehog.assert (abs (intPar - trueValue) < err)
+
 props :: [TestTree]
 props = 
   [ testProperty "Error is too big" prop_error
   , testCase "integrals" unit_integrals
+  , testProperty "integrals of linear function is wrong" prop_linear_int
   ]
