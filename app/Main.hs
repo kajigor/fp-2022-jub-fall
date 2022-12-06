@@ -4,8 +4,6 @@ import Minesweeper
 import System.Random
 import Graphics.UI.Gtk
 
-data FieldButtons = [[BU]]
-
 main :: IO ()
 main = do
     g <- newStdGen
@@ -40,7 +38,7 @@ main = do
     widgetShowAll window
     mainGUI
 
-createButtonFieldTable :: FieldChars -> IO Table -> FieldButtons
+createButtonFieldTable :: FieldChars -> IO Table -> [[Button]]
 createButtonFieldTable field table = createButtonFieldTableHelper field table 0 0 []
     where 
         createButtonFieldTableHelper field table x y currRow =
