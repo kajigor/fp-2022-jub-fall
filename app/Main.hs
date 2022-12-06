@@ -32,19 +32,19 @@ main = do
     --button3 <- buttonNewWithLabel "Quit"
     --onClicked button3 mainQuit
     --tableAttachDefaults table button3 0 2 1 2
-    buttons <- createButtonFieldTable field table
+    let buttons = createButtonFieldTable field table
     onDestroy window mainQuit
 
     widgetShowAll window
     mainGUI
 
-createButtonFieldTable :: FieldChars -> IO Table -> [[Button]]
+createButtonFieldTable :: FieldChars -> Table -> [[Button]]
 createButtonFieldTable field table = createButtonFieldTableHelper field table 0 0 []
     where 
         createButtonFieldTableHelper field table x y currRow =
             if (x == rows) then []
-            else if (y == cols) then currRow : (createButtonFieldTableHelper rows cols (x + 1) 0 [])
+            else if (y == cols) then currRow : (createButtonFieldTableHelper field table (x + 1) 0 [])
             else do
                 button <- buttonNewWithLabel ""
-                tableAttachDefaults table button2 cols (cols + 1) rows (rows + 1)
-                (createButtonFieldTablesHelper rows cols x (y + 1) (currRow ++ [button]))
+                tableAttachDefaults table button cols (cols + 1) rows (rows + 1)
+                (createButtonFieldTableHelper field table x (y + 1) (currRow ++ [button]))
