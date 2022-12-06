@@ -42,9 +42,9 @@ createButtonFieldTable :: FieldChars -> Table -> [[Button]]
 createButtonFieldTable field table = createButtonFieldTableHelper field table 0 0 []
     where 
         createButtonFieldTableHelper field table x y currRow =
-            if (x == rows) then []
-            else if (y == cols) then currRow : (createButtonFieldTableHelper field table (x + 1) 0 [])
+            if (x == (rows field)) then []
+            else if (y == (cols field)) then currRow : (createButtonFieldTableHelper field table (x + 1) 0 [])
             else do
                 button <- buttonNewWithLabel ""
-                tableAttachDefaults table button cols (cols + 1) rows (rows + 1)
+                tableAttachDefaults table button y (y + 1) x (x + 1)
                 (createButtonFieldTableHelper field table x (y + 1) (currRow ++ [button]))
