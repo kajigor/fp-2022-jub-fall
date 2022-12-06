@@ -1,0 +1,5 @@
+Expr:
+BinOp Plus (Number 42) (If (BinOp Eq (BinOp Plus (Number 1) (Number 2)) (Number 3)) (Number 13) (Boolean True))
+
+Value:
+Right 55
