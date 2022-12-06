@@ -45,6 +45,6 @@ createButtonFieldTable field table = createButtonFieldTableHelper field table 0 
             if (x == (rows field)) then []
             else if (y == (cols field)) then currRow : (createButtonFieldTableHelper field table (x + 1) 0 [])
             else do
-                button <- buttonNewWithLabel ""
+                let button = buttonNewWithLabel ""
                 let ret = tableAttachDefaults table button y (y + 1) x (x + 1)
                 (createButtonFieldTableHelper field table x (y + 1) (currRow ++ [button]))
