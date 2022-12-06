@@ -38,7 +38,7 @@ main = do
     widgetShowAll window
     mainGUI
 
-createButtonFieldTable :: FieldChars -> Table -> [[Button]]
+createButtonFieldTable :: FieldChars -> Table -> [[IO Button]]
 createButtonFieldTable field table = createButtonFieldTableHelper field table 0 0 []
     where 
         createButtonFieldTableHelper field table x y currRow =
