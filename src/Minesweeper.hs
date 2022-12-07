@@ -2,9 +2,6 @@ module Minesweeper where
 
 import System.Random
 import qualified Data.Set as Set
-import qualified Hedgehog.Range as Range
-import qualified Hedgehog.Gen as Gen
-import Hedgehog
 
 data Cell = Cell {
     x :: Int,
@@ -21,6 +18,14 @@ data GameState = GameState {
     opened :: Set.Set (Cell),
     status :: GameStatus
 } deriving (Show, Eq)
+
+gameBegin :: GameState
+gameBegin =
+    GameState {
+        opened = Set.empty,
+        flags = Set.empty,
+        status = Ongoing
+    }
 
 data FieldChars = FieldChars {
     rows :: Int,
@@ -44,6 +49,14 @@ generateField rows cols cntBombs randList = generateFieldHelper rows cols cntBom
             else do
                 let freeCells = (rows * cols - (Set.size placedBombs))
                 generateFieldHelper rows cols cntBombs (Set.insert (getCellByNumber (randomInt `mod` freeCells) 0 0 placedBombs cols) placedBombs) randList
+
+getSymb :: FieldChars -> GameState -> Int -> Int -> String
+getSymb field game x y = 
+    if (status game /= Ongoing && Set.member (Cell x y) (bombs field)) then "*"
+    else if (Set.member (Cell x y) (flags game)) then "?"
+    else if (Set.notMember (Cell x y) (opened game)) then "■"
+    else if (((counts field)!!x)!!y > 0) then show (((counts field)!!x)!!y)
+    else " "
 
 isCellInBounds :: Int -> Int -> Cell -> Bool
 isCellInBounds rows cols cell = ((x cell) >= 0 && (y cell) >= 0 && (x cell) < rows && (y cell) < cols)
@@ -109,14 +122,14 @@ checkAndFinishGame field game =
     if (isGameFinished field game) then game { status = Win }
     else game
 
-doActionOnOpen :: FieldChars -> GameState -> Cell -> GameState
+doActionOnOpen :: FieldChars -> GameState -> Cell -> (GameState, String)
 doActionOnOpen field game cell =
-    if (isBombActivated field game cell) then game { opened = (Set.insert cell (opened game)), status = Lose }
-    else if ((isFlagOnOpening field game cell) || (isCellOpened field game cell)) then game
-    else checkAndFinishGame field (game { opened = Set.union (opened game) (openAreaWhenClick field game cell)} )
+    if ((isFlagOnOpening field game cell) || (isCellOpened field game cell)) then (game, "Can't open a cell with a flag or an already opened cell")
+    else if (isBombActivated field game cell) then (game { opened = (Set.insert cell (opened game)), status = Lose }, "Boom")
+    else (checkAndFinishGame field (game { opened = Set.union (opened game) (openAreaWhenClick field game cell)} ), "Successfully opened a cell")
 
-doActionOnFlag :: FieldChars -> GameState -> Cell -> GameState
+doActionOnFlag :: FieldChars -> GameState -> Cell -> (GameState, String)
 doActionOnFlag field game cell = 
-    if (isCellOpened field game cell) then game
-    else if (isFlagOnOpening field game cell) then game { flags = (Set.delete cell (flags game)) }
-    else game { flags = (Set.insert cell (flags game)) }
+    if (isCellOpened field game cell) then (game, "Can't put a flag on an opened cell")
+    else if (isFlagOnOpening field game cell) then (game { flags = (Set.delete cell (flags game)) }, "Erased a flag")
+    else (game { flags = (Set.insert cell (flags game)) }, "Put a flag")

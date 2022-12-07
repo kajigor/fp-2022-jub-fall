@@ -98,9 +98,9 @@ unit_openAreaWhenClick = do
     openAreaWhenClick field1 game1begin (Cell 3 2) @?= Set.fromList [(Cell 1 1), (Cell 1 2), (Cell 1 3), (Cell 2 1), (Cell 2 2), (Cell 2 3), (Cell 3 1), (Cell 3 2), (Cell 3 3)]
 
 unit_doActions = do
-    doActionOnFlag field1 (doActionOnOpen field1 game1begin (Cell 0 0)) (Cell 1 0) @?= game1goes1
-    doActionOnOpen field1 game1goes1 (Cell 2 2) @?= game1goes2
-    doActionOnOpen field1 game1goes2 (Cell 1 0) @?= game1goes2
-    doActionOnOpen field1 game1goes2 (Cell 0 1) @?= game1fail
-    doActionOnFlag field1 (doActionOnFlag field1 game1goes2 (Cell 1 0)) (Cell 0 1) @?= game1changeflag
-    doActionOnOpen field1 (doActionOnOpen field1 game1changeflag (Cell 1 0)) (Cell 3 0) @?= game1win
+    (fst doActionOnFlag field1 (doActionOnOpen field1 game1begin (Cell 0 0)) (Cell 1 0)) @?= game1goes1
+    (fst doActionOnOpen field1 game1goes1 (Cell 2 2)) @?= game1goes2
+    (fst doActionOnOpen field1 game1goes2 (Cell 1 0)) @?= game1goes2
+    (fst doActionOnOpen field1 game1goes2 (Cell 0 1)) @?= game1fail
+    (fst doActionOnFlag field1 (doActionOnFlag field1 game1goes2 (Cell 1 0)) (Cell 0 1)) @?= game1changeflag
+    (fst doActionOnOpen field1 (doActionOnOpen field1 game1changeflag (Cell 1 0)) (Cell 3 0)) @?= game1win

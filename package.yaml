@@ -38,7 +38,6 @@ library:
   - containers
   - hedgehog
   - random
-  - gtk
 
 executables:
   P-exe:
@@ -52,7 +51,6 @@ executables:
     - P
     - containers
     - random
-    - gtk
 
 tests:
   P-test:
