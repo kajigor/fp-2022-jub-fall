@@ -3,6 +3,8 @@
 
 module Reductions where
 import Lambda
+import Control.Monad.State
+import Data.Maybe
 import qualified Data.Set as Set
 
 -- Выберите подходящий тип для подстановок.
@@ -33,17 +35,48 @@ isWeak CallByName = True
 isWeak _ = False
 
 -- Выполняет CAS на верхнем уровне, если можно, и снова запускает eval на результате
-evalApp :: Strategy -> Lambda -> Lambda -> Lambda
-evalApp strategy (Abs x y) z = eval strategy (y `cas` Subst x z)
-evalApp strategy x y = App (eval strategy x) (eval strategy y)
+evalApp :: Strategy -> Lambda -> Lambda -> StateT Int Maybe Lambda
+evalApp strategy (Abs x y) z = evalBounded strategy (y `cas` Subst x z)
+evalApp strategy x y = do
+  fuel <- get
+  if fuel <= 0
+    then lift Nothing
+    else put (fuel - 1)
+    
+  x' <- evalBounded strategy x
+  y' <- evalBounded strategy y
+  return $ App x' y'
 
 -- Интерпретатор лямбда термов, учитывающий стратегию.
+evalBounded :: Strategy -> Lambda -> StateT Int Maybe Lambda
+evalBounded _ (Var x) = return $ Var x
+
+evalBounded strategy (Abs x y)
+  | isWeak strategy = return $ Abs x y
+  | otherwise = do
+      y' <- evalBounded strategy y
+      return $ Abs x y'
+
+evalBounded CallByName (App x y) = do
+  x' <- evalBounded CallByName x
+  evalApp CallByName x' y
+
+evalBounded NormalOrder (App x y) = do
+  x' <- evalBounded CallByName x
+  evalApp NormalOrder x' y
+
+evalBounded CallByValue (App x y) = do
+  x' <- evalBounded CallByValue x
+  y' <- evalBounded CallByValue y
+  evalApp CallByValue x' y'
+
+evalBounded ApplicativeOrder (App x y) = do
+  x' <- evalBounded ApplicativeOrder x
+  y' <- evalBounded ApplicativeOrder y
+  evalApp ApplicativeOrder x' y'
+
+evalMaybe :: Strategy -> Lambda -> Maybe Int -> Maybe Lambda
+evalMaybe strategy expression limit = evalStateT (evalBounded strategy expression) (fromMaybe maxBound limit)
+
 eval :: Strategy -> Lambda -> Lambda
-eval _ (Var x) = Var x
-eval strategy (Abs x y)
-  | isWeak strategy = Abs x y
-  | otherwise = Abs x (eval strategy y)
-eval CallByName (App x y) = evalApp CallByName (eval CallByName x) y
-eval NormalOrder (App x y) = evalApp NormalOrder (eval CallByName x) y
-eval CallByValue (App x y) = evalApp CallByValue (eval CallByValue x) (eval CallByValue y)
-eval ApplicativeOrder (App x y) = evalApp ApplicativeOrder (eval ApplicativeOrder x) (eval ApplicativeOrder y)
+eval strategy expression = fromJust (evalMaybe strategy expression Nothing)
