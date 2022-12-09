@@ -1,8 +1,12 @@
-module Test.MinesweeperTest where
+module Test.UnitTests where
 
-import Test.Tasty.HUnit (Assertion, (@?=), assertBool)
+import Test.Tasty.HUnit
 import Minesweeper
 import Data.Set as Set
+import Test.Tasty
+import Test.Tasty.Hedgehog
+import Hedgehog
+
 
 field1 :: FieldChars
 field1 = 
@@ -61,6 +65,7 @@ game1win =
         status = Win
     }
 
+unit_generateField :: Assertion
 unit_generateField = do
     let generated = (generateField 2 5 5 [1, 2, 7, 0, 3, 5, 5, 5])
     (snd generated) @?= [5, 5, 5]
@@ -69,38 +74,58 @@ unit_generateField = do
     (rows (fst generated)) @?= 2
     (cols (fst generated)) @?= 5
 
+unit_countNeighbour :: Assertion
 unit_countNeighbour = do
     countNeighbour 10 10 (Cell 2 2) (\cell -> (x cell) + (y cell) <= 4) @?= 6
     countNeighbour 10 10 (Cell 0 1) (\cell -> True) @?= 6
     countNeighbour 2 3 (Cell 1 2) (\cell -> True) @?= 4
 
+unit_countCounts :: Assertion
 unit_countCounts = do
     countCounts 4 4 (bombs field1) @?= (counts field1)
 
+unit_isFlagOnOpening :: Assertion
 unit_isFlagOnOpening = do
     isFlagOnOpening field1 game1goes1 (Cell 0 0) @?= False
     isFlagOnOpening field1 game1goes1 (Cell 1 0) @?= True
 
+unit_isBombActivated :: Assertion
 unit_isBombActivated = do
     isBombActivated field1 game1goes1 (Cell 3 3) @?= False
     isBombActivated field1 game1goes1 (Cell 2 0) @?= True
 
-unit_isCellOpened= do
+unit_isCellOpened :: Assertion
+unit_isCellOpened = do
     isCellOpened field1 game1goes2 (Cell 1 0) @?= False
     isCellOpened field1 game1goes2 (Cell 3 2) @?= True
 
+unit_isGameFinished :: Assertion
 unit_isGameFinished = do
     isGameFinished field1 game1goes1 @?= False
     isGameFinished field1 game1win @?= True
 
+unit_openAreaWhenClick :: Assertion
 unit_openAreaWhenClick = do
     openAreaWhenClick field1 game1begin (Cell 0 0) @?= Set.fromList [(Cell 0 0)]
     openAreaWhenClick field1 game1begin (Cell 3 2) @?= Set.fromList [(Cell 1 1), (Cell 1 2), (Cell 1 3), (Cell 2 1), (Cell 2 2), (Cell 2 3), (Cell 3 1), (Cell 3 2), (Cell 3 3)]
 
+unit_doActions :: Assertion
 unit_doActions = do
-    (fst doActionOnFlag field1 (doActionOnOpen field1 game1begin (Cell 0 0)) (Cell 1 0)) @?= game1goes1
-    (fst doActionOnOpen field1 game1goes1 (Cell 2 2)) @?= game1goes2
-    (fst doActionOnOpen field1 game1goes2 (Cell 1 0)) @?= game1goes2
-    (fst doActionOnOpen field1 game1goes2 (Cell 0 1)) @?= game1fail
-    (fst doActionOnFlag field1 (doActionOnFlag field1 game1goes2 (Cell 1 0)) (Cell 0 1)) @?= game1changeflag
-    (fst doActionOnOpen field1 (doActionOnOpen field1 game1changeflag (Cell 1 0)) (Cell 3 0)) @?= game1win
+    (fst (doActionOnFlag field1 (fst (doActionOnOpen field1 game1begin (Cell 0 0))) (Cell 1 0))) @?= game1goes1
+    (fst (doActionOnOpen field1 game1goes1 (Cell 2 2))) @?= game1goes2
+    (fst (doActionOnOpen field1 game1goes2 (Cell 1 0))) @?= game1goes2
+    (fst (doActionOnOpen field1 game1goes2 (Cell 0 1))) @?= game1fail
+    (fst (doActionOnFlag field1 (fst (doActionOnFlag field1 game1goes2 (Cell 1 0))) (Cell 0 1))) @?= game1changeflag
+    (fst (doActionOnOpen field1 (fst (doActionOnOpen field1 game1changeflag (Cell 1 0))) (Cell 3 0))) @?= game1win
+
+unitTests :: [TestTree]
+unitTests =
+  [ testCase "Generates field correctly" unit_generateField
+  , testCase "countNeighbour works correctly" unit_countNeighbour
+  , testCase "Counts the counts of the field correctly" unit_countCounts
+  , testCase "isFlagOnOpenning works correctly" unit_isFlagOnOpening
+  , testCase "isBombActivated works correctly" unit_isBombActivated
+  , testCase "isCellOpened works correctly" unit_isCellOpened
+  , testCase "isGameFinished works correctly" unit_isGameFinished
+  , testCase "openAreaWhenClick works correctly" unit_openAreaWhenClick
+  , testCase "Does actions correctly" unit_doActions]
