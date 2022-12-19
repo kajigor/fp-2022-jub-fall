@@ -1,5 +1,7 @@
 module Test.Reductions where
-import Test.HUnit (Assertion, assertBool, (@?=))
+
+import Test.Tasty
+import Test.Tasty.HUnit
 
 import Reductions
 import Lambda
@@ -73,3 +75,7 @@ unit_eval = do
     (alphaEq (fromJust (reductor ApplicativeOrder term_eval3)) term_eval3_Applicative) @?= True
     (alphaEq (fromJust (reductor ApplicativeOrder term_eval4)) term_eval4_Applicative) @?= True
  
+
+props :: [TestTree]
+props = 
+  [testCase "unit_eval" unit_eval]

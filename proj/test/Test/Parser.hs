@@ -1,6 +1,8 @@
 
 module Test.Parser where
-import Test.HUnit (Assertion, assertBool, (@?=))
+    
+import Test.Tasty
+import Test.Tasty.HUnit
 
 import Parser
 import Lambda
@@ -30,3 +32,7 @@ unit_parse_string = do
     (runParser exprParser (show term3)) @?= Just ("", term3)
     (runParser exprParser (show term4)) @?= Just ("", term4)
     (runParser exprParser (show term5)) @?= Just ("", term5)
+
+props :: [TestTree]
+props = 
+  [testCase "unit_parse_string" unit_parse_string]

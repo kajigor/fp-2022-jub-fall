@@ -1,6 +1,8 @@
 
 module Test.Lambda where
-import Test.HUnit (Assertion, assertBool, (@?=))
+    
+import Test.Tasty
+import Test.Tasty.HUnit
 
 import Lambda
 
@@ -62,3 +64,8 @@ unit_show_string = do
     (show or') @?= "λp.λq.p p q"
     (show (App (Abs "x" (App (Var "t") (Var "x"))) (Abs "y" (Var "y")))) @?= "(λx.t x) (λy.y)"
     (show (App (App (Var "t") (Var "x")) (Abs "y" (Var "y")))) @?= "t x (λy.y)"
+
+
+props :: [TestTree]
+props = 
+  [testCase "unit_show_string" unit_show_string]

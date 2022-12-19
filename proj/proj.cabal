@@ -85,7 +85,7 @@ test-suite proj-test
     , proj
     , tasty
     , tasty-discover
-    , tasty-hedgehog >=0.2.0.0 && <0.3
+    , tasty-hedgehog
     , tasty-hspec
     , tasty-hunit
     , tasty-quickcheck

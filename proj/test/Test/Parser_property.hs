@@ -22,12 +22,12 @@ genLambda =
         genVar
     ]
     [
-        genLambda,
+        genAbs,
         genApp
     ]
   where
     genVar = Lambda.Var <$> genLetter
-    genLambda = do
+    genAbs = do
       lt <- (Lambda.Abs <$> genLetter)
       Gen.subterm genLambda lt
     genApp = do
