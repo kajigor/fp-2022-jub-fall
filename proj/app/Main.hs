@@ -6,6 +6,7 @@ module Main where
 import Parser
 import Reductions
 import Lambda
+import Data.Maybe
 import Data.GI.Base
 import System.Posix.Unistd
 import qualified Data.Text as Text
@@ -13,11 +14,11 @@ import qualified GI.Gtk as Gtk
 import qualified GI.Gtk.Objects as Objects
 
 
-reduce :: Maybe (String, Lambda.Lambda String) -> Maybe (Lambda.Lambda String) 
-reduce res = do 
-  str <- res
-  ans <- (reductor NormalOrder (snd str))
-  return ans
+reduceIfOk :: Maybe (String, Lambda.Lambda String) -> String -> String
+reduceIfOk Nothing str = ("Could not parse " ++ str)
+reduceIfOk (Just ("", lambda)) str = show (fromJust (reductor NormalOrder lambda))
+reduceIfOk (Just (remain, lambda)) str = 
+  ("Could not parse " ++ remain)
 
 buttonClickHandler :: Objects.Entry -> Gtk.Label -> IO ()
 buttonClickHandler input output =
@@ -25,8 +26,8 @@ buttonClickHandler input output =
     str <- Gtk.entryGetText input
     let x = Text.unpack str
     let lambda = (runParser exprParser x)
-    let lambda_red = reduce lambda
-    Gtk.labelSetText output (Text.pack (show lambda_red))
+    let response = reduceIfOk lambda x
+    Gtk.labelSetText output (Text.pack response)
 
 main :: IO ()
 main = do
