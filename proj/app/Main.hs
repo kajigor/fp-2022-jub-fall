@@ -47,17 +47,25 @@ main = do
   
   #resize win 640 480
 
+  term_message <- new Gtk.Label [#label := ""]
+  Gtk.labelSetText term_message "Print term"
+
   msg <- new Objects.Entry []
+
+  type_message <- new Gtk.Label [#label := ""]
+  Gtk.labelSetText type_message "Print type (choose from CallByValue | CallByName | NormalOrder | ApplicativeOrder)"
 
   msg_type <- new Objects.Entry []
 
   box <- new Gtk.Box [ #orientation := Gtk.OrientationVertical ]
   #add win box
 
+  #packStart box term_message True False 0
   #packStart box msg True False 10
+  #packStart box type_message True False 0
   #packStart box msg_type True False 10
 
-  text <- new Gtk.Label [#label := "0"]
+  text <- new Gtk.Label [#label := ""]
   #packStart box text True False 10
 
   btn <- new Gtk.Button [ #label := "Click me!" ]
