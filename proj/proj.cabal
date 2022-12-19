@@ -36,6 +36,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , exceptions
     , gi-gtk
     , haskell-gi-base
     , hedgehog
@@ -53,6 +54,7 @@ executable proj-exe
   build-depends:
       base >=4.7 && <5
     , containers
+    , exceptions
     , gi-gtk
     , haskell-gi-base
     , hedgehog
@@ -79,6 +81,7 @@ test-suite proj-test
     , HUnit-approx
     , base >=4.7 && <5
     , containers
+    , exceptions
     , gi-gtk
     , haskell-gi-base
     , hedgehog

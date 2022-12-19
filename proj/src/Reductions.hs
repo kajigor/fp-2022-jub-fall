@@ -39,6 +39,7 @@ cas_with_closed (Abs x a) subst closed = (Abs y (cas_with_closed (cas_with_close
         new_closed = Set.insert y closed
 
 data Strategy = CallByValue | CallByName | NormalOrder | ApplicativeOrder
+                deriving (Show, Read)
 
 
 reductor :: Strategy -> Lambda String -> Maybe (Lambda String)
@@ -131,3 +132,9 @@ reductorApplicative = (((\x -> \y -> (App y x))) <$> unpack_first <*> reductorAp
             <|> (App <$> unpack_second <*> reductorApplicative)
             <|> (cas_red <$> unpack_lambda) 
             <|> (((\x -> \y -> (Abs x y))) <$> into_lambda <*> reductorApplicative)
+
+reduce_list :: Strategy -> Lambda.Lambda String -> [Lambda.Lambda String] -> [Lambda.Lambda String]
+reduce_list strategy term lst = (term_reduced term1)
+    where term1 = reductor strategy term
+          term_reduced (Just term_new) = (reduce_list strategy term_new (lst ++ [term]))
+          term_reduced Nothing = lst ++ [term] 
