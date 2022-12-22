@@ -18,7 +18,7 @@
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
 resolver:
-  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/28.yaml
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/20/1.yaml
 #  compiler: ghc-8.10.7
 
 # User packages to be built.
@@ -31,7 +31,7 @@ resolver:
 #   - auto-update
 #   - wai
 packages:
-- .
+  - .
 # Dependency packages to be pulled from upstream that are not in the resolver.
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
@@ -41,23 +41,23 @@ packages:
 # - git: https://github.com/commercialhaskell/stack.git
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
-extra-deps: 
-  - hip-1.5.6.0
-  - Chart-diagrams-1.9.4@sha256:c04a6f1005aac1d5cdbba9d835cac302e9de4033314c2253a4c4f3b69c5afb4b,1762
-  - repa-3.4.1.5@sha256:4d94845e66d668345130f75f5de8f7c69139b91495c8c4b5a825014e8985e2fd,3562
-  - SVGFonts-1.8.0.1@sha256:66a29cebd825bdac6ed1da83bd3a310ba6e8db5d63d6511015d644b9a8ec48b8,3019
-  - diagrams-core-1.5.0.1@sha256:1ae7c35c61da6acc4f0cba6ac9457da9b507ae95456512e76a7cc109003cb0c0,2899
-  - diagrams-lib-1.4.5.3@sha256:3254bde663b2ba9b24dc9b208d2955fe8d3d944d3c8c81df3990b696a72c5a13,8242
-  - diagrams-postscript-1.5.1@sha256:ef80dca9931d5e4086a80085fcffada2432399d8bf3b9704f8bdca8b0614c670,2395
-  - diagrams-svg-1.4.3.1@sha256:2060a54662caa103ec9ce9e132204892ffdc3843b71671556e9998ef929cd508,3128
-  - svg-builder-0.1.1@sha256:5f44fc6623bf28b6067a5d619dbb9a78825d453266b6f02f69b1e5a03caaf9b2,1580
-  - active-0.2.0.16@sha256:0fc2d83741b9b09f9d3867d29b14d6f996aff1cec13810af1285788993b8b730,1788
-  - dual-tree-0.2.3.1@sha256:fdae62646fb4383a49b2d30862bb0824a06114b81fc74b65f3246c6ceb096006,2758
-  - fsnotify-0.4.1.0@sha256:44540beabea36aeeef930aa4d5f28091d431904bc9923b6ac4d358831c651235,2854
-  - lens-5.2@sha256:06029d80a926c466ae7e59e7e41f114e1f437526f776d022a8d0e19a6dc14576,14519
-  - monoid-extras-0.6.1@sha256:03141a1513274a0618fccf9aac34923d3cef64b23df716d86d0decd50efeeb13,2284
-  - statestack-0.3.1@sha256:88d630aa2556ca699f6c96625e81973cf0e6ea6384e3c7f9c59f69fd8f4e7daf,1098
- # - lens-5.0.1@sha256:63ed57e4d54c583ae2873d6892ef690942d90030864d0b772413a1458e98159f,15544
+extra-deps:
+  # - hip-1.5.6.0
+  # - Chart-diagrams-1.9.4@sha256:c04a6f1005aac1d5cdbba9d835cac302e9de4033314c2253a4c4f3b69c5afb4b,1762
+  # - repa-3.4.1.5@sha256:4d94845e66d668345130f75f5de8f7c69139b91495c8c4b5a825014e8985e2fd,3562
+  # - SVGFonts-1.8.0.1@sha256:66a29cebd825bdac6ed1da83bd3a310ba6e8db5d63d6511015d644b9a8ec48b8,3019
+  # - diagrams-core-1.5.0.1@sha256:1ae7c35c61da6acc4f0cba6ac9457da9b507ae95456512e76a7cc109003cb0c0,2899
+  # - diagrams-lib-1.4.5.3@sha256:3254bde663b2ba9b24dc9b208d2955fe8d3d944d3c8c81df3990b696a72c5a13,8242
+  # - diagrams-postscript-1.5.1@sha256:ef80dca9931d5e4086a80085fcffada2432399d8bf3b9704f8bdca8b0614c670,2395
+  # - diagrams-svg-1.4.3.1@sha256:2060a54662caa103ec9ce9e132204892ffdc3843b71671556e9998ef929cd508,3128
+  # - svg-builder-0.1.1@sha256:5f44fc6623bf28b6067a5d619dbb9a78825d453266b6f02f69b1e5a03caaf9b2,1580
+  # - active-0.2.0.16@sha256:0fc2d83741b9b09f9d3867d29b14d6f996aff1cec13810af1285788993b8b730,1788
+  # - dual-tree-0.2.3.1@sha256:fdae62646fb4383a49b2d30862bb0824a06114b81fc74b65f3246c6ceb096006,2758
+  # - fsnotify-0.4.1.0@sha256:44540beabea36aeeef930aa4d5f28091d431904bc9923b6ac4d358831c651235,2854
+  # - lens-5.2@sha256:06029d80a926c466ae7e59e7e41f114e1f437526f776d022a8d0e19a6dc14576,14519
+  # - monoid-extras-0.6.1@sha256:03141a1513274a0618fccf9aac34923d3cef64b23df716d86d0decd50efeeb13,2284
+  # - statestack-0.3.1@sha256:88d630aa2556ca699f6c96625e81973cf0e6ea6384e3c7f9c59f69fd8f4e7daf,1098
+  # - lens-5.0.1@sha256:63ed57e4d54c583ae2873d6892ef690942d90030864d0b772413a1458e98159f,15544
 # Override default flag values for local packages and extra-deps
 
 # flags: {}
