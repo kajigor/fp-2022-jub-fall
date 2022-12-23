@@ -111,21 +111,20 @@ unit_openAreaWhenClick = do
 
 unit_doActions :: Assertion
 unit_doActions = do
-    (fst (doActionOnFlag field1 (fst (doActionOnOpen field1 game1begin (Cell 0 0))) (Cell 1 0))) @?= game1goes1
-    (fst (doActionOnOpen field1 game1goes1 (Cell 2 2))) @?= game1goes2
-    (fst (doActionOnOpen field1 game1goes2 (Cell 1 0))) @?= game1goes2
-    (fst (doActionOnOpen field1 game1goes2 (Cell 0 1))) @?= game1fail
-    (fst (doActionOnFlag field1 (fst (doActionOnFlag field1 game1goes2 (Cell 1 0))) (Cell 0 1))) @?= game1changeflag
-    (fst (doActionOnOpen field1 (fst (doActionOnOpen field1 game1changeflag (Cell 1 0))) (Cell 3 0))) @?= game1win
+    doActionOnFlag field1 (doActionOnOpen field1 game1begin (Cell 0 0)) (Cell 1 0) @?= game1goes1
+    doActionOnOpen field1 game1goes1 (Cell 2 2) @?= game1goes2
+    doActionOnOpen field1 game1goes2 (Cell 1 0) @?= game1goes2
+    doActionOnOpen field1 game1goes2 (Cell 0 1) @?= game1fail
+    doActionOnFlag field1 (doActionOnFlag field1 game1goes2 (Cell 1 0)) (Cell 0 1) @?= game1changeflag
+    doActionOnOpen field1 (doActionOnOpen field1 game1changeflag (Cell 1 0)) (Cell 3 0) @?= game1win
 
 unitTests :: [TestTree]
 unitTests =
   [ testCase "Generates field correctly" unit_generateField
-  , testCase "countNeighbour works correctly" unit_countNeighbour
-  , testCase "Counts the counts of the field correctly" unit_countCounts
-  , testCase "isFlagOnOpenning works correctly" unit_isFlagOnOpening
-  , testCase "isBombActivated works correctly" unit_isBombActivated
-  , testCase "isCellOpened works correctly" unit_isCellOpened
-  , testCase "isGameFinished works correctly" unit_isGameFinished
-  , testCase "openAreaWhenClick works correctly" unit_openAreaWhenClick
-  , testCase "Does actions correctly" unit_doActions]
+  , testCase "countNeighbour for some predicate and just the number of cells" unit_countNeighbour
+  , testCase "Counts the neighbouring bombs of the field" unit_countCounts
+  , testCase "isFlagOnOpenning for flag and not flag" unit_isFlagOnOpening
+  , testCase "isBombActivated for bomb and not bomb" unit_isBombActivated
+  , testCase "isCellOpened for opened and not opened" unit_isCellOpened
+  , testCase "isGameFinished for win and ongoing" unit_isGameFinished
+  , testCase "openAreaWhenClick for corner and middle cells" unit_openAreaWhenClick]

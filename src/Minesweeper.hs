@@ -59,7 +59,9 @@ getSymb field game x y =
     else " "
 
 isCellInBounds :: Int -> Int -> Cell -> Bool
-isCellInBounds rows cols cell = ((x cell) >= 0 && (y cell) >= 0 && (x cell) < rows && (y cell) < cols)
+isCellInBounds rows cols cell = (isNumInRange (x cell) 0 (rows - 1)) && (isNumInRange (y cell) 0 (cols - 1))
+    where
+        isNumInRange num left right = (left <= num) && (num <= right)
 
 countNeighbour :: Int -> Int -> Cell -> (Cell -> Bool) -> Int
 countNeighbour rows cols cell predicate = countNeighbourHelper rows cols cell predicate (Cell (-1) (-1)) 
@@ -103,7 +105,7 @@ openAreaWhenClick field game cell = fst (openAreaHelper field game cell Set.empt
                 let ret6 = (openAreaHelper field game cell (snd ret5) (Cell (-1) 1))
                 let ret7 = (openAreaHelper field game cell (snd ret6) (Cell 1 (-1)))
                 let ret8 = (openAreaHelper field game cell (snd ret7) (Cell 1 1))
-                (Set.union (Set.fromList [cell]) (Set.union (uniteFourSets (fst ret1) (fst ret2) (fst ret3) (fst ret4)) (uniteFourSets (fst ret5) (fst ret6) (fst ret7) (fst ret8))), (snd ret8))
+                (Set.unions [(Set.fromList [cell]), (fst ret1), (fst ret2), (fst ret3), (fst ret4), (fst ret5), (fst ret6), (fst ret7), (fst ret8)], (snd ret8))
 
 isFlagOnOpening :: FieldChars -> GameState -> Cell -> Bool
 isFlagOnOpening _ game cell = Set.member cell (flags game)
@@ -121,15 +123,3 @@ checkAndFinishGame :: FieldChars -> GameState -> GameState
 checkAndFinishGame field game = 
     if (isGameFinished field game) then game { status = Win }
     else game
-
-doActionOnOpen :: FieldChars -> GameState -> Cell -> (GameState, String)
-doActionOnOpen field game cell =
-    if ((isFlagOnOpening field game cell) || (isCellOpened field game cell)) then (game, "Can't open a cell with a flag or an already opened cell")
-    else if (isBombActivated field game cell) then (game { opened = (Set.insert cell (opened game)), status = Lose }, "Boom")
-    else (checkAndFinishGame field (game { opened = Set.union (opened game) (openAreaWhenClick field game cell)} ), "Successfully opened a cell")
-
-doActionOnFlag :: FieldChars -> GameState -> Cell -> (GameState, String)
-doActionOnFlag field game cell = 
-    if (isCellOpened field game cell) then (game, "Can't put a flag on an opened cell")
-    else if (isFlagOnOpening field game cell) then (game { flags = (Set.delete cell (flags game)) }, "Erased a flag")
-    else (game { flags = (Set.insert cell (flags game)) }, "Put a flag")
