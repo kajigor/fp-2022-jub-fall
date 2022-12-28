@@ -7,13 +7,11 @@ import Codec.Picture
 import Control.Monad
 import Control.Monad.ST
 import System.Environment (getArgs)
-import System.FilePath (replaceExtension)
+--import System.FilePath (replaceExtension)
 import qualified Codec.Picture.Types as M
 
 import System.Environment( getArgs )
 import Codec.Picture.Types
-import Data.Vector
-import Data.Vector.Storable
 
 import Debug.Trace
 import GHC.Word

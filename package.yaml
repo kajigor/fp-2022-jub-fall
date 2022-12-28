@@ -1,3 +1,4 @@
+
 name:                proj
 version:             0.1.0.0
 github:              "kajigor/proj"
@@ -20,8 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/kaji
 
 dependencies:
 - base >= 4.7 && < 5
-- containers > 0.6
-- hmatrix
+- JuicyPixels == 3.3.7
 
 ghc-options:
 - -Wall
@@ -38,7 +38,7 @@ library:
   source-dirs: src
 
 executables:
-  proj-exe:
+  exe:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
@@ -46,10 +46,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - containers
-    - hmatrix
     - proj
-    - filepath
 
 tests:
   proj-test:
@@ -60,8 +57,6 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - containers
-    - hmatrix
     - hedgehog
     - HUnit
     - HUnit-approx
@@ -69,5 +64,4 @@ tests:
     - tasty-hedgehog
     - tasty-hunit
     - tasty-discover
-    - tasty-quickcheck
     - proj
