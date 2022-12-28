@@ -111,12 +111,12 @@ unit_openAreaWhenClick = do
 
 unit_doActions :: Assertion
 unit_doActions = do
-    doActionOnFlag field1 (doActionOnOpen field1 game1begin (Cell 0 0)) (Cell 1 0) @?= game1goes1
-    doActionOnOpen field1 game1goes1 (Cell 2 2) @?= game1goes2
-    doActionOnOpen field1 game1goes2 (Cell 1 0) @?= game1goes2
-    doActionOnOpen field1 game1goes2 (Cell 0 1) @?= game1fail
-    doActionOnFlag field1 (doActionOnFlag field1 game1goes2 (Cell 1 0)) (Cell 0 1) @?= game1changeflag
-    doActionOnOpen field1 (doActionOnOpen field1 game1changeflag (Cell 1 0)) (Cell 3 0) @?= game1win
+    (fst (doActionOnFlag field1 (fst (doActionOnOpen field1 game1begin (Cell 0 0))) (Cell 1 0))) @?= game1goes1
+    (fst (doActionOnOpen field1 game1goes1 (Cell 2 2))) @?= game1goes2
+    (fst (doActionOnOpen field1 game1goes2 (Cell 1 0))) @?= game1goes2
+    (fst (doActionOnOpen field1 game1goes2 (Cell 0 1))) @?= game1fail
+    (fst (doActionOnFlag field1 (fst (doActionOnFlag field1 game1goes2 (Cell 1 0))) (Cell 0 1))) @?= game1changeflag
+    (fst (doActionOnOpen field1 (fst (doActionOnOpen field1 game1changeflag (Cell 1 0))) (Cell 3 0))) @?= game1win
 
 unitTests :: [TestTree]
 unitTests =
@@ -127,4 +127,5 @@ unitTests =
   , testCase "isBombActivated for bomb and not bomb" unit_isBombActivated
   , testCase "isCellOpened for opened and not opened" unit_isCellOpened
   , testCase "isGameFinished for win and ongoing" unit_isGameFinished
-  , testCase "openAreaWhenClick for corner and middle cells" unit_openAreaWhenClick]
+  , testCase "openAreaWhenClick for corner and middle cells" unit_openAreaWhenClick
+  , testCase "Does actions correctly: flags and open, sometimes in one chain" unit_doActions]

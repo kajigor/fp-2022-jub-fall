@@ -34,12 +34,14 @@ data FieldChars = FieldChars {
     counts :: [[Int]]
 } deriving Show
 
-getCellByNumber :: Int -> Int -> Int -> Set.Set (Cell) -> Int -> Cell
-getCellByNumber number x y placedBombs cols =
-    if (y == cols) then getCellByNumber number (x + 1) 0 placedBombs cols
-    else if (number == 0) then Cell x y
-    else if (Set.member (Cell x y) placedBombs) then getCellByNumber number x (y + 1) placedBombs cols
-    else getCellByNumber (number - 1) x (y + 1) placedBombs cols 
+getCellByNumber :: Int -> Set.Set (Cell) -> Int -> Cell
+getCellByNumber number placedBombs cols = getCellByNumberHelper number 0 0 placedBombs cols
+    where 
+        getCellByNumberHelper number x y placedBombs cols =
+            if (y == cols) then getCellByNumberHelper number (x + 1) 0 placedBombs cols
+            else if (number == 0) then Cell x y
+            else if (Set.member (Cell x y) placedBombs) then getCellByNumberHelper number x (y + 1) placedBombs cols
+            else getCellByNumberHelper (number - 1) x (y + 1) placedBombs cols 
 
 generateField :: Int -> Int -> Int -> [Int] -> (FieldChars, [Int])
 generateField rows cols cntBombs randList = generateFieldHelper rows cols cntBombs Set.empty randList
@@ -48,7 +50,7 @@ generateField rows cols cntBombs randList = generateFieldHelper rows cols cntBom
             if ((Set.size placedBombs) == cntBombs) then (FieldChars rows cols placedBombs (countCounts rows cols placedBombs), randomInt : randList)
             else do
                 let freeCells = (rows * cols - (Set.size placedBombs))
-                generateFieldHelper rows cols cntBombs (Set.insert (getCellByNumber (randomInt `mod` freeCells) 0 0 placedBombs cols) placedBombs) randList
+                generateFieldHelper rows cols cntBombs (Set.insert (getCellByNumber (randomInt `mod` freeCells) placedBombs cols) placedBombs) randList
 
 getSymb :: FieldChars -> GameState -> Int -> Int -> String
 getSymb field game x y = 
@@ -123,3 +125,15 @@ checkAndFinishGame :: FieldChars -> GameState -> GameState
 checkAndFinishGame field game = 
     if (isGameFinished field game) then game { status = Win }
     else game
+
+doActionOnOpen :: FieldChars -> GameState -> Cell -> (GameState, String)
+doActionOnOpen field game cell =
+    if ((isFlagOnOpening field game cell) || (isCellOpened field game cell)) then (game, "Can't open a cell with a flag or an already opened cell")
+    else if (isBombActivated field game cell) then (game { opened = (Set.insert cell (opened game)), status = Lose }, "Boom")
+    else (checkAndFinishGame field (game { opened = Set.union (opened game) (openAreaWhenClick field game cell)} ), "Successfully opened a cell")
+
+doActionOnFlag :: FieldChars -> GameState -> Cell -> (GameState, String)
+doActionOnFlag field game cell = 
+    if (isCellOpened field game cell) then (game, "Can't put a flag on an opened cell")
+    else if (isFlagOnOpening field game cell) then (game { flags = (Set.delete cell (flags game)) }, "Erased a flag")
+    else (game { flags = (Set.insert cell (flags game)) }, "Put a flag")
