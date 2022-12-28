@@ -39,8 +39,8 @@ getCellByNumber number placedBombs cols = getCellByNumberHelper number 0 0 place
     where 
         getCellByNumberHelper number x y placedBombs cols =
             if (y == cols) then getCellByNumberHelper number (x + 1) 0 placedBombs cols
-            else if (number == 0) then Cell x y
             else if (Set.member (Cell x y) placedBombs) then getCellByNumberHelper number x (y + 1) placedBombs cols
+            else if (number == 0) then Cell x y
             else getCellByNumberHelper (number - 1) x (y + 1) placedBombs cols 
 
 generateField :: Int -> Int -> Int -> [Int] -> (FieldChars, [Int])
@@ -107,7 +107,7 @@ openAreaWhenClick field game cell = fst (openAreaHelper field game cell Set.empt
                 let ret6 = (openAreaHelper field game cell (snd ret5) (Cell (-1) 1))
                 let ret7 = (openAreaHelper field game cell (snd ret6) (Cell 1 (-1)))
                 let ret8 = (openAreaHelper field game cell (snd ret7) (Cell 1 1))
-                (Set.unions [(Set.fromList [cell]), (fst ret1), (fst ret2), (fst ret3), (fst ret4), (fst ret5), (fst ret6), (fst ret7), (fst ret8)], (snd ret8))
+                (Set.unions (Set.singleton cell : map fst [ret1, ret2, ret3, ret4, ret5, ret6, ret7, ret8]), (snd ret8))
 
 isFlagOnOpening :: FieldChars -> GameState -> Cell -> Bool
 isFlagOnOpening _ game cell = Set.member cell (flags game)
