@@ -10,7 +10,6 @@ import System.Environment (getArgs)
 import System.FilePath (replaceExtension)
 import qualified Codec.Picture.Types as M
 
-
 import System.Environment( getArgs )
 import Codec.Picture.Types
 import Data.Vector
@@ -19,11 +18,14 @@ import Data.Vector.Storable
 import Debug.Trace
 import GHC.Word
 
+
 {- transformImage :: Image PixelYCbCr8 -> Image PixelYCbCr8
 transformImage img = img -- Transform the image here -}
 
+
 averagePixel :: Image PixelRGB8 -> Int -> Int -> PixelRGB8
 averagePixel img x y = pixelAt img x y
+
 
 getPixel :: Int -> Image PixelRGB8 -> Int -> Int -> PixelRGB8
 getPixel block img x y 
@@ -34,12 +36,12 @@ getPixel block img x y
     prvX x 
       | x `mod` block == 0 = x 
       | otherwise = x - 1
-    
+
     prvY :: Int -> Int -> Int
     prvY x y
       | x `mod` block == 0 = y - 1
       | otherwise = y
-        
+
 
 transformRGBImage :: Int -> Image PixelRGB8 -> Image PixelRGB8
 transformRGBImage block img@Image {..} = runST $ do
@@ -51,6 +53,7 @@ transformRGBImage block img@Image {..} = runST $ do
             writePixel mimg x y (getPixel block img x y)
             go (x + 1) y
   go 0 0
+
 
 main :: IO ()
 main = do
@@ -65,10 +68,11 @@ main = do
           dynImg <- readImage filename
           case dynImg of
               Left err -> putStrLn err
-              
+
               Right (ImageYCbCr8 img) ->
                   writePng (filename Prelude.++ "_transformed.png")
                             . transformRGBImage block $ convertImage img
                 --
 
               Right _ -> putStrLn "Unhandled image colorspace"
+
