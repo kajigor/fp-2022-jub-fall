@@ -1,1 +1,1 @@
-{-# OPTIONS_GHC -F -pgmF tasty-discover -optF}
+{-# OPTIONS_GHC -F -pgmF tasty-discover -optF --tree-display #-}

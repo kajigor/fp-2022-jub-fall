@@ -52,6 +52,7 @@ test-suite proj-test
   type: exitcode-stdio-1.0
   main-is: Test.hs
   other-modules:
+      Test.PixelIt
       Paths_proj
   hs-source-dirs:
       test
