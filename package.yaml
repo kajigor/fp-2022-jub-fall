@@ -46,7 +46,7 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - proj
+    - proj  
 
 tests:
   proj-test:

@@ -23,6 +23,8 @@ source-repository head
   location: https://github.com/kajigor/proj
 
 library
+  exposed-modules:
+      PixelIt
   other-modules:
       Paths_proj
   hs-source-dirs:
