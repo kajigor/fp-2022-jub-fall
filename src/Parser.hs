@@ -12,11 +12,11 @@ type Parser = Parsec Void String
 
 
 parseName :: Parser String
-parseName = some $ (satisfy isLetter)
+parseName = some $ (satisfy isAlphaNum)
 
 parseLambda :: Parser (Lambda String)
 parseLambda = 
-    try parseApp <|> parseAbs <|> parseVar <|> parseBrackets
+    space *> (try parseApp <|> parseAbs <|> parseVar <|> parseBrackets) <* space
     where 
         parseApp = do
             frs <- parseVar <|> parseBrackets
