@@ -12,6 +12,7 @@ import Data.Char
 data Lambda a = Var a
               | App (Lambda a) (Lambda a)
               | Abs a (Lambda a)
+              deriving Eq
 
 -- true ≡ λx.λy.x
 true = Abs "x" (Abs "y" (Var "x"))
