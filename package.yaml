@@ -1,0 +1,77 @@
+name:                integration
+version:             0.1.0.0
+github:              "I-Gleb/integral-computation"
+license:             BSD3
+author:              "Gleb Ingman"
+maintainer:          "igr2309@gmail.com"
+copyright:           "Gleb Ingman"
+
+extra-source-files:
+- README.md
+- CHANGELOG.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/I-Gleb/integral-computation#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+
+executables:
+  exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - integration
+    - optparse-applicative
+  analize:
+    main:                Main.hs
+    source-dirs:         analize
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - integration
+
+
+tests:
+  integration-test:
+    main:                Test.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hedgehog
+    - HUnit
+    - HUnit-approx
+    - tasty
+    - tasty-hedgehog
+    - tasty-hunit
+    - tasty-discover
+    - integration

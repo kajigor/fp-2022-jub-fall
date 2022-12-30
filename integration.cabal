@@ -1,0 +1,86 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           integration
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/I-Gleb/integral-computation#readme>
+homepage:       https://github.com/I-Gleb/integral-computation#readme
+bug-reports:    https://github.com/I-Gleb/integral-computation/issues
+author:         Gleb Ingman
+maintainer:     igr2309@gmail.com
+copyright:      Gleb Ingman
+license:        BSD3
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/I-Gleb/integral-computation
+
+library
+  exposed-modules:
+      Combinators
+      Expr
+      Integration
+      Lexer
+      Parser
+  other-modules:
+      Paths_integration
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+executable analize
+  main-is: Main.hs
+  other-modules:
+      Paths_integration
+  hs-source-dirs:
+      analize
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , integration
+  default-language: Haskell2010
+
+executable exe
+  main-is: Main.hs
+  other-modules:
+      Paths_integration
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , integration
+    , optparse-applicative
+  default-language: Haskell2010
+
+test-suite integration-test
+  type: exitcode-stdio-1.0
+  main-is: Test.hs
+  other-modules:
+      Test.Integration
+      Test.Parser
+      Paths_integration
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , HUnit-approx
+    , base >=4.7 && <5
+    , hedgehog
+    , integration
+    , tasty
+    , tasty-discover
+    , tasty-hedgehog
+    , tasty-hunit
+  default-language: Haskell2010
