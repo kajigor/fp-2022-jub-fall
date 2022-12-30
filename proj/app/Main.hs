@@ -49,20 +49,31 @@ main = do
                         , #defaultHeight := 768
                         , #child := scrolledWin ]
   on win #destroy Gtk.mainQuit
+
+  examples <- new Gtk.Label [#label := ""]
+  Gtk.labelSetText examples (Text.pack ("Examples of reduction (copyable):\nTerm: (λx.λy.x) (λx.x)     Type of reduction: NormalOrder     Reduction: (λx.λy.x) (λx.x) -> (λy.λx.x)\n" ++ 
+                                                      "Term: (λy.λx.x) ((λx.x x) (λx.x x))     Type of reduction: ApplicativeOrder     Reduction: (λy.λx.x) ((λx.x x) (λx.x x)) -> (λy.λx.x) ((λx.x x) (λx.x x))  -> ... -> Didn't terminate \n" ++
+                                                      "Term: (λy.λx.x     Type of reduction: ApplicativeOrder     Reduction: Could not parse lambda \n"
+                            )
+                            )
+  Gtk.labelSetSelectable examples True
   
   term_message <- new Gtk.Label [#label := ""]
   Gtk.labelSetText term_message "Print term"
+  Gtk.labelSetSelectable term_message True
 
   msg <- new Objects.Entry []
 
   type_message <- new Gtk.Label [#label := ""]
   Gtk.labelSetText type_message "Print type (choose from CallByValue | CallByName | NormalOrder | ApplicativeOrder)"
+  Gtk.labelSetSelectable type_message True
 
   msg_type <- new Objects.Entry []
 
   box <- new Gtk.Box [ #orientation := Gtk.OrientationVertical ]
   #add scrolledWin box
 
+  #packStart box examples True False 0
   #packStart box term_message True False 0
   #packStart box msg True False 10
   #packStart box type_message True False 0
