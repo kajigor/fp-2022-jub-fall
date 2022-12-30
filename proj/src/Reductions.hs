@@ -133,8 +133,17 @@ reductorApplicative = (((\x -> \y -> (App y x))) <$> unpack_first <*> reductorAp
             <|> (cas_red <$> unpack_lambda) 
             <|> (((\x -> \y -> (Abs x y))) <$> into_lambda <*> reductorApplicative)
 
-reduce_list :: Strategy -> Lambda.Lambda String -> [Lambda.Lambda String] -> [Lambda.Lambda String]
-reduce_list strategy term lst = (term_reduced term1)
+reduce_list :: Strategy -> Lambda.Lambda String -> Int -> [Lambda.Lambda String] -> [Lambda.Lambda String]
+reduce_list strategy term 0 lst = lst
+reduce_list strategy term count lst = (term_reduced term1)
     where term1 = reductor strategy term
-          term_reduced (Just term_new) = (reduce_list strategy term_new (lst ++ [term]))
+          term_reduced (Just term_new) = (reduce_list strategy term_new (count - 1) (lst ++ [term]))
           term_reduced Nothing = lst ++ [term] 
+
+
+reduce_until :: Strategy -> Int -> Lambda.Lambda String -> Maybe (Lambda.Lambda String)
+reduce_until strategy 0 term = Nothing
+reduce_until strategy count term = (term_reduced term1)
+    where term1 = reductor strategy term
+          term_reduced (Just term_new) = (reduce_until strategy (count - 1) term_new)
+          term_reduced Nothing = Just term
