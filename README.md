@@ -17,7 +17,8 @@ To use them import module Integration.
 
 ## Usage of console application
 
-```Usage: stack run exe -- (-f|--function STRING) (-a|--from DOUBLE) (-b|--to DOUBLE) (-e|--eps DOUBLE)
+```
+Usage: stack run exe -- (-f|--function STRING) (-a|--from DOUBLE) (-b|--to DOUBLE) (-e|--eps DOUBLE)
   This application evaluates definite integrals with some fixed precision.
 
 Available options:
@@ -25,4 +26,7 @@ Available options:
   -a,--from DOUBLE         Start of integration segment.
   -b,--to DOUBLE           End of integration segment.
   -e,--eps DOUBLE          Precision of integration.
-  -h,--help                Show this help text```
+  -h,--help                Show this help text
+ ```
+ 
+ Example: `stack run exe -- -f 4*x*x*x-20*x*x+17*x+3 -a -13 -b 20 -e 0.0001`
