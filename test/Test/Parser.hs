@@ -1,17 +1,13 @@
 module Test.Parser where
     
  import Parser
- import Test.HUnit
+
  import Lambda
  import Text.Megaparsec
  import Text.Megaparsec.Char
  import Debug.Trace
- 
- instance Eq a => Eq (Lambda a) where
-     (App a b) == (App c d) = a == c && b == d
-     (Abs a b) == (Abs c d) = a == c && b == d
-     (Var a) == (Var b) = a == b
-     _ == _ = False
+ import Test.Tasty
+ import Test.Tasty.HUnit
 
  varx :: Lambda String
  varx = Var "x"
@@ -36,4 +32,9 @@ module Test.Parser where
      parseMaybe parseLambda "λx.λy.x (y z)" @?= Just ((Abs "x" $ Abs "y" $ App varx (App vary varz)))
      parseMaybe parseLambda "λf .x" @?= Nothing
      parseMaybe parseLambda "(λf.xx.) (x y)" @?= Nothing
-     parseMaybe parseLambda "λf.λx.x1" @?= Nothing
+     parseMaybe parseLambda "λf.λx.x1!" @?= Nothing
+
+ unitTests :: [TestTree]
+ unitTests =
+    [ testCase "parse lambda" unit_parse_lambda
+    ]     

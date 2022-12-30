@@ -6,6 +6,7 @@ import Web.Spock as Spock
 import Web.Spock.Config as Spock
 import Data.Aeson as A
 import Data.Text 
+import Data.String
 import Data.IORef
 import Parser
 import Reductions
@@ -78,7 +79,7 @@ app = do
     strat <- param' "strategy"
     tasksRef <- tasks <$> getState
     liftIO $ atomicModifyIORef' tasksRef $ \tasks ->
-      (tasks <> [Task lambda strat (evalBySteps (parseMaybe parseLambda (unpack lambda)) (unpack strat))] , ())
+      (tasks <> [Task lambda strat (evalBySteps (parseMaybe parseLambda (unpack (strip lambda))) (unpack strat))] , ())
     redirect "/"  
 
 
