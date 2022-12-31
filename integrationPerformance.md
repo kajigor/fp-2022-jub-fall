@@ -8,106 +8,138 @@ As expected Middle Point and Trapezoid Methods both give us similar results, clo
 
 ## Measurements:
 
+![2_x+1_sqrt(x+1_16)](img/2_x+1_sqrt(x+1_16).png)
+
 2*x+1/sqrt(x+1/16)
+
 0.1
-Middle Point Method: 9
-Trapezoid Method: 16
-Simpson Method: 8
+- Middle Point Method: 9
+- Trapezoid Method: 16
+- Simpson Method: 8
+
 1.0e-2
-Middle Point Method: 81
-Trapezoid Method: 64
-Simpson Method: 32
+- Middle Point Method: 81
+- Trapezoid Method: 64
+- Simpson Method: 32
+
 1.0e-3
-Middle Point Method: 243
-Trapezoid Method: 256
-Simpson Method: 64
+- Middle Point Method: 243
+- Trapezoid Method: 256
+- Simpson Method: 64
+
 1.0e-4
-Middle Point Method: 729
-Trapezoid Method: 512
-Simpson Method: 128
+- Middle Point Method: 729
+- Trapezoid Method: 512
+- Simpson Method: 128
+
 1.0e-5
-Middle Point Method: 2187
-Trapezoid Method: 2048
-Simpson Method: 256
+- Middle Point Method: 2187
+- Trapezoid Method: 2048
+- Simpson Method: 256
+
 1.0e-6
-Middle Point Method: 6561
-Trapezoid Method: 8192
-Simpson Method: 512
+- Middle Point Method: 6561
+- Trapezoid Method: 8192
+- Simpson Method: 512
+
+![cos(x_2)_x](img/cos(x_2)_x.png)
 
 cos(x/2)*x
+
 0.1
-Middle Point Method: 9
-Trapezoid Method: 8
-Simpson Method: 4
+- Middle Point Method: 9
+- Trapezoid Method: 8
+- Simpson Method: 4
+
 1.0e-2
-Middle Point Method: 27
-Trapezoid Method: 32
-Simpson Method: 8
+- Middle Point Method: 27
+- Trapezoid Method: 32
+- Simpson Method: 8
+
 1.0e-3
-Middle Point Method: 81
-Trapezoid Method: 128
-Simpson Method: 16
+- Middle Point Method: 81
+- Trapezoid Method: 128
+- Simpson Method: 16
+
 1.0e-4
-Middle Point Method: 729
-Trapezoid Method: 256
-Simpson Method: 32
+- Middle Point Method: 729
+- Trapezoid Method: 256
+- Simpson Method: 32
+
 1.0e-5
-Middle Point Method: 2187
-Trapezoid Method: 1024
-Simpson Method: 32
+- Middle Point Method: 2187
+- Trapezoid Method: 1024
+- Simpson Method: 32
+
 1.0e-6
-Middle Point Method: 6561
-Trapezoid Method: 4096
-Simpson Method: 64
+- Middle Point Method: 6561
+- Trapezoid Method: 4096
+- Simpson Method: 64
+
+![x^5-7_x^4+4_x^3-20_x^2+17_x+3](img/x^5-7_x^4+4_x^3-20_x^2+17_x+3.png)
 
 x^5-7*x^4+4*x^3-20*x^2+17*x+3
+
 0.1
-Middle Point Method: 59049
-Trapezoid Method: 32768
-Simpson Method: 512
+- Middle Point Method: 59049
+- Trapezoid Method: 32768
+- Simpson Method: 512
+
 1.0e-2
-Middle Point Method: 177147
-Trapezoid Method: 131072
-Simpson Method: 1024
+- Middle Point Method: 177147
+- Trapezoid Method: 131072
+- Simpson Method: 1024
+
 1.0e-3
-Middle Point Method: 531441
-Trapezoid Method: 524288
-Simpson Method: 1024
+- Middle Point Method: 531441
+- Trapezoid Method: 524288
+- Simpson Method: 1024
+
 1.0e-4
-Middle Point Method: 1594323
-Trapezoid Method: 1048576
-Simpson Method: 2048
+- Middle Point Method: 1594323
+- Trapezoid Method: 1048576
+- Simpson Method: 2048
+
 1.0e-5
-Middle Point Method: 4782969
-Trapezoid Method: 4194304
-Simpson Method: 4096
+- Middle Point Method: 4782969
+- Trapezoid Method: 4194304
+- Simpson Method: 4096
+
 1.0e-6
-Middle Point Method: 14348907
-Trapezoid Method: 16777216
-Simpson Method: 8192
+- Middle Point Method: 14348907
+- Trapezoid Method: 16777216
+- Simpson Method: 8192
+
+![e^(3_x_5)+log(x_4)_x](img/e^(3_x_5)+log(x_4)_x.png)
 
 e^(3*x/5)+log(x/4)/x
+
 0.1
-Middle Point Method: 59049
-Trapezoid Method: 32768
-Simpson Method: 512
+- Middle Point Method: 59049
+- Trapezoid Method: 32768
+- Simpson Method: 512
+
 1.0e-2
-Middle Point Method: 177147
-Trapezoid Method: 131072
-Simpson Method: 1024
+- Middle Point Method: 177147
+- Trapezoid Method: 131072
+- Simpson Method: 1024
+
 1.0e-3
-Middle Point Method: 531441
-Trapezoid Method: 524288
-Simpson Method: 2048
+- Middle Point Method: 531441
+- Trapezoid Method: 524288
+- Simpson Method: 2048
+
 1.0e-4
-Middle Point Method: 1594323
-Trapezoid Method: 1048576
-Simpson Method: 2048
+- Middle Point Method: 1594323
+- Trapezoid Method: 1048576
+- Simpson Method: 2048
+
 1.0e-5
-Middle Point Method: 4782969
-Trapezoid Method: 4194304
-Simpson Method: 4096
+- Middle Point Method: 4782969
+- Trapezoid Method: 4194304
+- Simpson Method: 4096
+
 1.0e-6
-Middle Point Method: 14348907
-Trapezoid Method: 16777216
-Simpson Method: 8192
+- Middle Point Method: 14348907
+- Trapezoid Method: 16777216
+- Simpson Method: 8192
