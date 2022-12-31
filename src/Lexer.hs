@@ -3,9 +3,8 @@ module Lexer where
 import Combinators
 import Expr
 import Data.Functor (($>))
-import Control.Applicative (some)
-import Data.Char (digitToInt, isDigit)
-import GHC.Float (int2Double)
+import Control.Applicative (some, (<|>))
+import Data.Char (isDigit)
 
 lbr :: Parser Char
 lbr = char '('
@@ -28,8 +27,14 @@ division = char '/' $> Div
 x :: Parser Expr
 x = X <$ char 'x'
 
-digit :: Parser Int
-digit = digitToInt <$> satisfy isDigit
+digit :: Parser Char
+digit = satisfy isDigit
+
+integer :: Parser String
+integer = some digit
+
+nonInteger :: Parser String
+nonInteger = (++) <$> integer <*> ((:) <$> char '.' <*> integer)
 
 number :: Parser Expr
-number = Number . foldl (\acc x -> acc * 10 + int2Double x) 0.0 <$> some digit
+number = Number . read <$> (nonInteger <|> integer)

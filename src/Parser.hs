@@ -26,7 +26,7 @@ exprBr = lbr *> parseSum <* rbr
 
 parse :: String -> Maybe Expr
 parse str =
-    case runParser parseExpr str of
+    case runParser parseExpr (trim str) of
       Just (str, e) | null (trim str)  -> Just e
       _ -> Nothing
   where
