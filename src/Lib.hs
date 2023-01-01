@@ -26,13 +26,6 @@ pixelizeN l n = replicate n (pixListAveragePixel l)
 pixelizeTwo :: Pixel RGBA Word8 -> Pixel RGBA Word8 -> Pixel RGBA Word8
 pixelizeTwo (PixelRGBA r1 g1 b1 a1) (PixelRGBA r2 g2 b2 a2) = PixelRGBA (r1 `div` 2 + r2 `div` 2) (g1 `div` 2 + g2 `div` 2) (b1 `div` 2 + b2 `div` 2) (a1 `div` 2 + a2 `div` 2)
 
-pixLamb :: [Pixel RGBA Word8] -> [Pixel RGBA Word8]
-pixLamb [p1, p2] = [pixelizeTwo p1 p2, pixelizeTwo p1 p2]
-pixLamb _ = undefined
-
-pixelizeImg :: [[Pixel RGBA Word8]] -> [[Pixel RGBA Word8]]
-pixelizeImg = foldr (\x -> (++) [concatMap pixLamb (chunksOf 2 x)]) []
-
 pixelizeImgN :: [[Pixel RGBA Word8]] -> Int -> [[Pixel RGBA Word8]]
 pixelizeImgN l n = foldr (\x -> (++) [concatMap (`pixelizeN` n) (chunksOf n x)]) [] l
 
