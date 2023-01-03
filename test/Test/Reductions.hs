@@ -55,6 +55,7 @@ module Test.Reductions where
         isNothing (reductionList ApplicativeOrder term_norm_only []) @?= True -- Return Nothing if no reduction
         isNothing (reductionList CallByValue term_norm_only []) @?= True -- Return Nothing if no reduction
 
+        (show (eval ApplicativeOrder (fromJust (parseMaybe parseLambda "(λm.λn.λf.m (n f)) (λf.λn.f n) (λf.λn.f n)")))) @?= "λf.λa.f a"
         length (fromJust (reductionList ApplicativeOrder (fromJust (parseMaybe parseLambda "(λx.x) y")) [])) @?= 1
 
     unitTests :: [TestTree]

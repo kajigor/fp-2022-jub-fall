@@ -90,7 +90,7 @@ reduceApplicativeOrder :: Reductor (Lambda String)
 reduceApplicativeOrder = (makeApp <$> getApp1 <*> reduceApplicativeOrder) <|>        
                          (App <$> getApp2 <*> reduceApplicativeOrder) <|> 
                          (makeSubst) <|>  
-                         (Abs <$> getAbs <*> reduceApplicativeOrder)    
+                         ((\x -> \y -> (Abs x y)) <$> getAbs <*> reduceApplicativeOrder)    
 
 getReduce :: Strategy -> Reductor (Lambda String)
 getReduce CallByName = reduceCallByName
@@ -104,7 +104,7 @@ reduceOnce strat lamb =  do
     return (snd next)
 
 reductionList :: Strategy -> Lambda String -> [Lambda String] -> Maybe ([Lambda String])
-reductionList strat lamb cur_lst = if (length cur_lst) > 50 then Nothing
+reductionList strat lamb cur_lst = if (length cur_lst) > 500 then Nothing
                                    else case new_term of
                                         Nothing -> Just (cur_lst)
                                         Just x -> reductionList strat x (cur_lst ++ [x])

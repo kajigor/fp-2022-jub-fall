@@ -14,7 +14,7 @@ module Test.Parser_pb where
     testShown :: String -> Lambda String -> Bool
     testShown shw term = case parsed of 
                             Nothing -> False
-                            (Just res) -> alphaEq res term
+                            (Just res) -> shw == (show res)
                             where 
                                 parsed = parseMaybe parseLambda shw
 
@@ -22,7 +22,7 @@ module Test.Parser_pb where
     prop_base_parse = property $ do
         rnd_term <- forAll $ genLambda
         let shw = show rnd_term
-        assert ((testShown shw rnd_term ) == True)
+        assert (testShown shw rnd_term)
     
     props :: [TestTree]
     props =

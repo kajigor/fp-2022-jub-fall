@@ -117,8 +117,8 @@ cas (Abs x y) (Subst z m) | x == z = Abs x y
                           | Set.notMember x (freeVars m) = Abs x (cas y (Subst z m) )
                           | otherwise = Abs nextVar $ cas (cas y (Subst x (Var nextVar))) (Subst z m)
                             where 
-                              nextVar = getVar (List.length uni) (Set.toList uni)
-                              uni = Set.union (allVars y) (allVars m)
+                              nextVar = getVar (List.length uni + 1) (Set.toList uni)
+                              uni = (z `Set.insert` (Set.union (allVars y) (allVars m)))
                             
                               allVars (Var a) = Set.singleton a
                               allVars (App a b) = Set.union (allVars a) (allVars b)
