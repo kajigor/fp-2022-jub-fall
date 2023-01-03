@@ -10,15 +10,10 @@ module Test.Reductions_pb where
     import Test.Tasty
     import Test.Tasty.Hedgehog
 
-    getLast :: [a] -> a
-    getLast [x] = x
-    getLast (x : xs) = getLast xs
-    getLast [] = error "reduction list was empty but not Nothing!"
-
     testReduction :: Lambda String -> Strategy -> Bool
     testReduction term strat = case reduct_list of 
                             Nothing -> True -- if not reduced we can't check it (mb it was limit) 
-                            (Just res) -> alphaEq (Lambda.eval strat term) (getLast res)
+                            (Just res) -> alphaEq (Lambda.eval strat term) (last res)
                             where 
                                 reduct_list = reductionList strat term  [term]
 
@@ -40,7 +35,7 @@ module Test.Reductions_pb where
     prop_reduce_byValue :: Property
     prop_reduce_byValue = property $ do
         rnd_term <- forAll $ genLambda
-        assert ((testReduction rnd_term CallByValue) == True)
+        assert (testReduction rnd_term CallByValue)
 
 
     
